@@ -4,19 +4,28 @@
 
 ## 一次性安装（不用 Homebrew）
 ```bash
-pip3 install rumps yt-dlp faster-whisper av pillow
+pip3 install yt-dlp faster-whisper av pillow
 ```
 
-## 用法（不开终端）
-1. **双击「收藏整理库抓取.app」** → 菜单栏出现 🎬 图标。
-2. 点图标 → **启动抓取服务**（图标变 🎬🟢）。
-3. 点 **复制口令** → 打开网页库 ⚙️ 设置 → 粘进「本地抓视频口令」→ 保存（只需一次）。
-4. 之后在网页库 **🎬 抓视频** 粘链接就行。不用时点「停止服务」或「退出」。
+## 用法：双击「开关」App（不开终端）
+**双击 `收藏整理库抓取.app`** —— 它是个开关：
+- **第一次双击 = 启动服务**，并把**口令自动复制到剪贴板** + 弹通知。
+- 打开网页库 [收藏整理库](https://nickkklian.github.io/content-organizer/) → ⚙️ 设置 → 「本地抓视频口令」粘上 → 保存（**只需一次**，之后浏览器记住）。
+- 之后在「🎬 抓视频」粘链接即可。
+- **再次双击同一个 App = 停止服务。**
+
+> 首次在 Finder 双击若被拦（未签名）：**右键 → 打开 → 打开**；或系统设置 → 隐私与安全性 → 「仍要打开」。
 
 ## 排错 / 说明
-- **.app 打不开**（权限/签名）：终端里 `python3 content_menubar.py`（菜单栏版），或 `python3 content_server.py`（纯服务，会把口令打印出来）。
-- .app 里默认用 `/opt/anaconda3/bin/python3`；你的 python 在别处就改 `收藏整理库抓取.app/Contents/MacOS/run` 里的 `PY=`。
+- **App 实在打不开** → 终端保底：`cd ~/Desktop/Dev/hub-apps/content-organizer/local && python3 content_server.py`（会打印口令；窗口留着别关＝服务）。
+- **改了 python 路径/位置** → 编辑 `co_toggle.applescript` 顶部的 `pyPath`，再重编译：`osacompile -o 收藏整理库抓取.app co_toggle.applescript`。
 - **小红书视频**要用带 `xsec_token` 的链接（App 分享→复制链接的 xhslink，或浏览器登录后地址栏网址）。
-- **B站**优先取现成字幕（含 AI 字幕，需浏览器登录态 cookie），没有再本地 whisper；小红书一律 whisper。
-- **截图**由网页库的 Claude 判断留哪些有用；转写、存库都不经过第三方（Claude/GitHub key 只在你浏览器里）。
-- 口令存 `~/.config/xhs-fetch/token`。
+- **B站**是 DASH：分别下视频流(抽帧)/音频流(转写)；优先取现成字幕（含 AI 字幕，需浏览器登录 cookie），没有才本地 whisper。**B站反爬会限流(412)**，遇到等几分钟再试。
+- **截图**由网页库的 Claude 判断留哪些有用；转写、存库都不经过第三方（Claude/GitHub key 只在你浏览器）。
+- 下载的视频/音频**抽完帧即删**（临时目录 `finally` 清掉），不占空间；只有 whisper 模型（几百 MB）一次性缓存复用。
+- 口令存 `~/.config/xhs-fetch/token`；服务端口 `127.0.0.1:8766`。
+
+## 文件
+- `content_server.py` —— 本地抓取 API（真干活的）。
+- `co_toggle.applescript` —— 开关的源码（改完用 osacompile 重编译）。
+- `收藏整理库抓取.app` —— 编译好的开关（双击用）。
