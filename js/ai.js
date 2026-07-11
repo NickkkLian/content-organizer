@@ -54,21 +54,25 @@ window.XHS = window.XHS || {};
   };
 
   var SYSTEM =
-    '你是一名中文内容编辑。任务：把用户给的多篇小红书笔记，整理、归纳、去重、合并成一篇结构清晰的中文长文（合集）。\n' +
+    '你是一名中文内容编辑。任务：把用户给的多条收藏内容（小红书图文/视频、B站视频）整理、归纳、去重，合并成一篇结构清晰的中文长文（合集）。\n' +
     '要求：\n' +
     '1. 找出共同主题与若干子主题，按子主题分板块（section）。\n' +
-    '2. 每个板块要综合多篇笔记的相关内容，提炼并用你自己的话重写，禁止逐条照抄原文。\n' +
-    '3. 保留有价值的具体信息：店名、地址、价格、步骤、数据、链接等。\n' +
-    '4. source_indices 用从 1 开始的编号，列出该板块主要参考了哪几篇笔记（对应输入里的【1】【2】…）。\n' +
-    '5. 若消息中附带了某些笔记的图片，请仔细读取图片里的文字与关键信息（菜单、价目、地点、步骤、配料表等），一并纳入整理——小红书笔记的干货经常只写在图里。\n' +
-    '6. 一律用简体中文。title 简洁有信息量；summary 用一两句话概括整篇。';
+    '2. 每个板块综合多条内容的相关信息，提炼并用你自己的话重写，禁止逐条照抄。\n' +
+    '3. 保留有价值的具体信息：店名、地址、价格、步骤、数据、观点、结论、链接等。\n' +
+    '4. source_indices 用从 1 开始的编号，列出该板块主要参考了哪几条（对应输入里的【1】【2】…）。\n' +
+    '5. 视频内容多为「语音转写」——没标点、口语化、可能有同音错别字，请据上下文理解真实意思再提炼。\n' +
+    '6. 若附带图片，仔细读图里的文字与关键信息（菜单、价目、幻灯片、数据等）一并纳入。\n' +
+    '7. 一律用简体中文。title 简洁有信息量；summary 用一两句话概括整篇。';
 
   function postsBlock(posts) {
     return posts.map(function (p, i) {
       var tags = (p.tags && p.tags.length) ? p.tags.map(function (t) { return '#' + t; }).join(' ') : '（无）';
-      var body = (p.body || '').slice(0, 2000);
-      return '【' + (i + 1) + '】标题：' + (p.title || '（无）') +
-        '\n标签：' + tags + '\n正文：' + body + '\n链接：' + (p.url || '（无）');
+      var src = (p.platform === 'bili' ? 'B站' : '小红书') + ((p.isVideo || p.platform === 'bili') ? '视频' : '图文');
+      var s = '【' + (i + 1) + '】' + src + '｜标题：' + (p.title || '（无）') + '\n标签：' + tags;
+      if (p.body) s += '\n正文/简介：' + p.body.slice(0, 1500);
+      if (p.transcript) s += '\n语音转写：' + p.transcript.slice(0, 8000);
+      s += '\n链接：' + (p.url || '（无）');
+      return s;
     }).join('\n\n');
   }
 
@@ -85,7 +89,7 @@ window.XHS = window.XHS || {};
         (existing.sections || []).map(function (s) { return '## ' + s.heading + '\n' + s.content; }).join('\n\n') +
         '\n\n———\n\n';
     }
-    userText += '以下是 ' + posts.length + ' 篇小红书笔记：\n\n' + postsBlock(posts);
+    userText += '以下是 ' + posts.length + ' 条收藏内容（小红书图文/视频、B站视频）：\n\n' + postsBlock(posts);
 
     // 组装 content：正文 + （可选）各笔记附图（posts[i].imgs 为 image content blocks）
     var content = [{ type: 'text', text: userText }];
@@ -134,8 +138,44 @@ window.XHS = window.XHS || {};
     return data;
   }
 
+  // 判图：候选帧交给 Claude 视觉，只留有信息价值的。frames=[b64…]；返回要保留的下标数组（判不了/都没用→[]）。
+  async function judgeFrames(frames) {
+    var cfg = getConfig();
+    if (!cfg.apiKey || !frames || !frames.length) return [];
+    var content = [{ type: 'text', text:
+      '以下是一条视频的候选截图，按序号从 0 开始。只挑出「有信息价值」的（含文字/幻灯片/网页或App截图/数据/图表/步骤演示等能独立传达信息的），排除纯人物说话镜头、空镜、风景等没有独立信息的。返回要保留的序号数组；都没用就返回空数组。' }];
+    frames.forEach(function (b, i) {
+      content.push({ type: 'text', text: '[' + i + ']' });
+      content.push({ type: 'image', source: { type: 'base64', media_type: 'image/webp', data: b } });
+    });
+    var reqBody = {
+      model: cfg.model || DEFAULT_MODEL, max_tokens: 300,
+      messages: [{ role: 'user', content: content }],
+      output_config: { format: { type: 'json_schema', schema: {
+        type: 'object', properties: { keep: { type: 'array', items: { type: 'integer' } } },
+        required: ['keep'], additionalProperties: false } } }
+    };
+    var r;
+    try {
+      r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': cfg.apiKey,
+          'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify(reqBody)
+      });
+    } catch (e) { return []; }
+    if (!r.ok) return [];
+    var j = await r.json();
+    var tb = (j.content || []).filter(function (b) { return b.type === 'text'; })[0];
+    if (!tb) return [];
+    try {
+      var d = JSON.parse(tb.text);
+      return Array.isArray(d.keep) ? d.keep.filter(function (i) { return i >= 0 && i < frames.length; }) : [];
+    } catch (e) { return []; }
+  }
+
   X.ai = {
     getConfig: getConfig, saveConfig: saveConfig, isReady: isReady,
-    consolidate: consolidate, MODELS: MODELS, DEFAULT_MODEL: DEFAULT_MODEL
+    consolidate: consolidate, judgeFrames: judgeFrames, MODELS: MODELS, DEFAULT_MODEL: DEFAULT_MODEL
   };
 })(window.XHS);

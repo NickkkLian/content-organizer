@@ -175,9 +175,20 @@ window.XHS = window.XHS || {};
     imgDead(img);
   }
 
+  // 把 AI 选中的 base64 帧存进仓库 xhs-images/<key>/，返回 repo 路径数组（给视频笔记的 imagesRepo）
+  async function saveFrames(key, b64list){
+    var paths = [];
+    for (var i = 0; i < (b64list || []).length; i++) {
+      var p = DIR + '/' + key + '/' + i + '.webp';
+      await putRepoFile(p, b64list[i]);
+      paths.push(p);
+    }
+    return paths;
+  }
+
   X.images = {
     isExpired: isExpired, httpsize: httpsize, proxyUrl: proxyUrl,
-    visionUrl: visionUrl, capB64: capB64,
+    visionUrl: visionUrl, capB64: capB64, saveFrames: saveFrames,
     archiveNote: archiveNote, hydrate: hydrate, imgFallback: imgFallback,
     repoImageB64: repoImageB64, ready: ready, MAX_PER_NOTE: MAX_PER_NOTE
   };

@@ -549,12 +549,30 @@ window.XHS = window.XHS || {};
         var mode = tab.getAttribute('data-mode');
         document.getElementById('mode-link').style.display = mode === 'link' ? 'block' : 'none';
         document.getElementById('mode-manual').style.display = mode === 'manual' ? 'block' : 'none';
+        document.getElementById('mode-video').style.display = mode === 'video' ? 'block' : 'none';
+        if (mode === 'video') refreshFetchStatus();
       });
     });
 
     els.fetchBtn.addEventListener('click', onFetch);
     els.urlInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onFetch(); });
     els.parseManualBtn.addEventListener('click', onParseManual);
+
+    // 🎬 抓视频
+    if (els.fetchTokenInput) els.fetchTokenInput.value = X.fetchsvc.getToken();
+    els.fetchVideoBtn.addEventListener('click', onFetchVideo);
+    els.videoInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onFetchVideo(); });
+    els.saveFetchTokenBtn.addEventListener('click', function () {
+      X.fetchsvc.setToken(els.fetchTokenInput.value);
+      els.fetchTokenStatus.textContent = T('已保存 ✓','Saved ✓'); refreshFetchStatus();
+    });
+    els.testFetchBtn.addEventListener('click', async function () {
+      els.fetchTokenStatus.textContent = T('测试中…','Testing…');
+      var ok = await X.fetchsvc.health();
+      els.fetchTokenStatus.textContent = ok ? T('✓ 本地服务在线','✓ Local service online')
+        : T('✗ 连不上（菜单栏小程序启动了吗？）','✗ Unreachable (is the menu-bar app running?)');
+      refreshFetchStatus();
+    });
 
     els.result.addEventListener('click', function (e) {
       var b = e.target.closest('[data-act]'); if (!b) return;
@@ -641,12 +659,57 @@ window.XHS = window.XHS || {};
     if (els.langBtn) els.langBtn.addEventListener('click', X.i18n.toggleLang);
   }
 
+  // ---------- 🎬 抓视频（本地后端 + AI 判图） ----------
+  async function refreshFetchStatus(){
+    if (!els.fetchStatus) return;
+    var ok = await X.fetchsvc.health();
+    els.fetchStatus.className = 'dot ' + (ok ? 'dot--on' : 'dot--off');
+    els.fetchStatus.title = ok ? T('本地服务在线','Local service online') : T('本地服务未启动','Local service offline');
+  }
+  async function onFetchVideo(){
+    var url = (els.videoInput.value || '').trim();
+    if (!url) { setStatus(T('粘一条视频链接','Paste a video link'), 'err'); return; }
+    if (!(await X.fetchsvc.health())) {
+      refreshFetchStatus();
+      setStatus(T('连不上本地抓取服务 — 先启动菜单栏小程序，并在 ⚙️ 里填口令','Local fetch service unreachable — start the menu-bar app and set the token in ⚙️'), 'err');
+      return;
+    }
+    els.fetchVideoBtn.disabled = true;
+    try {
+      var res = await X.fetchsvc.fetchVideo(url, function (line) { setStatus(line, 'loading'); });
+      var note = res.note || {}, frames = res.frames || [];
+      var kept = [];
+      if (frames.length) {
+        setStatus(T('AI 判断截图有没有用…','AI judging which screenshots are useful…'), 'loading');
+        var idx = await X.ai.judgeFrames(frames);
+        kept = idx.map(function (i) { return frames[i]; });
+      }
+      var imagesRepo = [];
+      if (kept.length && X.images.ready()) {
+        setStatus(T('存截图…','Saving screenshots…'), 'loading');
+        try { imagesRepo = await X.images.saveFrames(note.key || ('v' + Date.now()), kept); } catch (e) {}
+      }
+      note.platform = note.platform || (/bilibili\.com|\/video\/BV/i.test(note.url || '') ? 'bili' : 'xhs');
+      note.isVideo = true;
+      note.imagesRepo = imagesRepo;
+      note.images = imagesRepo.map(function () { return note.cover || ''; });
+      delete note.key;
+      showResult(note);
+      setStatus(T('抓取完成 — 转写 ' + ((note.transcript || '').length) + ' 字，有用截图 ' + kept.length + ' 张。点「★ 收藏」入库。',
+        'Done — ' + ((note.transcript || '').length) + ' transcript chars, ' + kept.length + ' useful screenshots. Click Save.'), 'ok');
+      els.videoInput.value = '';
+    } catch (e) {
+      setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');
+    } finally { els.fetchVideoBtn.disabled = false; }
+  }
+
   function init(){
     ['status','result','urlInput','fetchBtn','manualText','manualImages','parseManualBtn',
      'catFilter','platFilter','search','libList','libCount','exportJson','exportMd','clearAll',
      'syncStatus','syncBtn','settingsBtn','settingsPanel','tokenInput','saveTokenBtn','settingsStatus','repoLabel',
      'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
-     'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs'
+     'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs',
+     'videoInput','fetchVideoBtn','fetchStatus','fetchTokenInput','saveFetchTokenBtn','testFetchBtn','fetchTokenStatus'
     ].forEach(function (id) { els[id] = document.getElementById(id); });
     X.i18n.applyStatic();
     bind();

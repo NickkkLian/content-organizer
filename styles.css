@@ -130,3 +130,6 @@ img[data-repo]:not([src]){min-height:90px;background:rgba(0,0,0,.05);border-radi
 .note__ts>summary::before{content:"▸ "}
 .note__ts[open]>summary::before{content:"▾ "}
 .note__ts-body{margin-top:6px;max-height:240px;overflow:auto}
+.dot{font-size:11px;vertical-align:middle}
+.dot--on{color:var(--ok)}
+.dot--off{color:var(--muted)}

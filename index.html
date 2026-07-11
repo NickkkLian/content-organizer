@@ -19,6 +19,7 @@
     <div class="tabs">
       <button class="tab tab--on" data-mode="link" data-i18n="tabLink">🔗 链接整理</button>
       <button class="tab" data-mode="manual" data-i18n="tabManual">✍️ 手动粘贴</button>
+      <button class="tab" data-mode="video" data-i18n="tabVideo">🎬 抓视频</button>
     </div>
 
     <div id="mode-link">
@@ -36,6 +37,16 @@
       <textarea id="manualImages" rows="2" data-i18n-ph="manualImgPh"
         placeholder="（可选）图片直链，多个用空格或逗号分隔"></textarea>
       <button id="parseManualBtn" class="btn btn--primary" data-i18n="organize">整理</button>
+    </div>
+
+    <div id="mode-video" style="display:none">
+      <div class="row">
+        <input id="videoInput" type="url" data-i18n-ph="videoPh"
+               placeholder="粘小红书 / B站视频链接（可连分享文案一起粘）">
+        <button id="fetchVideoBtn" class="btn btn--primary" data-i18n="fetchVideo">🎬 抓取</button>
+      </div>
+      <p class="hint"><span id="fetchStatus" class="dot dot--off">●</span>
+        <span data-i18n="videoHint">需本地菜单栏小程序在跑。小红书视频要用带 xsec_token 的链接。转写在本机做，截图交 AI 判断留哪些。</span></p>
     </div>
 
     <div id="status" class="status" style="display:none"></div>
@@ -76,6 +87,15 @@
         <button id="saveAiBtn" class="btn btn--primary" data-i18n="save">保存</button>
       </div>
       <div id="aiStatus" class="hint"></div>
+
+      <hr class="settings__hr">
+      <p class="hint" data-i18n="fetchTokenHint">本地「🎬 抓视频」服务的口令（菜单栏小程序里可看/复制）。只存本机浏览器。</p>
+      <div class="row">
+        <input id="fetchTokenInput" type="password" autocomplete="off" placeholder="xhs-fetch token">
+        <button id="saveFetchTokenBtn" class="btn btn--primary" data-i18n="save">保存</button>
+        <button id="testFetchBtn" class="btn" data-i18n="testConn">测试连接</button>
+      </div>
+      <div id="fetchTokenStatus" class="hint"></div>
     </div>
 
     <div id="platFilter" class="chips chips--plat"></div>
@@ -108,6 +128,7 @@
 <script src="js/store.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/images.js"></script>
+<script src="js/fetch.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/app.js"></script>
 </body>
