@@ -108,6 +108,14 @@ def download_media(url, tmp):
         raise RuntimeError("视频下载失败（需登录 cookie / 或不是视频）：" + (p.stderr or "")[:200])
     return files[0]
 
+def dl(url, tmp, fmt, name):
+    """按指定 format 下载单个流，返回 (本地路径 or None, 进程结果)。"""
+    import glob
+    out = os.path.join(tmp, name + ".%(ext)s")
+    p = subprocess.run(ytdlp_cmd(["-f", fmt, "--no-part", "-o", out, url]), capture_output=True, text=True)
+    files = glob.glob(os.path.join(tmp, name + ".*"))
+    return (files[0] if files else None), p
+
 def whisper_transcribe(media_path, log):
     try:
         from faster_whisper import WhisperModel
@@ -193,15 +201,25 @@ def process(url, log):
     log(f"「{note['title']}」 · {note['author'] or '匿名'} · {note['duration']}s")
     tmp = tempfile.mkdtemp(prefix="cvapi_")
     try:
-        log("下载视频…"); media = download_media(note["url"], tmp)
-        t = ""
+        vid = None
         if plat == "bili":
+            # B站是 DASH（视频/音频分离，无合并单文件）：字幕优先，再分别下视频流(抽帧)/音频流(转写)，避开 ffmpeg 合并
             log("找现成字幕…"); t = get_subtitle(note["url"], tmp)
             if t: log(f"✓ 现成字幕 {len(t)} 字")
-        if not t:
-            log("本地转写语音（按时长，可能几分钟）…"); t = whisper_transcribe(media, log); log(f"✓ 转写 {len(t)} 字")
-        note["transcript"] = t
-        log("抽候选画面…"); frames = candidate_frames(media, log)
+            log("下载视频流(抽帧用，按码率选小的、优先 H.264)…")
+            vid, vp = dl(note["url"], tmp, "bv*[vcodec^=avc1][tbr<=800]/bv*[tbr<=800]/bv*[vcodec^=avc1]/bv*", "v")
+            if not vid: log("（视频流下载失败，跳过截图：" + (vp.stderr or "").strip()[-140:] + "）")
+            if not t:
+                log("无字幕 → 下音频本地转写…")
+                aud, ap = dl(note["url"], tmp, "ba[ext=m4a]/ba/bestaudio", "a")
+                if aud: t = whisper_transcribe(aud, log); log(f"✓ 转写 {len(t)} 字")
+                else: log("（音频下载失败，无转写：" + (ap.stderr or "").strip()[-140:] + "）")
+            note["transcript"] = t
+        else:
+            # 小红书：muxed 单文件通吃（视频+音频）
+            log("下载视频…"); vid = download_media(note["url"], tmp)
+            log("本地转写语音（按时长，可能几分钟）…"); note["transcript"] = whisper_transcribe(vid, log); log(f"✓ 转写 {len(note['transcript'])} 字")
+        log("抽候选画面…"); frames = candidate_frames(vid, log) if vid else []
         log(f"✓ 候选画面 {len(frames)} 张（交给网页库 AI 判断哪些有用）")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
