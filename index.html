@@ -2,30 +2,112 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>收藏整理库</title>
-<style>
-  :root{color-scheme:light dark}
-  *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:grid;place-items:center;
-    font:16px/1.6 -apple-system,"PingFang SC",system-ui,sans-serif;
-    background:#f6f7f9;color:#18191c}
-  @media (prefers-color-scheme:dark){body{background:#0f1115;color:#e6e8ea}}
-  .card{max-width:520px;padding:40px 32px;text-align:center}
-  h1{font-size:30px;margin:.2em 0}
-  .tag{display:inline-block;margin:6px 0 18px;padding:3px 12px;border-radius:999px;
-    background:#ff244218;color:#ff2442;font-size:13px;font-weight:600}
-  p{color:#8a9098;margin:.4em 0}
-  .row{margin-top:22px;font-size:14px;color:#8a9098}
-  a{color:#ff2442}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>收藏整理库 · Content Organizer</title>
+<meta name="description" content="小红书(图文/视频) + B站(视频) 统一收藏、跨平台 AI 整理。">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="card">
-    <h1>📚 收藏整理库</h1>
-    <div class="tag">建设中 · 正在合并小红书 + B站</div>
-    <p>小红书(图文 / 视频)+ B站(视频)统一收藏、跨平台 AI 整理。</p>
-    <p class="row">很快上线。数据仍在你的私有库,零迁移。</p>
-  </div>
+<header class="hero">
+  <button id="langBtn" class="btn btn--ghost lang-btn" title="中 / EN">EN</button>
+  <h1 data-i18n="h1">📚 收藏整理库</h1>
+  <p class="sub" data-i18n="sub">小红书(图文/视频) + B站(视频) 统一收藏 · 跨平台 AI 整理</p>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="tabs">
+      <button class="tab tab--on" data-mode="link" data-i18n="tabLink">🔗 链接整理</button>
+      <button class="tab" data-mode="manual" data-i18n="tabManual">✍️ 手动粘贴</button>
+    </div>
+
+    <div id="mode-link">
+      <div class="row">
+        <input id="urlInput" type="url" data-i18n-ph="urlPh"
+               placeholder="粘贴小红书链接，如 http://xhslink.com/xxx 或 https://www.xiaohongshu.com/explore/...">
+        <button id="fetchBtn" class="btn btn--primary" data-i18n="organize">整理</button>
+      </div>
+      <p class="hint" data-i18n="linkHint">纯前端经公共代理（Jina Reader / AllOrigins）抓取，尽力而为；若被反爬拦截，请切到「手动粘贴」。</p>
+    </div>
+
+    <div id="mode-manual" style="display:none">
+      <textarea id="manualText" rows="5" data-i18n-ph="manualTextPh"
+        placeholder="把小红书「分享 → 复制链接 / 复制文字」的内容整段粘进来（标题、正文、#话题# 都行）"></textarea>
+      <textarea id="manualImages" rows="2" data-i18n-ph="manualImgPh"
+        placeholder="（可选）图片直链，多个用空格或逗号分隔"></textarea>
+      <button id="parseManualBtn" class="btn btn--primary" data-i18n="organize">整理</button>
+    </div>
+
+    <div id="status" class="status" style="display:none"></div>
+  </section>
+
+  <section id="result" class="result" style="display:none"></section>
+
+  <section class="card">
+    <div class="lib__head">
+      <h2>📚 <span data-i18n="myLib">我的收藏库</span> <span id="libCount" class="muted"></span></h2>
+      <div class="lib__tools">
+        <button id="syncStatus" class="sync-pill" title="云同步状态（点击设置）">● 本地</button>
+        <input id="search" type="search" data-i18n-ph="searchPh" placeholder="搜索标题 / 正文 / 标签">
+        <button id="syncBtn" class="btn btn--ghost" data-i18n="syncBtn">🔄 同步</button>
+        <button id="archToggle" class="chip" data-i18n-title="archTitle" title="切换查看已归档">📥 <span data-i18n="archived">已归档</span> <span id="archCount">0</span></button>
+        <button id="fixAllBtn" class="btn btn--ghost" data-i18n-title="fixAllTitle" title="重新抓取并把所有图片永久存进你的私有仓库（防小红书链接过期 403）" data-i18n="fixAll">🔧 修复全部图片</button>
+        <button id="settingsBtn" class="btn btn--ghost">⚙️</button>
+        <button id="exportMd" class="btn btn--ghost" data-i18n="exportMd">导出 MD</button>
+        <button id="exportJson" class="btn btn--ghost" data-i18n="exportJson">导出 JSON</button>
+        <button id="clearAll" class="btn btn--danger" data-i18n="clearAll">清空</button>
+      </div>
+    </div>
+
+    <div id="settingsPanel" class="settings" style="display:none">
+      <p class="hint" data-i18n-html="syncHint">收藏库同步到私有仓库 <code id="repoLabel"></code>，多设备共享。令牌仅存于本机浏览器（与导航站共用 <code>pha-config</code>），<strong>绝不写入任何仓库</strong>。</p>
+      <div class="row">
+        <input id="tokenInput" type="password" autocomplete="off" data-i18n-ph="tokenPh"
+               placeholder="GitHub Token（fine-grained PAT，需对 Database 仓库 Contents 读写）">
+        <button id="saveTokenBtn" class="btn btn--primary" data-i18n="saveConnect">保存并连接</button>
+      </div>
+      <div id="settingsStatus" class="hint"></div>
+
+      <hr class="settings__hr">
+      <p class="hint" data-i18n-html="aiHint">「✨ AI 整理成合集」用 Claude API 把多篇笔记综合成分板块长文。API 令牌仅存本机浏览器、<strong>绝不写入仓库</strong>；点一次约几美分。<a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">获取 Key ↗</a></p>
+      <div class="row">
+        <input id="aiKeyInput" type="password" autocomplete="off" data-i18n-ph="aiKeyPh" placeholder="Anthropic API Key（sk-ant-…）">
+        <select id="aiModel" class="selbar__sel"></select>
+        <button id="saveAiBtn" class="btn btn--primary" data-i18n="save">保存</button>
+      </div>
+      <div id="aiStatus" class="hint"></div>
+    </div>
+
+    <div id="catFilter" class="chips"></div>
+
+    <div id="selBar" class="selbar" style="display:none">
+      <span id="selCount" class="muted"></span>
+      <button id="consolidateBtn" class="btn btn--primary" data-i18n="consolidate">✨ AI 整理成合集</button>
+      <label class="chip selbar__imgs" data-i18n-title="withImgsTitle" title="把所选笔记的全部图片交给 AI 一起读（上限 100 张；图里的菜单/价格/步骤等会被整理进合集；图多时更慢、费用更高）"><input type="checkbox" id="includeImgs"> 🖼 <span data-i18n="withImgs">连图片一起分析</span></label>
+      <select id="addToComp" class="selbar__sel"><option value="" data-i18n="addToCompOpt">加入已有合集…</option></select>
+      <button id="clearSel" class="btn btn--ghost" data-i18n="clearSel">取消选择</button>
+    </div>
+
+    <div id="libList" class="lib__list"></div>
+  </section>
+
+  <section class="card" id="compsCard">
+    <div class="lib__head">
+      <h2>🧩 <span data-i18n="myComps">我的合集</span> <span id="compCount" class="muted"></span></h2>
+    </div>
+    <div id="compList" class="lib__list"></div>
+  </section>
+</main>
+
+<footer class="foot" data-i18n="foot">本地缓存 + 私有仓库云同步 + AI 整理合集 · 令牌只存本机浏览器</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/classify.js"></script>
+<script src="js/parse.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/images.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
