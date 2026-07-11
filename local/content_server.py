@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-小红书视频抓取 · 本地 API（无界面，供网页库调用）。
-菜单栏 App（xhs_menubar.py）负责把它跑起来；网页库通过 http://127.0.0.1:8766 调它。
+收藏整理库 · 本地抓取 API（无界面，供网页库调用）。小红书 + B站 视频通吃：按链接自动认平台。
+菜单栏 App（content_menubar.py）负责把它跑起来；网页库通过 http://127.0.0.1:8766 调它。
 
-它只干重活：下视频 → 本地转写 → 抽“不同画面”的候选帧（base64 返回）。
-【判图】哪些截图有用、【存库】写 xhs.json + 归档图，都在网页库里做——
+它只干重活：下视频 → 转写（B站优先取现成字幕，没有再本地 whisper；小红书一律 whisper）→ 抽“不同画面”的候选帧（base64 返回）。
+【判图】哪些截图有用、【存库】写 content.json + 归档图，都在网页库里做——
 那边才有 Claude key 和 GitHub 令牌。后端不碰你的任何密钥、也不碰 git，最小面。
 
 依赖： pip3 install yt-dlp faster-whisper av pillow
-单独跑（调试用）： python3 xhs_server.py
+单独跑（调试用）： python3 content_server.py
 """
 import sys, os, re, json, subprocess, tempfile, shutil, base64, io, secrets, urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -48,41 +48,56 @@ def clean_url(text):
     if m: return "https://" + re.sub(r"[^\w=/?&%.\-]+$", "", m.group(0))
     raise RuntimeError("没找到链接。把小红书链接粘进来即可（可连前后分享文案）。")
 
-NOTE_ID_RE = re.compile(r"(?:explore|discovery/item|item)/([0-9a-fA-F]{16,32})")
-def note_key(url, info_id):
-    m = NOTE_ID_RE.search(url or "")
+def detect_platform(url):
+    return "bili" if re.search(r"bilibili\.com|b23\.tv|/video/BV|(?:^|[/?&=])av\d+", url or "", re.I) else "xhs"
+
+XHS_ID_RE = re.compile(r"(?:explore|discovery/item|item)/([0-9a-fA-F]{16,32})")
+BV_RE = re.compile(r"(BV[0-9A-Za-z]{8,12})")
+def note_key(url, info_id, plat):
+    if plat == "bili":
+        m = BV_RE.search(url or "") or BV_RE.search(str(info_id or ""))
+        return (m.group(1) if m else "") or (str(info_id) if info_id else "") or secrets.token_hex(8)
+    m = XHS_ID_RE.search(url or "")
     return (m.group(1) if m else "") or (info_id or "") or secrets.token_hex(8)
 
-def xhs_meta(url):
+def meta(url, plat):
     p = subprocess.run(ytdlp_cmd(["--dump-single-json", "--skip-download", "--no-warnings", url]),
                        capture_output=True, text=True)
     if p.returncode != 0:
         err = (p.stderr or "")
-        if ("No video formats" in err) or ("failed to obtain" in err) or ("Unable to extract" in err):
+        if plat == "xhs" and (("No video formats" in err) or ("failed to obtain" in err) or ("Unable to extract" in err)):
             raise RuntimeError("拿不到视频内容——多半这条链接缺 xsec_token。请用带 token 的链接："
                                "小红书 App 打开这条→分享→复制链接（xhslink 自带 token），"
                                "或电脑浏览器登录后打开→复制地址栏网址（含 xsec_token=…）。")
-        raise RuntimeError("抓元数据失败：" + err[:220])
+        raise RuntimeError(("B站" if plat == "bili" else "小红书") + "抓元数据失败：" + err[:220])
     info = json.loads(p.stdout)
     if info.get("entries"): info = info["entries"][0]
     return info
 
-def build_note(url, info):
+def build_note(url, info, plat):
     tags = info.get("tags") or info.get("categories") or []
     if isinstance(tags, str): tags = [tags]
     cover = (info.get("thumbnail") or "").replace("http://", "https://")
-    return {
-        "title": (info.get("title") or "小红书视频").strip(),
+    note = {
+        "title": (info.get("title") or ("B站视频" if plat == "bili" else "小红书视频")).strip(),
         "author": (info.get("uploader") or info.get("uploader_id") or "").strip(),
         "body": (info.get("description") or "").strip(),
         "url": info.get("webpage_url") or url,
         "cover": cover,
         "duration": int(info.get("duration") or 0),
         "tags": [str(t) for t in tags][:12],
-        "source": "xhs-video", "isVideo": True,
-        "category": "视频", "categoryEmoji": "🎬",
+        "isVideo": True,
+        "categoryEmoji": "🎬" if plat == "xhs" else "📺",
         "transcript": "",
     }
+    if plat == "bili":
+        cats = info.get("categories") or []
+        note["platform"] = "bili"; note["source"] = "bili"
+        note["tname"] = (cats[0] if cats else "") or ""
+        note["category"] = note["tname"] or "B站视频"
+    else:
+        note["platform"] = "xhs"; note["source"] = "xhs-video"; note["category"] = "视频"
+    return note
 
 def download_media(url, tmp):
     out = os.path.join(tmp, "v.%(ext)s")
@@ -141,16 +156,51 @@ def candidate_frames(media_path, log):
         out.append(base64.b64encode(buf.getvalue()).decode())
     return out
 
+def extract_sub_text(path):
+    raw = open(path, encoding="utf-8", errors="ignore").read()
+    if path.endswith((".json", ".json3", ".srv3")):
+        try:
+            body = (json.loads(raw) or {}).get("body") or []
+            txt = "\n".join((seg.get("content") or "").strip() for seg in body if (seg.get("content") or "").strip())
+            if txt.strip(): return txt
+        except Exception: pass
+    out = []
+    for ln in raw.splitlines():
+        ln = ln.strip()
+        if not ln or ln.isdigit() or "-->" in ln: continue
+        if ln == "WEBVTT" or ln.startswith(("NOTE", "Kind:", "Language:")): continue
+        ln = re.sub(r"<[^>]+>", "", ln).strip()
+        if ln and (not out or out[-1] != ln): out.append(ln)
+    return "\n".join(out)
+
+def get_subtitle(url, tmp):
+    # 只要中文字幕（含 B 站 AI 字幕）；别用 all（会混进 ai-zh-ar 等机翻）
+    subprocess.run(ytdlp_cmd(["--skip-download", "--write-subs", "--write-auto-subs",
+                              "--sub-langs", "ai-zh,zh-Hans,zh-Hant,zh-CN,zh",
+                              "-o", os.path.join(tmp, "%(id)s.%(ext)s"), url]), capture_output=True)
+    subs = [f for f in os.listdir(tmp) if re.search(r"\.(srt|vtt|ass|json3?|srv3)$", f)]
+    subs.sort(key=lambda f: (0 if "zh" in f else 1, f))
+    for f in subs:
+        txt = extract_sub_text(os.path.join(tmp, f))
+        if txt.strip() and re.search(r"[一-鿿]", txt): return txt   # 含汉字兜底
+    return ""
+
 def process(url, log):
-    url = clean_url(url); log("链接：" + url)
-    log("抓元数据…"); info = xhs_meta(url); note = build_note(url, info)
-    note["key"] = note_key(note["url"], info.get("id"))
+    url = clean_url(url); plat = detect_platform(url)
+    log(("B站" if plat == "bili" else "小红书") + " · " + url)
+    log("抓元数据…"); info = meta(url, plat); note = build_note(url, info, plat)
+    note["key"] = note_key(note["url"], info.get("id"), plat)
     log(f"「{note['title']}」 · {note['author'] or '匿名'} · {note['duration']}s")
-    tmp = tempfile.mkdtemp(prefix="xhsapi_")
+    tmp = tempfile.mkdtemp(prefix="cvapi_")
     try:
         log("下载视频…"); media = download_media(note["url"], tmp)
-        log("本地转写语音（按时长，可能几分钟）…"); note["transcript"] = whisper_transcribe(media, log)
-        log(f"✓ 转写 {len(note['transcript'])} 字")
+        t = ""
+        if plat == "bili":
+            log("找现成字幕…"); t = get_subtitle(note["url"], tmp)
+            if t: log(f"✓ 现成字幕 {len(t)} 字")
+        if not t:
+            log("本地转写语音（按时长，可能几分钟）…"); t = whisper_transcribe(media, log); log(f"✓ 转写 {len(t)} 字")
+        note["transcript"] = t
         log("抽候选画面…"); frames = candidate_frames(media, log)
         log(f"✓ 候选画面 {len(frames)} 张（交给网页库 AI 判断哪些有用）")
     finally:
@@ -196,12 +246,15 @@ class H(BaseHTTPRequestHandler):
             return
         self._json({"error": "not found"}, 404)
 
+def make_server():
+    return ThreadingHTTPServer(("127.0.0.1", PORT), H)
+
 def run_server():
-    ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
+    make_server().serve_forever()
 
 def main():
-    print(f"xhs-fetch 本地 API 已启动 → http://127.0.0.1:{PORT}/")
-    print(f"口令(token)：{TOKEN}   （网页库设置里填这个）")
+    print(f"收藏整理库 · 本地抓取 API 已启动 → http://127.0.0.1:{PORT}/")
+    print(f"口令(token)：{TOKEN}   （填进网页库 ⚙️ 设置）")
     run_server()
 
 if __name__ == "__main__":

@@ -1,0 +1,7 @@
+#!/bin/bash
+# 定位到 local/（.app 就放在 local/ 里）：run 在 .app/Contents/MacOS/ → 上三级即 local/
+cd "$(dirname "$0")/../../.." || exit 1
+# 优先用 anaconda 的 python3（Finder 启动时 PATH 精简，需绝对路径）；否则回退 python3
+PY=/opt/anaconda3/bin/python3
+[ -x "$PY" ] || PY="$(command -v python3)"
+exec "$PY" content_menubar.py
