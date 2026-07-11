@@ -300,7 +300,7 @@ window.XHS = window.XHS || {};
     els.consolidateBtn.disabled = true; els.addToComp.disabled = true;
     setStatus(T('AI 整理中…（约 10–30 秒，请勿关闭页面）','AI consolidating… (~10–30s, keep this page open)'), 'loading');
     try {
-      var posts = notes.map(function (n) { return { title: n.title, body: n.body, tags: n.tags, url: n.url }; });
+      var posts = notes.map(function (n) { return { title: n.title, body: n.body, tags: n.tags, url: n.url, transcript: n.transcript, platform: n.platform, isVideo: isVideo(n) }; });
       // 可选：连图片一起分析——带上所选笔记的全部图片（Claude API 单请求上限 100 张，超出截断并提示）
       if (els.includeImgs && els.includeImgs.checked) {
         var MAXI = 100, total = 0, skippedCap = 0, skippedDead = 0;
