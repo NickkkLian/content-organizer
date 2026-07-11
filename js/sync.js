@@ -1,13 +1,17 @@
-/* 云同步：把收藏库存到私有仓库 NickkkLian/Database 的 xhs.json，支持多设备。
-   令牌与导航站共用 localStorage 键 pha-config，只存本机、绝不进仓库。
-   仅读写本 app 自己的数据文件 xhs.json，不碰仓库内其它任何文件。 */
+/* 云同步：统一收藏库存到私有仓库 NickkkLian/Database 的 content.json（含小红书+B站，每条带 platform）。
+   首次运行若 content.json 不存在，自动从旧的 xhs.json + bilibili.json 合并生成（原文件不动，留作备份）。
+   令牌与导航站共用 localStorage 键 pha-config，只存本机、绝不进仓库。只读写 Database 内数据文件，不碰其它。 */
 window.XHS = window.XHS || {};
 (function (X) {
   'use strict';
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function(zh,en){return zh;};
 
-  var PHA_KEY = 'pha-config';        // 与 personal-hub-admin / 其它 app 共享
-  var DATA_PATH = 'xhs.json';        // 本 app 在 Database 仓库里的专属文件
+  var PHA_KEY = 'pha-config';           // 与 personal-hub-admin / 其它 app 共享
+  var DATA_PATH = 'content.json';       // 统一收藏库文件
+  var LEGACY = [                        // 首次引导：旧的各平台文件 → 打平台标签合并
+    { platform: 'xhs',  file: 'xhs.json' },
+    { platform: 'bili', file: 'bilibili.json' }
+  ];
   var DEFAULTS = { owner: 'NickkkLian', repo: 'Database', token: '' };
 
   // ---------- 配置（小心保留 pha-config 既有字段，尤其 repo） ----------
@@ -19,7 +23,6 @@ window.XHS = window.XHS || {};
   }
   function isConfigured(cfg){ cfg = cfg || getConfig(); return Boolean(cfg.owner && cfg.token); }
 
-  // 写回令牌时整体合并，绝不改动 repo / 其它字段，避免影响导航站与其它 app
   function saveToken(token, owner){
     var cur = getConfig();
     var next = Object.assign({}, cur, { token: token });
@@ -27,7 +30,6 @@ window.XHS = window.XHS || {};
     localStorage.setItem(PHA_KEY, JSON.stringify(next));
     return next;
   }
-
   function dataLabel(){ var c = getConfig(); return c.owner + '/' + c.repo + ' → ' + DATA_PATH; }
 
   // ---------- 工具 ----------
@@ -61,8 +63,8 @@ window.XHS = window.XHS || {};
       deletedComps: Array.isArray(d.deletedComps) ? d.deletedComps : []
     };
   }
-  function contentsUrl(cfg){
-    return 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + DATA_PATH;
+  function contentsUrl(cfg, file){
+    return 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + (file || DATA_PATH);
   }
 
   // ---------- 校验令牌（只读 GET /user，不碰任何仓库） ----------
@@ -74,9 +76,9 @@ window.XHS = window.XHS || {};
     return j.login;
   }
 
-  // ---------- 读 / 写 xhs.json ----------
-  async function getFile(cfg){
-    var r = await fetch(contentsUrl(cfg), { headers: headers(cfg.token) });
+  // ---------- 读 / 写 数据文件（file 缺省 = content.json） ----------
+  async function getFile(cfg, file){
+    var r = await fetch(contentsUrl(cfg, file), { headers: headers(cfg.token) });
     if (r.status === 404) return { doc: emptyDoc(), sha: null, missing: true };
     if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
     if (!r.ok) throw new Error(T('读取失败 HTTP ','Read failed HTTP ') + r.status);
@@ -86,17 +88,43 @@ window.XHS = window.XHS || {};
     catch (e) { doc = emptyDoc(); }
     return { doc: doc, sha: j.sha, missing: false };
   }
-  async function putFile(cfg, doc, sha, message){
-    var body = { message: message || 'xhs-organizer sync', content: b64encode(JSON.stringify(doc, null, 2)) };
+  async function putFile(cfg, doc, sha, message, file){
+    var body = { message: message || 'content-organizer sync', content: b64encode(JSON.stringify(doc, null, 2)) };
     if (sha) body.sha = sha;
-    var r = await fetch(contentsUrl(cfg), {
+    var r = await fetch(contentsUrl(cfg, file), {
       method: 'PUT', headers: headers(cfg.token), body: JSON.stringify(body)
     });
     if (!r.ok) throw new Error(T('写入失败 HTTP ','Write failed HTTP ') + r.status + (r.status === 409 ? T('（版本冲突）',' (version conflict)') : ''));
     return r.json();
   }
 
-  // ---------- 合并（多设备并发安全：并集 + 墓碑 + 最新者胜） ----------
+  // ---------- 首次引导：把旧的两个库合并成统一 doc（每条打 platform） ----------
+  function combineLegacy(xhsDoc, biliDoc){
+    function tag(doc, p){
+      var d = normalizeDoc(doc);
+      d.notes.forEach(function (n) { if (n && !n.platform) n.platform = p; });
+      d.compilations.forEach(function (c) { if (c && !c.platform) c.platform = p; });
+      return d;
+    }
+    var x = tag(xhsDoc, 'xhs'), b = tag(biliDoc, 'bili');
+    return {
+      version: 1, updatedAt: null,
+      notes: x.notes.concat(b.notes),
+      deleted: x.deleted.concat(b.deleted),
+      compilations: x.compilations.concat(b.compilations),
+      deletedComps: x.deletedComps.concat(b.deletedComps)
+    };
+  }
+  async function bootstrapFromLegacy(cfg){
+    var docs = [];
+    for (var i = 0; i < LEGACY.length; i++) {
+      var f = await getFile(cfg, LEGACY[i].file);
+      docs.push(f.doc);
+    }
+    return combineLegacy(docs[0], docs[1]);
+  }
+
+  // ---------- 合并（多设备并发安全：并集 + 墓碑 + 最新者胜；platform 随对象保留） ----------
   function mergeList(aItems, bItems, aDel, bDel){
     var deleted = Array.from(new Set((aDel || []).concat(bDel || [])));
     var delSet = {}; deleted.forEach(function (id) { delSet[id] = 1; });
@@ -138,22 +166,23 @@ window.XHS = window.XHS || {};
     };
   }
 
-  // ---------- 一次同步 = 拉取 + 合并 + （有变化才）回写 ----------
+  // ---------- 一次同步 = 拉取(缺则从旧库引导) + 合并 + （有变化才）回写 ----------
   async function sync(){
     var cfg = getConfig();
     if (!isConfigured(cfg)) throw new Error(T('未连接：请先在设置里填入令牌','Not connected: enter a token in settings first'));
 
-    var remote = await getFile(cfg);
-    var merged = mergeDocs(remote.doc, localDoc());
+    var remote = await getFile(cfg);                    // content.json
+    var base = remote.missing ? await bootstrapFromLegacy(cfg) : remote.doc;
+    var merged = mergeDocs(base, localDoc());
 
-    if (remote.missing || sig(remote.doc) !== sig(merged)) {
+    if (remote.missing || sig(base) !== sig(merged)) {
       try {
-        await putFile(cfg, merged, remote.sha, 'xhs-organizer: sync notes');
+        await putFile(cfg, merged, remote.sha, remote.missing ? 'content-organizer: init from legacy' : 'content-organizer: sync');
       } catch (e) {
-        // sha 过期等冲突 → 重新拉取再合并一次
-        var fresh = await getFile(cfg);
-        merged = mergeDocs(fresh.doc, localDoc());
-        await putFile(cfg, merged, fresh.sha, 'xhs-organizer: sync notes (retry)');
+        var fresh = await getFile(cfg);                 // sha 冲突 → 重新拉再合并
+        var fbase = fresh.missing ? await bootstrapFromLegacy(cfg) : fresh.doc;
+        merged = mergeDocs(fbase, localDoc());
+        await putFile(cfg, merged, fresh.sha, 'content-organizer: sync (retry)');
       }
     }
     X.store.replaceAll(merged.notes);
@@ -166,6 +195,6 @@ window.XHS = window.XHS || {};
   X.sync = {
     getConfig: getConfig, isConfigured: isConfigured, saveToken: saveToken,
     dataLabel: dataLabel, validate: validate, sync: sync,
-    _merge: mergeDocs, _b64: { enc: b64encode, dec: b64decode }   // 暴露给测试
+    _merge: mergeDocs, _combineLegacy: combineLegacy, _b64: { enc: b64encode, dec: b64decode }
   };
 })(window.XHS);
