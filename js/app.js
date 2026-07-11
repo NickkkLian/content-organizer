@@ -8,6 +8,8 @@ window.XHS = window.XHS || {};
   var els = {};
   var currentNote = null;   // 当前整理出、尚未收藏的笔记
   var activeFilter = 'all';
+  var activePlatform = 'all';    // 平台筛选：all / xhs / bili
+  var activeType = 'all';        // 类型筛选：all / post / video
   var selectedIds = new Set();   // 勾选用于「AI 整理成合集」的笔记 id
   var viewArchived = false;      // 归档视图开关：整理过的笔记自动归档到这里
 
@@ -24,9 +26,31 @@ window.XHS = window.XHS || {};
   }
 
   function catOf(note){
-    return note.category
-      ? { name: note.category, emoji: note.categoryEmoji || '🗂️' }
-      : X.classify(note).primary;
+    if (note.category) return { name: note.category, emoji: note.categoryEmoji || (note.platform === 'bili' ? '📺' : '🗂️') };
+    if (note.platform === 'bili') return { name: note.tname || 'B站', emoji: '📺' };
+    return X.classify(note).primary;
+  }
+  function isVideo(note){
+    return Boolean(note.platform === 'bili' || note.isVideo || note.source === 'xhs-video');
+  }
+  function fmtDur(sec){
+    sec = parseInt(sec, 10) || 0; if (!sec) return '';
+    var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function platBadge(note){
+    return note.platform === 'bili'
+      ? '<span class="badge badge--plat badge--bili">📺 ' + T('B站','Bilibili') + '</span>'
+      : '<span class="badge badge--plat badge--xhs">📕 ' + T('小红书','XHS') + '</span>';
+  }
+  function typeBadge(note){
+    if (!isVideo(note)) return '<span class="badge badge--soft">🖼 ' + T('图文','Post') + '</span>';
+    var d = note.durationText || fmtDur(note.duration);
+    return '<span class="badge badge--soft">🎬 ' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
+  }
+  function renderTranscript(note){
+    var t = note.transcript || ''; if (!t) return '';
+    return '<details class="note__ts"><summary>🗣 ' + T('语音转写','Transcript') + ' · ' + t.length + T(' 字',' chars') +
+      '</summary><pre class="note__body note__ts-body">' + esc(t) + '</pre></details>';
   }
 
   function renderImages(note){
@@ -61,25 +85,31 @@ window.XHS = window.XHS || {};
 
   function noteCardHtml(note, actionsHtml, opts){
     opts = opts || {};
-    var cls = X.classify(note);
     var cat = catOf(note);
-    var secondary = cls.ranked.slice(note.category ? 0 : 1, 3)
-      .filter(function (c) { return c.name !== cat.name; })
-      .map(function (c) { return '<span class="badge badge--soft">' + c.emoji + ' ' + esc(X.catLabel(c.name)) + '</span>'; })
-      .join('');
+    var vid = isVideo(note);
+    var secondary = '';
+    if (note.platform !== 'bili' && !vid) {          // 仅小红书图文用 classify 的次级分类
+      var cls = X.classify(note);
+      secondary = cls.ranked.slice(note.category ? 0 : 1, 3)
+        .filter(function (c) { return c.name !== cat.name; })
+        .map(function (c) { return '<span class="badge badge--soft">' + c.emoji + ' ' + esc(X.catLabel(c.name)) + '</span>'; })
+        .join('');
+    }
     var sel = opts.selectable
       ? '<label class="note__sel"><input type="checkbox" class="selbox" data-id="' + note.id + '"' + (opts.selected ? ' checked' : '') + '> ' + T('选入合集','Add to compilation') + '</label>'
       : '';
     return '' +
       '<article class="card note' + (opts.selected ? ' is-sel' : '') + '">' + sel +
         '<div class="note__head">' +
-          '<span class="badge">' + cat.emoji + ' ' + esc(X.catLabel(cat.name)) + '</span>' + secondary +
-          (note.source ? '<span class="src">' + T('来源 ','Source ') + esc(note.source) + '</span>' : '') +
+          platBadge(note) +
+          '<span class="badge">' + cat.emoji + ' ' + esc(X.catLabel(cat.name)) + '</span>' +
+          typeBadge(note) + secondary +
         '</div>' +
         '<h3 class="note__title">' + esc(note.title || T('未命名','Untitled')) + '</h3>' +
         (note.author ? '<div class="note__author">@' + esc(note.author) + '</div>' : '') +
         renderTags(note.tags) +
         (note.body ? '<pre class="note__body">' + esc(note.body) + '</pre>' : '') +
+        renderTranscript(note) +
         renderImages(note) +
         (note.url ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>' : '') +
         '<div class="note__actions">' + actionsHtml + '</div>' +
@@ -131,7 +161,7 @@ window.XHS = window.XHS || {};
   function buildFilters(notes){
     var counts = {};
     notes.forEach(function (n) {
-      var key = n.category || X.classify(n).primary.name;
+      var key = catOf(n).name;
       counts[key] = (counts[key] || 0) + 1;
     });
     var html = '<button class="chip' + (activeFilter === 'all' ? ' chip--on' : '') + '" data-cat="all">' + T('全部 ','All ') + notes.length + '</button>';
@@ -141,22 +171,47 @@ window.XHS = window.XHS || {};
     els.catFilter.innerHTML = html;
   }
 
+  // 平台 + 类型 两组筛选（渲染进 #platFilter）
+  function ptChip(dim, val, zh, en, count, active){
+    return '<button class="chip' + (active ? ' chip--on' : '') + '" data-dim="' + dim + '" data-val="' + val + '">' + T(zh, en) + ' ' + count + '</button>';
+  }
+  function buildPlatType(base){
+    if (!els.platFilter) return;
+    var xhsN = base.filter(function (n) { return (n.platform || 'xhs') !== 'bili'; }).length;
+    var biliN = base.filter(function (n) { return n.platform === 'bili'; }).length;
+    var vidN = base.filter(isVideo).length, postN = base.length - vidN;
+    var h = ptChip('plat', 'all', '全部', 'All', base.length, activePlatform === 'all');
+    if (xhsN) h += ptChip('plat', 'xhs', '📕 小红书', '📕 XHS', xhsN, activePlatform === 'xhs');
+    if (biliN) h += ptChip('plat', 'bili', '📺 B站', '📺 Bilibili', biliN, activePlatform === 'bili');
+    h += '<span class="chips__sep"></span>';
+    h += ptChip('type', 'all', '全部', 'All', base.length, activeType === 'all');
+    if (postN) h += ptChip('type', 'post', '🖼 图文', '🖼 Posts', postN, activeType === 'post');
+    if (vidN) h += ptChip('type', 'video', '🎬 视频', '🎬 Videos', vidN, activeType === 'video');
+    els.platFilter.innerHTML = h;
+  }
+
   function renderLibrary(){
     var all = X.store.getAll();
     var base = all.filter(function (n) { return viewArchived ? n.archived : !n.archived; });
     var archivedCount = all.filter(function (n) { return n.archived; }).length;
     if (els.archCount) els.archCount.textContent = archivedCount;
     if (els.archToggle) els.archToggle.classList.toggle('chip--on', viewArchived);
-    buildFilters(base);
+    buildPlatType(base);
+    var ptBase = base.filter(function (n) {
+      if (activePlatform !== 'all' && (n.platform || 'xhs') !== activePlatform) return false;
+      if (activeType === 'video' && !isVideo(n)) return false;
+      if (activeType === 'post' && isVideo(n)) return false;
+      return true;
+    });
+    buildFilters(ptBase);
     var q = (els.search.value || '').trim().toLowerCase();
-    var list = base.filter(function (n) {
-      var cat = n.category || X.classify(n).primary.name;
-      if (activeFilter !== 'all' && cat !== activeFilter) return false;
+    var list = ptBase.filter(function (n) {
+      if (activeFilter !== 'all' && catOf(n).name !== activeFilter) return false;
       if (!q) return true;
-      var hay = ((n.title || '') + ' ' + (n.body || '') + ' ' + (n.tags || []).join(' ')).toLowerCase();
+      var hay = ((n.title || '') + ' ' + (n.body || '') + ' ' + (n.transcript || '') + ' ' + (n.author || '') + ' ' + (n.tags || []).join(' ')).toLowerCase();
       return hay.indexOf(q) !== -1;
     });
-    els.libCount.textContent = list.length + ' / ' + base.length + T(' 篇',' notes') + (viewArchived ? T('（已归档）',' (archived)') : '');
+    els.libCount.textContent = list.length + ' / ' + ptBase.length + T(' 篇',' notes') + (viewArchived ? T('（已归档）',' (archived)') : '');
     if (!base.length) { els.libList.innerHTML = '<p class="empty">' + (viewArchived ? T('还没有已归档的笔记。整理成合集后，作为素材的笔记会自动归档到这里。','No archived notes yet. After you consolidate, the source notes are auto-archived here.') : T('还没有收藏。整理一篇笔记后点「收藏到本地库」。','No saved notes yet. Organize a note, then click "Save to library".')) + '</p>'; return; }
     if (!list.length) { els.libList.innerHTML = '<p class="empty">' + T('没有匹配的笔记。','No matching notes.') + '</p>'; return; }
     els.libList.innerHTML = list.map(function (n) {
@@ -512,6 +567,12 @@ window.XHS = window.XHS || {};
       var c = e.target.closest('[data-cat]'); if (!c) return;
       activeFilter = c.getAttribute('data-cat'); renderLibrary();
     });
+    els.platFilter.addEventListener('click', function (e) {
+      var c = e.target.closest('[data-dim]'); if (!c) return;
+      var dim = c.getAttribute('data-dim'), val = c.getAttribute('data-val');
+      if (dim === 'plat') activePlatform = val; else if (dim === 'type') activeType = val;
+      activeFilter = 'all'; renderLibrary();
+    });
     els.search.addEventListener('input', renderLibrary);
 
     els.libList.addEventListener('click', function (e) {
@@ -582,7 +643,7 @@ window.XHS = window.XHS || {};
 
   function init(){
     ['status','result','urlInput','fetchBtn','manualText','manualImages','parseManualBtn',
-     'catFilter','search','libList','libCount','exportJson','exportMd','clearAll',
+     'catFilter','platFilter','search','libList','libCount','exportJson','exportMd','clearAll',
      'syncStatus','syncBtn','settingsBtn','settingsPanel','tokenInput','saveTokenBtn','settingsStatus','repoLabel',
      'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
      'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs'

@@ -117,3 +117,16 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
 img[data-repo]:not([src]){min-height:90px;background:rgba(0,0,0,.05);border-radius:8px;}
 .selbar__imgs{display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
 .selbar__imgs input{accent-color:currentColor;cursor:pointer;}
+
+/* —— 统一库：平台/类型徽标 + 语音转写 + 筛选分隔 —— */
+.chips--plat{margin-bottom:8px}
+.chips__sep{width:1px;align-self:center;height:16px;background:var(--line);margin:0 4px}
+.badge--plat{font-weight:600}
+.badge--xhs{background:var(--soft);color:var(--red)}
+.badge--bili{background:#eaf7fc;color:#0086b3}
+.note__ts{margin:8px 0}
+.note__ts>summary{cursor:pointer;color:var(--muted);font-size:13px;list-style:none;user-select:none}
+.note__ts>summary::-webkit-details-marker{display:none}
+.note__ts>summary::before{content:"▸ "}
+.note__ts[open]>summary::before{content:"▾ "}
+.note__ts-body{margin-top:6px;max-height:240px;overflow:auto}
