@@ -288,17 +288,17 @@ window.XHS = window.XHS || {};
       comps.map(function (c) { return '<option value="' + c.id + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
   }
 
-  async function runConsolidate(existingComp){
+  async function runConsolidate(existingComp, reorgOnly){
     if (!X.ai || !X.ai.isReady()){
       setStatus(T('请先在 ⚙️ 设置里填入 Anthropic API 令牌','Enter your Anthropic API token in ⚙️ Settings first'), 'err');
       els.settingsPanel.style.display = 'block';
       els.settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    var notes = X.store.getAll().filter(function (n) { return selectedIds.has(n.id); });
-    if (!notes.length){ setStatus(T('请先勾选笔记','Select some notes first'), 'err'); return; }
+    var notes = reorgOnly ? [] : X.store.getAll().filter(function (n) { return selectedIds.has(n.id); });
+    if (!notes.length && !existingComp){ setStatus(T('请先勾选笔记','Select some notes first'), 'err'); return; }
     els.consolidateBtn.disabled = true; els.addToComp.disabled = true;
-    setStatus(T('AI 整理中…（约 10–30 秒，请勿关闭页面）','AI consolidating… (~10–30s, keep this page open)'), 'loading');
+    setStatus(reorgOnly ? T('AI 再整理中…（去重合并、剔除无效信息，请勿关闭页面）','Re-organizing… (dedupe & clean, keep this page open)') : T('AI 整理中…（约 10–30 秒，请勿关闭页面）','AI consolidating… (~10–30s, keep this page open)'), 'loading');
     try {
       var posts = notes.map(function (n) { return { title: n.title, body: n.body, tags: n.tags, url: n.url, transcript: n.transcript, platform: n.platform, isVideo: isVideo(n) }; });
       // 可选：连图片一起分析——带上所选笔记的全部图片（Claude API 单请求上限 100 张，超出截断并提示）
@@ -349,7 +349,7 @@ window.XHS = window.XHS || {};
       X.store.archive(notes.map(function (n) { return n.id; }));   // 整理过的素材自动归档
       selectedIds.clear();
       renderLibrary(); renderComps(); updateSelBar();
-      setStatus(T('整理完成 ✓ 已存入合集，原笔记已自动归档','Done ✓ Saved to a compilation; source notes auto-archived'), 'ok');
+      setStatus(notes.length ? T('整理完成 ✓ 已存入合集，原笔记已自动归档','Done ✓ Saved to a compilation; source notes auto-archived') : T('再整理完成 ✓ 合集已更新（去重合并、清理无效信息）','Re-organized ✓ Compilation updated'), 'ok');
       scheduleSync();
       els.compsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) {
@@ -394,6 +394,7 @@ window.XHS = window.XHS || {};
       (c.summary ? '<div class="comp__summary">' + esc(c.summary) + '</div>' : '') +
       secs +
       '<div class="note__actions">' +
+        '<button class="btn btn--primary" data-cact="reorg" data-id="' + c.id + '">' + T('🔄 重新整理','🔄 Re-organize') + '</button>' +
         '<button class="btn btn--ghost" data-cact="copy" data-id="' + c.id + '">' + T('复制 MD','Copy MD') + '</button>' +
         '<button class="btn btn--danger" data-cact="del" data-id="' + c.id + '">' + T('删除','Delete') + '</button>' +
       '</div></article>';
@@ -653,6 +654,7 @@ window.XHS = window.XHS || {};
       var act = b.getAttribute('data-cact');
       var comp = X.store.getComps().find(function (c) { return c.id === id; });
       if (act === 'copy') { if (comp) copyText(compToMarkdown(comp)); }
+      else if (act === 'reorg') { if (comp && confirm(T('对这篇合集再整理一次？会去重合并、剔除无效信息、精炼重排。','Re-organize this compilation? It will dedupe, clean and tighten.'))) runConsolidate(comp, true); }
       else if (act === 'del') { if (confirm(T('删除这篇合集？','Delete this compilation?'))) { X.store.removeComp(id); renderComps(); updateSelBar(); scheduleSync(); } }
     });
     els.saveAiBtn.addEventListener('click', onSaveAI);

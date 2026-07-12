@@ -54,15 +54,17 @@ window.XHS = window.XHS || {};
   };
 
   var SYSTEM =
-    '你是一名中文内容编辑。任务：把用户给的多条收藏内容（小红书图文/视频、B站视频）整理、归纳、去重，合并成一篇结构清晰的中文长文（合集）。\n' +
+    '你是一名中文内容编辑。任务：把用户给的收藏内容（小红书图文/视频、B站视频；有时还含一篇已有合集）整理、归纳、去重，合并成一篇结构清晰的中文长文（合集）。\n' +
     '要求：\n' +
     '1. 找出共同主题与若干子主题，按子主题分板块（section）。\n' +
-    '2. 每个板块综合多条内容的相关信息，提炼并用你自己的话重写，禁止逐条照抄。\n' +
-    '3. 保留有价值的具体信息：店名、地址、价格、步骤、数据、观点、结论、链接等。\n' +
-    '4. source_indices 用从 1 开始的编号，列出该板块主要参考了哪几条（对应输入里的【1】【2】…）。\n' +
-    '5. 视频内容多为「语音转写」——没标点、口语化、可能有同音错别字，请据上下文理解真实意思再提炼。\n' +
-    '6. 若附带图片，仔细读图里的文字与关键信息（菜单、价目、幻灯片、数据等）一并纳入。\n' +
-    '7. 一律用简体中文。title 简洁有信息量；summary 用一两句话概括整篇。';
+    '2. **去重合并**：同一信息只保留一处；相近的观点/做法合并成一条更完整的表述；跨来源、跨板块的重复都要合并，别让读者看到两遍。\n' +
+    '3. **剔除无效信息（但要甄别、别误删干货）**：去掉与主题无关的闲聊、引流话术（关注/点赞/三连/求关注/评论区见）、纯情绪口水、语音转写的重复与错乱；务必保留有价值的具体信息——店名、地址、价格、步骤、数据、观点、结论、经验、链接等。\n' +
+    '4. **直接呈现内容，不要作者视角的转述**：禁止「作者说/博主提到/UP主认为/他建议」这类表述，把事实、观点、方法直接写出来即可。\n' +
+    '5. 提炼并用你自己的话重写，禁止逐条照抄原文；一律用简体中文。\n' +
+    '6. 视频内容多为「语音转写」——没标点、口语化、可能有同音错别字，据上下文理解真实意思再提炼。\n' +
+    '7. 若附带图片，仔细读图里的文字与关键信息（菜单、价目、幻灯片、数据等）一并纳入。\n' +
+    '8. source_indices 用从 1 开始的编号，列出该板块主要参考了输入里的哪几条【N】（没有对应的新内容时可留空数组）。\n' +
+    '9. title 简洁有信息量；summary 用一两句话概括整篇。';
 
   function postsBlock(posts) {
     return posts.map(function (p, i) {
@@ -80,16 +82,21 @@ window.XHS = window.XHS || {};
   async function consolidate(posts, existing) {
     var cfg = getConfig();
     if (!cfg.apiKey) throw new Error(T('未设置 AI 令牌','AI token not set'));
-    if (!posts || !posts.length) throw new Error(T('没有可整理的笔记','No notes to consolidate'));
+    if ((!posts || !posts.length) && !existing) throw new Error(T('没有可整理的内容','Nothing to consolidate'));
+    posts = posts || [];
 
     var userText = '';
     if (existing) {
-      userText += '这是一篇已有的合集，请把下面的新笔记整合进去（可补充到已有板块，或新增板块），最后返回整合后的【完整合集】（包含原有内容）：\n\n' +
-        '已有合集标题：' + (existing.title || '') + '\n' +
-        (existing.sections || []).map(function (s) { return '## ' + s.heading + '\n' + s.content; }).join('\n\n') +
-        '\n\n———\n\n';
+      var existingText = '已有合集标题：' + (existing.title || '') + '\n' +
+        (existing.sections || []).map(function (s) { return '## ' + s.heading + '\n' + s.content; }).join('\n\n');
+      if (posts.length) {
+        userText += '下面是一篇【已有合集】和 ' + posts.length + ' 条【新收藏内容】。把新内容并入合集——不是简单追加：在已有内容与新内容之间**去重合并**（同一信息只留一处、相近观点合并成一条）、**剔除无效信息**、重排成一篇精炼的【完整合集】返回。\n\n【已有合集】\n' + existingText + '\n\n———\n\n【新收藏内容】\n' + postsBlock(posts);
+      } else {
+        userText += '请对下面这篇【已有合集】做一次**精炼再整理**：跨板块去重合并（重复/相近内容并成一条）、剔除无效信息、语言收紧、结构理顺，返回一篇更精炼的【完整合集】。\n\n【已有合集】\n' + existingText;
+      }
+    } else {
+      userText += '以下是 ' + posts.length + ' 条收藏内容（小红书图文/视频、B站视频）：\n\n' + postsBlock(posts);
     }
-    userText += '以下是 ' + posts.length + ' 条收藏内容（小红书图文/视频、B站视频）：\n\n' + postsBlock(posts);
 
     // 组装 content：正文 + （可选）各笔记附图（posts[i].imgs 为 image content blocks）
     var content = [{ type: 'text', text: userText }];
