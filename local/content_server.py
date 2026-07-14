@@ -18,8 +18,13 @@ PORT = int(os.environ.get("XHS_PORT", "8766"))
 COOKIES_BROWSER = os.environ.get("XHS_COOKIES_BROWSER", "chrome")
 WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
 WHISPER_LANG = os.environ.get("WHISPER_LANG", "zh")     # 空=自动识别
-KEEP_MAX = int(os.environ.get("XHS_FRAMES", "12"))      # 最多返回多少张候选帧（AI 再从中挑有用的）
-SCENE_THR = float(os.environ.get("XHS_SCENE_THR", "0.12"))
+KEEP_MAX = int(os.environ.get("XHS_FRAMES", "14"))      # 最多返回多少张候选帧（AI 再从中挑有用的）
+# 去重阈值：真正的判官是网页库的 Claude（它能读懂画面文字），本地只合并「近乎完全相同」的帧。
+# 实测 MAD：同一页(仅压缩噪点)≈0.0006；同版式但文字不同的演示页/幻灯片≈0.014~0.022；换场景 0.1+。
+# 旧值 0.12 远高于 0.014 → 把「版式一样、文字不同」的页面全并掉了（站长实测踩到：HTML 演示每页
+# skills 名称不同却只截到一张）。取 0.008：噪点合并、文字一变就留，宁可多送让 AI 挑。
+SCENE_THR = float(os.environ.get("XHS_SCENE_THR", "0.008"))
+SIG_PX = int(os.environ.get("XHS_SIG_PX", "144"))       # 比对缩略图边长（分辨率影响不大，144 兼顾小字）
 FRAME_MAX = 1568
 ALLOW_ORIGINS = {"https://nickkklian.github.io",
                  "http://localhost:8765", "http://127.0.0.1:8765",
@@ -142,7 +147,7 @@ def candidate_frames(media_path, log):
     try:
         c = av.open(media_path); v = c.streams.video[0]; v.codec_context.skip_frame = "NONKEY"
         for frame in c.decode(v):
-            im = frame.to_image(); cand.append((im, im.convert("L").resize((64, 64))))
+            im = frame.to_image(); cand.append((im, im.convert("L").resize((SIG_PX, SIG_PX))))
             if len(cand) >= 240: break
         c.close()
     except Exception as e:
