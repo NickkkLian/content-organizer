@@ -12,6 +12,8 @@ window.XHS = window.XHS || {};
   var activeType = 'all';        // 类型筛选：all / post / video
   var selectedIds = new Set();   // 勾选用于「AI 整理成合集」的笔记 id
   var viewArchived = false;      // 归档视图开关：整理过的笔记自动归档到这里
+  var viewCompArchived = false;  // 合集归档视图（与图文/视频归档分开）
+  var editingCompId = null;      // 正在手动编辑的合集 id
 
   function setStatus(msg, type){
     els.status.textContent = msg || '';
@@ -98,20 +100,31 @@ window.XHS = window.XHS || {};
     var sel = opts.selectable
       ? '<label class="note__sel"><input type="checkbox" class="selbox" data-id="' + note.id + '"' + (opts.selected ? ' checked' : '') + '> ' + T('选入合集','Add to compilation') + '</label>'
       : '';
+    // 默认收起（只留角标+标题+一行摘要），点标题/箭头展开——避免每条卡片占满屏、划半天才到下一条
+    var peek = esc(String(note.body || note.transcript || '').replace(/\s+/g, ' ').trim().slice(0, 70));
+    var nImg = Math.max((note.images || []).length, (note.imagesRepo || []).length);
+    var meta = [];
+    if (nImg) meta.push('🖼' + nImg);
+    if (note.transcript) meta.push('🗣' + note.transcript.length + T('字','ch'));
     return '' +
-      '<article class="card note' + (opts.selected ? ' is-sel' : '') + '">' + sel +
+      '<article class="card note' + (opts.expanded ? '' : ' is-fold') + (opts.selected ? ' is-sel' : '') + '">' + sel +
         '<div class="note__head">' +
           platBadge(note) +
           '<span class="badge">' + cat.emoji + ' ' + esc(X.catLabel(cat.name)) + '</span>' +
           typeBadge(note) + secondary +
+          (meta.length ? '<span class="src">' + meta.join(' · ') + '</span>' : '') +
+          '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
         '</div>' +
-        '<h3 class="note__title">' + esc(note.title || T('未命名','Untitled')) + '</h3>' +
+        '<h3 class="note__title" data-fold>' + esc(note.title || T('未命名','Untitled')) + '</h3>' +
         (note.author ? '<div class="note__author">@' + esc(note.author) + '</div>' : '') +
-        renderTags(note.tags) +
-        (note.body ? '<pre class="note__body">' + esc(note.body) + '</pre>' : '') +
-        renderTranscript(note) +
-        renderImages(note) +
-        (note.url ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>' : '') +
+        (peek ? '<div class="note__peek" data-fold>' + peek + '…</div>' : '') +
+        '<div class="note__more">' +
+          renderTags(note.tags) +
+          (note.body ? '<pre class="note__body">' + esc(note.body) + '</pre>' : '') +
+          renderTranscript(note) +
+          renderImages(note) +
+          (note.url ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>' : '') +
+        '</div>' +
         '<div class="note__actions">' + actionsHtml + '</div>' +
       '</article>';
   }
@@ -120,7 +133,8 @@ window.XHS = window.XHS || {};
     currentNote = note;
     els.result.innerHTML = noteCardHtml(note,
       '<button class="btn btn--primary" data-act="save">' + T('★ 收藏到本地库','★ Save to library') + '</button>' +
-      '<button class="btn" data-act="copy">' + T('复制为 Markdown','Copy as Markdown') + '</button>');
+      '<button class="btn" data-act="copy">' + T('复制为 Markdown','Copy as Markdown') + '</button>',
+      { expanded: true });
     els.result.style.display = 'block';
     X.images.hydrate(els.result);
     els.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -302,6 +316,7 @@ window.XHS = window.XHS || {};
     try {
       var posts = notes.map(function (n) { return { title: n.title, body: n.body, tags: n.tags, url: n.url, transcript: n.transcript, platform: n.platform, isVideo: isVideo(n) }; });
       // 可选：连图片一起分析——带上所选笔记的全部图片（Claude API 单请求上限 100 张，超出截断并提示）
+      var imgMap = {};   // "2-3" → {repo,url}：给图编号送 AI，它用 keep_images 指名哪些值得留在合集里
       if (els.includeImgs && els.includeImgs.checked) {
         var MAXI = 100, total = 0, skippedCap = 0, skippedDead = 0;
         for (var pi = 0; pi < notes.length; pi++) {
@@ -309,16 +324,21 @@ window.XHS = window.XHS || {};
           var repo = n.imagesRepo || [], imgs = n.images || [];
           for (var ii = 0; ii < Math.max(repo.length, imgs.length); ii++) {
             if (total >= MAXI) { skippedCap++; continue; }
+            var label = (pi + 1) + '-' + (ii + 1);
             if (repo[ii]) {
               try {
                 setStatus(T('打包图片 ', 'Packing image ') + (total + 1) + '…', 'loading');
                 var b64 = await X.images.repoImageB64(repo[ii]);
                 var cap = await X.images.capB64(b64, 'image/webp', 1568);
+                blocks.push({ type: 'text', text: '[图 ' + label + ']' });
                 blocks.push({ type: 'image', source: { type: 'base64', media_type: cap.media_type, data: cap.data } });
+                imgMap[label] = { repo: repo[ii], url: imgs[ii] || '' };
                 total++;
               } catch (e) { skippedDead++; }
             } else if (imgs[ii] && !X.images.isExpired(imgs[ii])) {
+              blocks.push({ type: 'text', text: '[图 ' + label + ']' });
               blocks.push({ type: 'image', source: { type: 'url', url: X.images.visionUrl(imgs[ii]) } });
+              imgMap[label] = { repo: null, url: imgs[ii] };
               total++;
             } else if (imgs[ii]) { skippedDead++; }
           }
@@ -338,9 +358,17 @@ window.XHS = window.XHS || {};
       });
       var prevIds = (existingComp && existingComp.sourceNoteIds) || [];
       var prevUrls = (existingComp && existingComp.sourceUrls) || [];
+      // 合集保留必要图片：AI 用 keep_images 指名「文字替代不了」的图，与合集已有的图合并去重
+      var seenI = {}, cImgs = [], cRepo = [];
+      var addImg = function (u, r) { var k = r || u; if (!k || seenI[k]) return; seenI[k] = 1; cImgs.push(u || ''); cRepo.push(r || null); };
+      var prevI = (existingComp && existingComp.images) || [], prevR = (existingComp && existingComp.imagesRepo) || [];
+      for (var qi = 0; qi < Math.max(prevI.length, prevR.length); qi++) addImg(prevI[qi], prevR[qi]);
+      (res.keep_images || []).forEach(function (lb) { var m = imgMap[String(lb)]; if (m) addImg(m.url, m.repo); });
       var comp = {
         id: existingComp ? existingComp.id : undefined,
         title: res.title, topic: res.topic, summary: res.summary, sections: sections,
+        images: cImgs, imagesRepo: cRepo,
+        archived: existingComp ? !!existingComp.archived : false,
         sourceNoteIds: Array.from(new Set(prevIds.concat(notes.map(function (n) { return n.id; })))),
         sourceUrls: Array.from(new Set(prevUrls.concat(notes.map(function (n) { return n.url; }).filter(Boolean)))),
         model: X.ai.getConfig().model
@@ -388,23 +416,56 @@ window.XHS = window.XHS || {};
         : '';
       return '<div class="comp__sec"><h4>' + esc(s.heading) + '</h4><div class="body">' + esc(s.content) + '</div>' + src + '</div>';
     }).join('');
-    return '<article class="card comp">' +
-      '<div class="comp__meta">' + meta + '</div>' +
-      '<h3 class="comp__title">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</h3>' +
+    var arch = viewCompArchived
+      ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + c.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
+      : '<button class="btn btn--ghost" data-cact="arch" data-id="' + c.id + '">' + T('📥 归档','📥 Archive') + '</button>';
+    return '<article class="card comp is-fold">' +
+      '<div class="comp__meta">' + meta +
+        '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
+      '</div>' +
+      '<h3 class="comp__title" data-fold>' + esc(c.title || T('未命名合集','Untitled compilation')) + '</h3>' +
       (c.summary ? '<div class="comp__summary">' + esc(c.summary) + '</div>' : '') +
-      secs +
+      '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
       '<div class="note__actions">' +
         '<button class="btn btn--primary" data-cact="reorg" data-id="' + c.id + '">' + T('🔄 重新整理','🔄 Re-organize') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="edit" data-id="' + c.id + '">' + T('✏️ 编辑','✏️ Edit') + '</button>' +
         '<button class="btn btn--ghost" data-cact="copy" data-id="' + c.id + '">' + T('复制 MD','Copy MD') + '</button>' +
+        arch +
         '<button class="btn btn--danger" data-cact="del" data-id="' + c.id + '">' + T('删除','Delete') + '</button>' +
       '</div></article>';
   }
+
+  // 合集手动编辑：标题 / 概括 / 各板块标题与正文
+  function compEditHtml(c){
+    var secs = (c.sections || []).map(function (s, i) {
+      return '<div class="comp__sec">' +
+        '<input class="comp__ed-h" data-i="' + i + '" value="' + esc(s.heading || '') + '" placeholder="' + T('板块标题','Section heading') + '">' +
+        '<textarea class="comp__ed-c" data-i="' + i + '" rows="8">' + esc(s.content || '') + '</textarea></div>';
+    }).join('');
+    return '<article class="card comp is-editing">' +
+      '<div class="comp__meta"><span class="badge">✏️ ' + T('编辑中','Editing') + '</span></div>' +
+      '<input class="comp__ed-title" value="' + esc(c.title || '') + '" placeholder="' + T('合集标题','Compilation title') + '">' +
+      '<textarea class="comp__ed-sum" rows="2" placeholder="' + T('一句话概括','One-line summary') + '">' + esc(c.summary || '') + '</textarea>' +
+      secs +
+      '<div class="note__actions">' +
+        '<button class="btn btn--primary" data-cact="save-edit" data-id="' + c.id + '">' + T('保存','Save') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="cancel-edit" data-id="' + c.id + '">' + T('取消','Cancel') + '</button>' +
+      '</div></article>';
+  }
   function renderComps(){
-    var comps = X.store.getComps();
-    els.compCount.textContent = comps.length ? '· ' + comps.length + T(' 篇',' notes') : '';
+    var all = X.store.getComps();
+    var archN = all.filter(function (c) { return c.archived; }).length;
+    if (els.compArchCount) els.compArchCount.textContent = archN;
+    if (els.compArchToggle) els.compArchToggle.classList.toggle('chip--on', viewCompArchived);
+    var comps = all.filter(function (c) { return viewCompArchived ? c.archived : !c.archived; });
+    els.compCount.textContent = comps.length
+      ? '· ' + comps.length + T(' 篇',' items') + (viewCompArchived ? T('（已归档）',' (archived)') : '') : '';
     els.compList.innerHTML = comps.length
-      ? comps.map(compCardHtml).join('')
-      : '<p class="empty">' + T('还没有合集。在收藏库勾选几篇同主题的笔记，点「✨ AI 整理成合集」。','No compilations yet. Tick a few same-topic notes in the library, then click "✨ AI consolidate".') + '</p>';
+      ? comps.map(function (c) { return c.id === editingCompId ? compEditHtml(c) : compCardHtml(c); }).join('')
+      : '<p class="empty">' + (viewCompArchived
+          ? T('没有已归档的合集。','No archived compilations.')
+          : T('还没有合集。在收藏库勾选几篇同主题的笔记，点「✨ AI 整理成合集」。','No compilations yet. Tick a few same-topic notes in the library, then click "✨ AI consolidate".')) + '</p>';
+    X.images.hydrate(els.compList);   // 合集里保留的图（仓库归档图）异步填 blob
   }
 
   // ---------- AI 设置 ----------
@@ -655,7 +716,41 @@ window.XHS = window.XHS || {};
       var comp = X.store.getComps().find(function (c) { return c.id === id; });
       if (act === 'copy') { if (comp) copyText(compToMarkdown(comp)); }
       else if (act === 'reorg') { if (comp && confirm(T('对这篇合集再整理一次？会去重合并、剔除无效信息、精炼重排。','Re-organize this compilation? It will dedupe, clean and tighten.'))) runConsolidate(comp, true); }
+      else if (act === 'edit') { editingCompId = id; renderComps(); }
+      else if (act === 'cancel-edit') { editingCompId = null; renderComps(); }
+      else if (act === 'save-edit') {
+        var card = b.closest('.comp.is-editing');
+        if (card && comp) {
+          var val = function (sel) { var el = card.querySelector(sel); return el ? el.value : null; };
+          X.store.saveComp(Object.assign({}, comp, {
+            title: String(val('.comp__ed-title') != null ? val('.comp__ed-title') : (comp.title || '')).trim(),
+            summary: String(val('.comp__ed-sum') || '').trim(),
+            sections: (comp.sections || []).map(function (s, i) {
+              var h = card.querySelector('.comp__ed-h[data-i="' + i + '"]');
+              var cc = card.querySelector('.comp__ed-c[data-i="' + i + '"]');
+              return Object.assign({}, s, { heading: h ? h.value.trim() : s.heading, content: cc ? cc.value : s.content });
+            })
+          }));
+          editingCompId = null; renderComps(); scheduleSync();
+          setStatus(T('合集已保存 ✓','Compilation saved ✓'), 'ok');
+        }
+      }
+      else if (act === 'arch' || act === 'unarch') {
+        if (comp) { X.store.saveComp(Object.assign({}, comp, { archived: act === 'arch' })); renderComps(); scheduleSync(); }
+      }
       else if (act === 'del') { if (confirm(T('删除这篇合集？','Delete this compilation?'))) { X.store.removeComp(id); renderComps(); updateSelBar(); scheduleSync(); } }
+    });
+    // 卡片折叠：点标题 / 箭头 展开收起（笔记卡与合集卡通用）
+    document.addEventListener('click', function (e) {
+      var f = e.target.closest('[data-fold]'); if (!f) return;
+      var card = f.closest('.note, .comp'); if (card) card.classList.toggle('is-fold');
+    });
+    if (els.jumpComps) els.jumpComps.addEventListener('click', function () { els.compsCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    if (els.jumpLib) els.jumpLib.addEventListener('click', function () {
+      var c = els.libList.closest('.card') || els.libList; c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    if (els.compArchToggle) els.compArchToggle.addEventListener('click', function () {
+      viewCompArchived = !viewCompArchived; editingCompId = null; renderComps();
     });
     els.saveAiBtn.addEventListener('click', onSaveAI);
     if (els.langBtn) els.langBtn.addEventListener('click', X.i18n.toggleLang);
@@ -711,7 +806,8 @@ window.XHS = window.XHS || {};
      'syncStatus','syncBtn','settingsBtn','settingsPanel','tokenInput','saveTokenBtn','settingsStatus','repoLabel',
      'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
      'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs',
-     'videoInput','fetchVideoBtn','fetchStatus','fetchTokenInput','saveFetchTokenBtn','testFetchBtn','fetchTokenStatus'
+     'videoInput','fetchVideoBtn','fetchStatus','fetchTokenInput','saveFetchTokenBtn','testFetchBtn','fetchTokenStatus',
+     'jumpComps','jumpLib','compArchToggle','compArchCount'
     ].forEach(function (id) { els[id] = document.getElementById(id); });
     X.i18n.applyStatic();
     bind();

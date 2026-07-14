@@ -47,9 +47,11 @@ window.XHS = window.XHS || {};
           required: ['heading', 'content', 'source_indices'],
           additionalProperties: false
         }
-      }
+      },
+      // 值得留在合集里的图片编号（形如 "2-3"＝第2条的第3张）；文字能表达的就别留
+      keep_images: { type: 'array', items: { type: 'string' } }
     },
-    required: ['title', 'topic', 'summary', 'sections'],
+    required: ['title', 'topic', 'summary', 'sections', 'keep_images'],
     additionalProperties: false
   };
 
@@ -62,9 +64,12 @@ window.XHS = window.XHS || {};
     '4. **直接呈现内容，不要作者视角的转述**：禁止「作者说/博主提到/UP主认为/他建议」这类表述，把事实、观点、方法直接写出来即可。\n' +
     '5. 提炼并用你自己的话重写，禁止逐条照抄原文；一律用简体中文。\n' +
     '6. 视频内容多为「语音转写」——没标点、口语化、可能有同音错别字，据上下文理解真实意思再提炼。\n' +
-    '7. 若附带图片，仔细读图里的文字与关键信息（菜单、价目、幻灯片、数据等）一并纳入。\n' +
-    '8. source_indices 用从 1 开始的编号，列出该板块主要参考了输入里的哪几条【N】（没有对应的新内容时可留空数组）。\n' +
-    '9. title 简洁有信息量；summary 用一两句话概括整篇。';
+    '7. 若附带图片，仔细读图里的文字与关键信息（菜单、价目、幻灯片、数据等）一并纳入正文。\n' +
+    '8. **保留必要图片**：图片按 [图 N-M] 编号（N=第几条内容，M=该条第几张）。把「文字替代不了、必须看图」的挑进 keep_images——\n' +
+    '   如菜单/价目表/幻灯片/图表/数据截图/步骤图/含关键信息的界面截图；纯装饰、风景、人像、重复的一律不要。\n' +
+    '   已在正文里能说清楚的信息，就不要再留图。没有值得留的就返回空数组 []。\n' +
+    '9. source_indices 用从 1 开始的编号，列出该板块主要参考了输入里的哪几条【N】（没有对应的新内容时可留空数组）。\n' +
+    '10. title 简洁有信息量；summary 用一两句话概括整篇。';
 
   function postsBlock(posts) {
     return posts.map(function (p, i) {

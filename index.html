@@ -56,7 +56,8 @@
 
   <section class="card">
     <div class="lib__head">
-      <h2>📚 <span data-i18n="myLib">我的收藏库</span> <span id="libCount" class="muted"></span></h2>
+      <h2>📚 <span data-i18n="myLib">我的收藏库</span> <span id="libCount" class="muted"></span>
+        <button id="jumpComps" class="chip" data-i18n="jumpComps">🧩 合集 ↓</button></h2>
       <div class="lib__tools">
         <button id="syncStatus" class="sync-pill" title="云同步状态（点击设置）">● 本地</button>
         <input id="search" type="search" data-i18n-ph="searchPh" placeholder="搜索标题 / 正文 / 标签">
@@ -115,6 +116,10 @@
   <section class="card" id="compsCard">
     <div class="lib__head">
       <h2>🧩 <span data-i18n="myComps">我的合集</span> <span id="compCount" class="muted"></span></h2>
+      <div class="lib__tools">
+        <button id="compArchToggle" class="chip" data-i18n-title="compArchTitle" title="切换查看已归档的合集（与图文/视频归档分开）">📥 <span data-i18n="archived">已归档</span> <span id="compArchCount">0</span></button>
+        <button id="jumpLib" class="chip" data-i18n="jumpLib">↑ 回收藏库</button>
+      </div>
     </div>
     <div id="compList" class="lib__list"></div>
   </section>

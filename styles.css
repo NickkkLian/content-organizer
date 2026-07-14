@@ -133,3 +133,21 @@ img[data-repo]:not([src]){min-height:90px;background:rgba(0,0,0,.05);border-radi
 .dot{font-size:11px;vertical-align:middle}
 .dot--on{color:var(--ok)}
 .dot--off{color:var(--muted)}
+
+/* —— 卡片折叠：默认收起，只留角标+标题+一行摘要；点标题/箭头展开 —— */
+.note__fold{margin-left:auto;border:none;background:transparent;cursor:pointer;color:var(--muted);
+  font-size:13px;line-height:1;padding:2px 6px;transition:transform .15s;flex:none}
+.note.is-fold .note__fold,.comp.is-fold .note__fold{transform:rotate(-90deg)}
+.note.is-fold .note__more,.comp.is-fold .comp__more{display:none}
+.note:not(.is-fold) .note__peek{display:none}
+.note__peek{color:var(--muted);font-size:13px;margin:4px 0 2px;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note__title,.comp__title{cursor:pointer}
+.note.is-fold,.comp.is-fold{padding-bottom:12px}
+.note.is-fold .note__actions,.comp.is-fold .note__actions{margin-top:8px}
+
+/* —— 合集手动编辑态 —— */
+.comp.is-editing input,.comp.is-editing textarea{width:100%;margin:6px 0;font-family:inherit}
+.comp__ed-title{font-size:17px;font-weight:600}
+.comp__ed-c{font:13.5px/1.7 inherit;white-space:pre-wrap;resize:vertical}
+.comp__ed-h{font-weight:600}
