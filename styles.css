@@ -11,7 +11,10 @@ body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
 .lang-btn{position:absolute;top:14px;right:16px;padding:6px 12px;font-size:13px;min-width:46px}
 .hero h1{margin:0;font-size:26px}
 .hero .sub{margin:6px 0 0;color:var(--muted);font-size:14px}
-.wrap{max-width:880px;margin:0 auto;padding:8px 16px 40px}
+/* 1280 是为「一排 4 张卡」让路的（4×~290px + 间距）；880 时 4 张只剩 ~200px 塞不下。
+   录入/设置类窄内容用 .card--narrow 收回 880，避免输入框被拉成一整条。 */
+.wrap{max-width:1280px;margin:0 auto;padding:8px 16px 40px}
+.card--narrow{max-width:880px;margin-left:auto;margin-right:auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
 
@@ -68,7 +71,19 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
 .chip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;
   padding:5px 12px;font-size:13px;cursor:pointer}
 .chip--on{background:var(--red);color:#fff;border-color:var(--red)}
-.lib__list{display:flex;flex-direction:column;gap:14px}
+/* 库与合集共用：一排 4 张；窄了退成 2 张（站长指定，不退到 1 张）。
+   minmax(0,1fr) 而非 1fr——否则长标题/长链接会把格子撑破。
+   不写 align-items:start——默认 stretch 让同排卡片等高，底边齐平；
+   试过 start（各自然高），同排高低参差像没对齐的砖墙，难看。 */
+.lib__list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+/* 折叠态卡片：按钮沉到卡片底部，卡片再高按钮也一条线对齐 */
+.lib__list>.note.is-fold,.lib__list>.comp.is-fold{display:flex;flex-direction:column}
+.lib__list>.note.is-fold .note__actions,.lib__list>.comp.is-fold .note__actions{margin-top:auto;padding-top:10px}
+@media(max-width:1080px){ .lib__list{grid-template-columns:repeat(2,minmax(0,1fr))} }
+/* 展开态（笔记/合集）与合集编辑态占满整行——正文·图集·转写挤在 ~290px 里没法读 */
+.lib__list>.note:not(.is-fold),.lib__list>.comp:not(.is-fold){grid-column:1/-1}
+/* 空状态是裸 <p class="empty">，别让它只占一格 */
+.lib__list>.empty{grid-column:1/-1}
 .empty{color:var(--muted);text-align:center;padding:24px}
 .foot{text-align:center;font-size:12px;padding:18px;color:var(--muted)}
 
@@ -78,7 +93,7 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
 .sync-pill.is-ok{color:var(--ok);border-color:#bfe9cf;background:#f1fbf5}
 .sync-pill.is-syncing{color:#9a6700;border-color:#f0e0b8;background:#fffaf0}
 .sync-pill.is-err{color:var(--err);border-color:#f3c2c2;background:#fdf0f0}
-.settings{border:1px dashed var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:#fafbfc}
+.settings{border:1px dashed var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:#fafbfc;max-width:880px}
 .settings code{background:#eef0f2;border-radius:5px;padding:1px 6px;font-size:12px}
 .settings .row{margin-top:8px}
 #settingsStatus{margin-top:8px}
@@ -110,6 +125,15 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
   .row{flex-direction:column}
   .lib__head{flex-direction:column;align-items:stretch}
   .lib__tools input{width:100%}
+  /* 手机上仍是「一排 2 篇」，格子只剩 ~146px：不缩一号的话徽标/按钮会一行一个。
+     375px 实测折叠卡高 592px → 缩号后 363px（省 39%），否则密度优势被吃掉，与初衷相反。 */
+  .lib__list>.note,.lib__list>.comp{padding:12px}
+  .lib__list .note__title,.lib__list .comp__title{font-size:15px}
+  .lib__list .badge{padding:2px 6px;font-size:10.5px}
+  .lib__list .btn{padding:7px 9px;font-size:11.5px;border-radius:8px}
+  .lib__list .note__sel{font-size:11px}
+  .lib__list .note__peek{font-size:12px}
+  .lib__list .src{font-size:10px}
 }
 
 /* 图片归档：过期占位 + 合集选择栏的图片开关 */
