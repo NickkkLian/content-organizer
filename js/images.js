@@ -94,9 +94,19 @@ window.XHS = window.XHS || {};
     var body = { message: 'xhs-organizer: archive image ' + path, content: b64 };
     var r = await fetch(contentsUrl(path), { method: 'PUT', headers: ghHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
     if (r.status === 422 || r.status === 409) {
-      // 已存在：取 sha 覆盖
-      var g = await fetch(contentsUrl(path), { headers: ghHeaders() });
-      if (g.ok) { body.sha = (await g.json()).sha; r = await fetch(contentsUrl(path), { method: 'PUT', headers: ghHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) }); }
+      /* 已存在 → 取 sha 覆盖。这个 GET 的 cache:'no-store' 是必须的，别删：
+         渲染截图时 repoImageUrl 用 Accept:vnd.github.raw 请求过同一个 URL，Chrome 把「原始 webp」缓存在
+         该 URL 下、且实测不按 Accept 分桶（GitHub 发了 Vary: Accept，但浏览器里读到的 vary 为 null）。
+         命中那份缓存时 g.json() 会拿到 webp 字节，报 "Unexpected token 'R', RIFF…"——重抓同一条视频时
+         截图全军覆没（真踩到过）。实测：光加显式 Accept 挡不住，只有 no-store 管用。 */
+      var g = await fetch(contentsUrl(path), {
+        headers: ghHeaders({ Accept: 'application/vnd.github+json' }), cache: 'no-store'
+      });
+      if (g.ok) {
+        var meta = await g.json();
+        body.sha = meta.sha;
+        r = await fetch(contentsUrl(path), { method: 'PUT', headers: ghHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+      }
     }
     if (!r.ok) throw new Error('GitHub ' + r.status);
     return path;
@@ -177,14 +187,15 @@ window.XHS = window.XHS || {};
 
   // 把 AI 选中的 base64 帧存进仓库 xhs-images/<key>/，返回 repo 路径数组（给视频笔记的 imagesRepo）
   async function saveFrames(key, b64list, onProgress){
-    var paths = [];
+    var paths = [], fails = [];
     for (var i = 0; i < (b64list || []).length; i++) {
       if (onProgress) onProgress(i + 1, b64list.length);
       var p = DIR + '/' + key + '/' + i + '.webp';
-      await putRepoFile(p, b64list[i]);   // 失败就抛，让调用方报出来（别静默吞掉）
-      paths.push(p);
+      try { await putRepoFile(p, b64list[i]); paths.push(p); }   // 单张失败不连累其余
+      catch (e) { fails.push((e && e.message) || String(e)); }
     }
-    return paths;
+    if (!paths.length && fails.length) throw new Error(fails[0]); // 全军覆没才抛，让调用方显示原因
+    return paths;                                                 // 部分失败：调用方按 M/N 显示，一眼看出少了
   }
 
   X.images = {
