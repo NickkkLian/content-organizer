@@ -83,7 +83,10 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
 @media(max-width:1080px){ .lib__list{grid-template-columns:repeat(2,minmax(0,1fr))} }
 /* 手机回单列：2 列在 375px 上每格仅 146px，徽标/按钮一行一个、折叠卡反被撑到 592px，
    比单列还费划——密度是负的。单列 ~343px 就是原本合理的样子，字号也不必缩。 */
-@media(max-width:560px){ .lib__list{grid-template-columns:1fr} }
+/* 必须 minmax(0,1fr) 不能写 1fr：1fr＝minmax(auto,1fr)，auto 下限是内容的 min-content 宽，
+   有真实卡片时列宽被撑到 668px（375px 视口）→ 整页横向溢出＝手机上「完全没适配」。
+   踩过：空库测不出来（没内容就没 min-content），必须灌真实数据再量。 */
+@media(max-width:560px){ .lib__list{grid-template-columns:minmax(0,1fr)} }
 /* 展开态（笔记/合集）与合集编辑态占满整行——正文·图集·转写挤在 ~290px 里没法读 */
 .lib__list>.note:not(.is-fold),.lib__list>.comp:not(.is-fold){grid-column:1/-1}
 /* 空状态是裸 <p class="empty">，别让它只占一格 */
@@ -125,10 +128,32 @@ textarea{display:block;margin-bottom:10px;resize:vertical}
 .comp__src{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .comp__src a{font-size:11px;color:var(--muted);background:#f1f3f5;border-radius:6px;padding:2px 8px;text-decoration:none}
 
+/* —— 手机适配（≤560px，实测 375px）——
+   本 app 此前只有下面前三条，标签栏/工具栏/hero 从没管过：375px 实测标签各 56px 全断成两行、
+   工具栏 233px 排成 1+1+1+2+1+2+2 七行乱堆、要滚 436px 才见「我的收藏库」。 */
 @media(max-width:560px){
   .row{flex-direction:column}
   .lib__head{flex-direction:column;align-items:stretch}
   .lib__tools input{width:100%}
+
+  /* hero 瘦身：小屏上没必要占掉半屏 */
+  .hero{padding:18px 16px 8px}
+  .hero h1{font-size:20px}
+  .hero .sub{font-size:11.5px;line-height:1.45}
+  .lang-btn{top:10px;right:10px;padding:4px 9px;font-size:12px;min-width:40px}
+
+  /* 标签栏改横向滚动、绝不换行（与 Business-Lab / Album-Journal 同套路） */
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{white-space:nowrap;flex:none}
+
+  /* 工具栏与卡片收一号，把七行乱堆压下去 */
+  .wrap{padding:6px 12px 32px}
+  .card{padding:14px}
+  .lib__tools{gap:6px}
+  .lib__tools .btn,.lib__tools .sync-pill{padding:8px 10px;font-size:12.5px}
+  .chips{gap:6px;margin-bottom:10px}
+  .chip{padding:4px 10px;font-size:12px}
 }
 
 /* 图片归档：过期占位 + 合集选择栏的图片开关 */
