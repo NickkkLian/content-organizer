@@ -781,10 +781,22 @@ window.XHS = window.XHS || {};
         var idx = await X.ai.judgeFrames(frames);
         kept = idx.map(function (i) { return frames[i]; });
       }
-      var imagesRepo = [];
-      if (kept.length && X.images.ready()) {
-        setStatus(T('存截图…','Saving screenshots…'), 'loading');
-        try { imagesRepo = await X.images.saveFrames(note.key || ('v' + Date.now()), kept); } catch (e) {}
+      // 存截图：别吞异常——失败要让人看见，且状态只报「真存下的张数」，不报「AI 挑中的张数」
+      var imagesRepo = [], imgErr = '';
+      if (kept.length) {
+        if (!X.images.ready()) {
+          imgErr = T('未连接 GitHub（⚙️ 设置里填令牌）→ 截图没法归档，本次未保存图片',
+                     'GitHub not connected (set the token in ⚙️) → screenshots were not archived');
+        } else {
+          setStatus(T('存截图 0/' + kept.length + '…','Saving screenshots 0/' + kept.length + '…'), 'loading');
+          try {
+            imagesRepo = await X.images.saveFrames(note.key || ('v' + Date.now()), kept, function (i, n) {
+              setStatus(T('存截图 ' + i + '/' + n + '…','Saving screenshots ' + i + '/' + n + '…'), 'loading');
+            });
+          } catch (e) {
+            imgErr = T('截图归档失败：','Saving screenshots failed: ') + (e && e.message ? e.message : e);
+          }
+        }
       }
       note.platform = note.platform || (/bilibili\.com|\/video\/BV/i.test(note.url || '') ? 'bili' : 'xhs');
       note.isVideo = true;
@@ -792,8 +804,9 @@ window.XHS = window.XHS || {};
       note.images = imagesRepo.map(function () { return note.cover || ''; });
       delete note.key;
       showResult(note);
-      setStatus(T('抓取完成 — 转写 ' + ((note.transcript || '').length) + ' 字，有用截图 ' + kept.length + ' 张。点「★ 收藏」入库。',
-        'Done — ' + ((note.transcript || '').length) + ' transcript chars, ' + kept.length + ' useful screenshots. Click Save.'), 'ok');
+      var doneMsg = T('抓取完成 — 转写 ' + ((note.transcript || '').length) + ' 字，截图 ' + imagesRepo.length + '/' + kept.length + ' 张已存。点「★ 收藏」入库。',
+        'Done — ' + ((note.transcript || '').length) + ' transcript chars, ' + imagesRepo.length + '/' + kept.length + ' screenshots saved. Click Save.');
+      setStatus(imgErr ? (doneMsg + ' ⚠️ ' + imgErr) : doneMsg, imgErr ? 'err' : 'ok');
       els.videoInput.value = '';
     } catch (e) {
       setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');

@@ -176,11 +176,12 @@ window.XHS = window.XHS || {};
   }
 
   // 把 AI 选中的 base64 帧存进仓库 xhs-images/<key>/，返回 repo 路径数组（给视频笔记的 imagesRepo）
-  async function saveFrames(key, b64list){
+  async function saveFrames(key, b64list, onProgress){
     var paths = [];
     for (var i = 0; i < (b64list || []).length; i++) {
+      if (onProgress) onProgress(i + 1, b64list.length);
       var p = DIR + '/' + key + '/' + i + '.webp';
-      await putRepoFile(p, b64list[i]);
+      await putRepoFile(p, b64list[i]);   // 失败就抛，让调用方报出来（别静默吞掉）
       paths.push(p);
     }
     return paths;
