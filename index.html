@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content Organizer</title>
+<meta name="description" content="One library for Xiaohongshu posts/videos and Bilibili videos, with cross-platform AI consolidation. Static front end, private-repo sync, tokens never leave the browser.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <button id="langBtn" class="btn btn--ghost lang-btn" title="中文 / EN">中文</button>
+  <h1 data-i18n="h1">📚 Content Organizer</h1>
+  <p class="sub" data-i18n="sub">Xiaohongshu (posts/videos) + Bilibili (videos) · one library · cross-platform AI consolidation</p>
+</header>
+
+<main class="wrap">
+  <section class="card card--narrow">
+    <div class="tabs">
+      <button class="tab tab--on" data-mode="link" data-i18n="tabLink">🔗 By link</button>
+      <button class="tab" data-mode="manual" data-i18n="tabManual">✍️ Manual paste</button>
+      <button class="tab" data-mode="video" data-i18n="tabVideo">🎬 Fetch video</button>
+    </div>
+
+    <div id="mode-link">
+      <div class="row">
+        <input id="urlInput" type="url" data-i18n-ph="urlPh"
+               placeholder="Paste an XHS link, e.g. http://xhslink.com/xxx or https://www.xiaohongshu.com/explore/...">
+        <button id="fetchBtn" class="btn btn--primary" data-i18n="organize">Organize</button>
+      </div>
+      <p class="hint" data-i18n="linkHint">Front-end-only fetch via public proxies (Jina Reader / AllOrigins), best-effort; if the site blocks it, switch to "Manual paste".</p>
+    </div>
+
+    <div id="mode-manual" style="display:none">
+      <textarea id="manualText" rows="5" data-i18n-ph="manualTextPh"
+        placeholder="Paste the whole &quot;Share → Copy link / Copy text&quot; content here (title, body, #topics# all fine)"></textarea>
+      <textarea id="manualImages" rows="2" data-i18n-ph="manualImgPh"
+        placeholder="(Optional) direct image links, separated by spaces or commas"></textarea>
+      <button id="parseManualBtn" class="btn btn--primary" data-i18n="organize">Organize</button>
+    </div>
+
+    <div id="mode-video" style="display:none">
+      <div class="row">
+        <input id="videoInput" type="url" data-i18n-ph="videoPh"
+               placeholder="Paste an XHS / Bilibili video link (share text is fine too)">
+        <button id="fetchVideoBtn" class="btn btn--primary" data-i18n="fetchVideo">🎬 Fetch</button>
+      </div>
+      <p class="hint"><span id="fetchStatus" class="dot dot--off">●</span>
+        <span data-i18n="videoHint">Needs the local fetch service running. XHS videos need a link with xsec_token. Transcription happens on your machine; the AI decides which screenshots to keep.</span></p>
+    </div>
+
+    <div id="status" class="status" style="display:none"></div>
+  </section>
+
+  <section id="result" class="result card--narrow" style="display:none"></section>
+
+  <section class="card">
+    <div class="lib__head">
+      <h2>📚 <span data-i18n="myLib">My library</span> <span id="libCount" class="muted"></span>
+        <button id="jumpComps" class="chip" data-i18n="jumpComps">🧩 Compilations ↓</button></h2>
+      <div class="lib__tools">
+        <button id="syncStatus" class="sync-pill" data-i18n-title="syncPillTitle" title="Cloud sync status (click to set up)">● Local</button>
+        <input id="search" type="search" data-i18n-ph="searchPh" placeholder="Search title / body / tags">
+        <button id="syncBtn" class="btn btn--ghost" data-i18n="syncBtn">🔄 Sync</button>
+        <button id="archToggle" class="chip" data-i18n-title="archTitle" title="Toggle archived view">📥 <span data-i18n="archived">Archived</span> <span id="archCount">0</span></button>
+        <button id="fixAllBtn" class="btn btn--ghost" data-i18n-title="fixAllTitle" title="Re-fetch and archive every image permanently into your private repo (XHS links expire with 403)" data-i18n="fixAll">🔧 Fix all images</button>
+        <button aria-label="Settings" data-i18n-aria="settingsTitle" id="settingsBtn" class="btn btn--ghost">⚙️</button>
+        <button id="exportMd" class="btn btn--ghost" data-i18n="exportMd">Export MD</button>
+        <button id="exportJson" class="btn btn--ghost" data-i18n="exportJson">Export JSON</button>
+        <button id="clearAll" class="btn btn--danger" data-i18n="clearAll">Clear</button>
+      </div>
+    </div>
+
+    <div id="settingsPanel" class="settings" style="display:none">
+      <p class="hint" data-i18n-html="syncHint">Your library syncs to the private repo <code id="repoLabel"></code>, shared across devices. The token is stored only in this browser and <strong>never written to any repo</strong>.</p>
+      <div class="row">
+        <input id="tokenInput" type="password" autocomplete="off" data-i18n-ph="tokenPh"
+               placeholder="GitHub token (fine-grained PAT with read/write on the data repo's Contents)">
+        <button id="saveTokenBtn" class="btn btn--primary" data-i18n="saveConnect">Save & connect</button>
+      </div>
+      <div id="settingsStatus" class="hint"></div>
+
+      <hr class="settings__hr">
+      <p class="hint" data-i18n-html="aiHint">"✨ AI consolidate" uses the Claude API to merge several notes into one sectioned long-form piece. The API key is stored only in this browser and <strong>never written to any repo</strong>; a run costs a few cents. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">Get a key ↗</a></p>
+      <div class="row">
+        <input id="aiKeyInput" type="password" autocomplete="off" data-i18n-ph="aiKeyPh" placeholder="Anthropic API key (sk-ant-…)">
+        <select id="aiModel" class="selbar__sel"></select>
+        <button id="saveAiBtn" class="btn btn--primary" data-i18n="save">Save</button>
+      </div>
+      <div id="aiStatus" class="hint"></div>
+
+      <hr class="settings__hr">
+      <p class="hint" data-i18n="fetchTokenHint">Token for the local fetch service (shown/copied by the toggle app). Stored only in this browser.</p>
+      <div class="row">
+        <input id="fetchTokenInput" type="password" autocomplete="off" placeholder="xhs-fetch token">
+        <button id="saveFetchTokenBtn" class="btn btn--primary" data-i18n="save">Save</button>
+        <button id="testFetchBtn" class="btn" data-i18n="testConn">Test connection</button>
+      </div>
+      <div id="fetchTokenStatus" class="hint"></div>
+    </div>
+
+    <div id="platFilter" class="chips chips--plat"></div>
+    <div id="catFilter" class="chips"></div>
+
+    <div id="selBar" class="selbar" style="display:none">
+      <span id="selCount" class="muted"></span>
+      <button id="consolidateBtn" class="btn btn--primary" data-i18n="consolidate">✨ AI consolidate</button>
+      <label class="chip selbar__imgs" data-i18n-title="withImgsTitle" title="Send ALL images of the selected notes to the AI (up to 100; menus/prices/steps inside images get consolidated; more images = slower & costlier)"><input type="checkbox" id="includeImgs" checked> 🖼 <span data-i18n="withImgs">Analyze images too</span></label>
+      <select id="addToComp" class="selbar__sel"><option value="" data-i18n="addToCompOpt">Add to an existing compilation…</option></select>
+      <button id="clearSel" class="btn btn--ghost" data-i18n="clearSel">Clear selection</button>
+    </div>
+
+    <div id="libList" class="lib__list"></div>
+  </section>
+
+  <section class="card" id="compsCard">
+    <div class="lib__head">
+      <h2>🧩 <span data-i18n="myComps">My compilations</span> <span id="compCount" class="muted"></span></h2>
+      <div class="lib__tools">
+        <button id="compArchToggle" class="chip" data-i18n-title="compArchTitle" title="Toggle archived compilations (separate from the note archive)">📥 <span data-i18n="archived">Archived</span> <span id="compArchCount">0</span></button>
+        <button id="jumpLib" class="chip" data-i18n="jumpLib">↑ Back to library</button>
+      </div>
+    </div>
+    <div id="compList" class="lib__list"></div>
+  </section>
+</main>
+
+<footer class="foot" data-i18n="foot">Local cache + private-repo cloud sync + AI consolidation · tokens stay in this browser</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/classify.js"></script>
+<script src="js/parse.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/images.js"></script>
+<script src="js/fetch.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
