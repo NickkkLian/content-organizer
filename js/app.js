@@ -183,7 +183,10 @@ window.XHS = window.XHS || {};
     { platform: 'bili', isVideo: true, duration: 612, title: 'Mechanical keyboard buying guide: switches, layouts and budgets',
       author: 'sample', tags: ['数码', '键盘', '测评'], category: '数码', categoryEmoji: '📺', tname: '数码',
       body: 'A 10-minute explainer on what actually matters when buying your first mechanical keyboard.',
-      transcript: 'Three things decide whether you like a keyboard: the switch type, the layout, and the case material. Linear switches are smooth, tactile ones have a bump, clicky ones are loud — try them in a shop before ordering. For layouts, 75 percent keeps the function row and arrows in a compact footprint, which is the sweet spot for most people. Under a hundred dollars, look for hot-swap sockets so you can change switches later; above that, gasket mounting and a weighted case make the biggest difference in feel and sound.' }
+      /* Deliberately written at realistic length — a real fetch produces a few thousand to
+         twenty thousand characters, and a three-line stub does not show what the pipeline is for.
+         Entirely invented: this is not a transcript of any real video. */
+      transcript: 'Okay so the question I get most often is which mechanical keyboard should I buy first, and honestly the answer is that three things decide whether you end up liking it: the switch type, the layout, and the case. Everything else is decoration. Let me go through them one at a time.\n\nStarting with switches. There are three families. Linear switches move straight down with no bump, they feel smooth, and they are what most people who type fast end up preferring. Tactile switches have a small bump partway through the press so you can feel the moment it registers, which some people find helps accuracy. And clicky switches add a click bar so the sound is deliberate and loud — those are great fun and terrible in an office. If you can, go to a shop and press them, because reading about a bump is nothing like feeling one. If you cannot, buy a switch tester for a few dollars before committing to a whole board.\n\nSecond, layout. Full size boards have a number pad, which sounds useful until you notice it pushes your mouse hand out by about fifteen centimetres all day. Tenkeyless drops the number pad. Seventy five percent keeps the function row and the arrow keys but squeezes everything together, and for most people that is the sweet spot — you keep the keys you actually use and get your desk back. Sixty percent drops the arrows entirely and puts them on a layer, which is fine if you are willing to build the muscle memory and annoying if you are not. Be honest with yourself about the number pad. If you do accounting, keep it. If you have used it twice this year, let it go.\n\nThird, the case, and this is the part people skip. The case is what you are actually hearing when you type. A hollow plastic case with the board screwed straight into it sounds thin and hollow. A gasket mounted board, where the plate sits on soft strips instead of being bolted down, sounds fuller and feels softer to bottom out on. Add weight — aluminium or a brass plate inside — and the whole thing gets quieter and more solid. This is the single biggest difference between a forty dollar board and a two hundred dollar board, more than the switches.\n\nNow budgets. Under a hundred, the one feature worth insisting on is hot swap sockets, which let you pull switches out with a tool and try different ones without soldering. That single feature turns a cheap board into something you can keep experimenting with. Between one hundred and two hundred, you start getting gasket mounting and better sound dampening. Above that you are mostly paying for materials and finish, which is a real thing to enjoy but not a performance upgrade.\n\nOne last thing about keycaps. PBT plastic resists the shine that ABS develops after a year of use, and the profile — the shape and height of each row — changes how your fingers travel more than people expect. Cherry profile is low and sculpted and a safe default. If your board comes with cheap keycaps, swapping them is the cheapest upgrade that actually changes the experience.\n\nSo to summarise: pick the switch by feel not by spec sheet, pick seventy five percent unless you have a reason not to, make sure it is hot swap, and spend whatever is left on the case rather than the extras.' }
   ];
   function seedSamples(){
     SAMPLES.forEach(function (s) {
@@ -802,14 +805,25 @@ window.XHS = window.XHS || {};
     if (!els.fetchStatus) return;
     var ok = await X.fetchsvc.health();
     els.fetchStatus.className = 'dot ' + (ok ? 'dot--on' : 'dot--off');
-    els.fetchStatus.title = ok ? T('本地服务在线','Local service online') : T('本地服务未启动','Local service offline');
+    /* Offline should not read as "a dependency is missing". Running this step locally is a
+       design decision: yt-dlp needs the browser's logged-in session, and transcription and
+       frame extraction happen on the same machine, so neither the session nor the media
+       ever leaves it. Saying so is the difference between "by design" and "unfinished". */
+    els.fetchStatus.title = ok
+      ? T('本地服务在线','Local service online')
+      : T('本地服务未启动。转写和抽帧刻意放在你自己的电脑上跑——登录态和媒体文件都不出本机。启动方法见仓库 local/README.md',
+          'Local service not running. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it. See local/README.md to start it.');
   }
   async function onFetchVideo(){
     var url = (els.videoInput.value || '').trim();
     if (!url) { setStatus(T('粘一条视频链接','Paste a video link'), 'err'); return; }
     if (!(await X.fetchsvc.health())) {
       refreshFetchStatus();
-      setStatus(T('连不上本地抓取服务 — 先启动菜单栏小程序，并在 ⚙️ 里填口令','Local fetch service unreachable — start the toggle app and set the token in ⚙️'), 'err');
+      /* The line a first-time visitor is most likely to hit. Phrased as "go install something"
+         it reads as unfinished; it should say why this step is local at all, and offer a way
+         to see the output without installing anything. */
+      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在 ⚙️ 里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
+                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token into ⚙️. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
       return;
     }
     els.fetchVideoBtn.disabled = true;
