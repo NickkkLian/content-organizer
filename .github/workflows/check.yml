@@ -1,0 +1,41 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  merge-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # the merge rules the two devices depend on, and the same file the browser loads
+      - run: node check.mjs
+
+  break:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # each rule broken in a copy; green only when the case written for that rule is the one that fails
+      - run: node check.mjs --break
+
+  no-build-step:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # the page is served as it is committed: every script it loads must be a file in the repository
+      - run: |
+          missing=0
+          for src in $(grep -o 'src="[^"]*\.js"' index.html | cut -d'"' -f2); do
+            case "$src" in http*) echo "external script: $src"; missing=1;; esac
+            if [ ! -f "$src" ]; then echo "missing: $src"; missing=1; fi
+          done
+          [ "$missing" = 0 ] && echo "every script tag points at a file in the repository"
+          exit $missing

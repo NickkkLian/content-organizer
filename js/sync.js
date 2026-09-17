@@ -54,18 +54,6 @@ window.XHS = window.XHS || {};
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return new TextDecoder().decode(bytes);
   }
-  function emptyDoc(){ return { version: 1, updatedAt: null, notes: [], deleted: [], compilations: [], deletedComps: [] }; }
-  function normalizeDoc(d){
-    d = d || {};
-    return {
-      version: d.version || 1,
-      updatedAt: d.updatedAt || null,
-      notes: Array.isArray(d.notes) ? d.notes : [],
-      deleted: Array.isArray(d.deleted) ? d.deleted : [],
-      compilations: Array.isArray(d.compilations) ? d.compilations : [],
-      deletedComps: Array.isArray(d.deletedComps) ? d.deletedComps : []
-    };
-  }
   function contentsUrl(cfg, file){
     return 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + (file || DATA_PATH);
   }
@@ -101,23 +89,10 @@ window.XHS = window.XHS || {};
     return r.json();
   }
 
-  // ---------- first-run bootstrap: merge the two legacy libraries into one doc (tagging platform) ----------
-  function combineLegacy(xhsDoc, biliDoc){
-    function tag(doc, p){
-      var d = normalizeDoc(doc);
-      d.notes.forEach(function (n) { if (n && !n.platform) n.platform = p; });
-      d.compilations.forEach(function (c) { if (c && !c.platform) c.platform = p; });
-      return d;
-    }
-    var x = tag(xhsDoc, 'xhs'), b = tag(biliDoc, 'bili');
-    return {
-      version: 1, updatedAt: null,
-      notes: x.notes.concat(b.notes),
-      deleted: x.deleted.concat(b.deleted),
-      compilations: x.compilations.concat(b.compilations),
-      deletedComps: x.deletedComps.concat(b.deletedComps)
-    };
-  }
+  // ---------- the merge rules live in js/merge.js: DOM-free, and the same file the tests in check.mjs run ----------
+  var M = (window.XHS && window.XHS.merge) || (typeof require === 'function' ? require('./merge.js') : null);
+  var emptyDoc = M.emptyDoc, normalizeDoc = M.normalizeDoc, mergeDocs = M.mergeDocs, sig = M.sig, combineLegacy = M.combineLegacy;
+
   async function bootstrapFromLegacy(cfg){
     var docs = [];
     for (var i = 0; i < LEGACY.length; i++) {
@@ -125,40 +100,6 @@ window.XHS = window.XHS || {};
       docs.push(f.doc);
     }
     return combineLegacy(docs[0], docs[1]);
-  }
-
-  // ---------- merge (safe under concurrent devices: union + tombstones + latest wins; platform travels with the object) ----------
-  function mergeList(aItems, bItems, aDel, bDel){
-    var deleted = Array.from(new Set((aDel || []).concat(bDel || [])));
-    var delSet = {}; deleted.forEach(function (id) { delSet[id] = 1; });
-    var byId = {};
-    (aItems || []).concat(bItems || []).forEach(function (n) {
-      if (!n || !n.id || delSet[n.id]) return;
-      var ex = byId[n.id];
-      if (!ex || String(n.savedAt || '') >= String(ex.savedAt || '')) byId[n.id] = n;
-    });
-    var items = Object.keys(byId).map(function (k) { return byId[k]; })
-      .sort(function (x, y) { return String(y.savedAt || '').localeCompare(String(x.savedAt || '')); });
-    return { items: items, deleted: deleted };
-  }
-  function mergeDocs(a, b){
-    a = normalizeDoc(a); b = normalizeDoc(b);
-    var n = mergeList(a.notes, b.notes, a.deleted, b.deleted);
-    var c = mergeList(a.compilations, b.compilations, a.deletedComps, b.deletedComps);
-    return {
-      version: 1, updatedAt: new Date().toISOString(),
-      notes: n.items, deleted: n.deleted,
-      compilations: c.items, deletedComps: c.deleted
-    };
-  }
-  function sig(doc){
-    function s(list){
-      return (list || []).slice()
-        .sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); })
-        .map(function (x) { return JSON.stringify(x); }).join('|');
-    }
-    return s(doc.notes) + '##' + (doc.deleted || []).slice().sort().join(',') +
-      '@@' + s(doc.compilations) + '##' + (doc.deletedComps || []).slice().sort().join(',');
   }
 
   function localDoc(){
