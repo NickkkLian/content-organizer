@@ -25,13 +25,30 @@ window.XHS = window.XHS || {};
   ];
   var OTHER = { key:'other', name:'其他', emoji:'🗂️' };
 
-  // English display names (display layer only; the stored note.category stays the Chinese name)
+  /* English display names (display layer only; the stored note.category stays the Chinese name).
+
+     Two sets of names end up here. The first is this file's own categories, above. The second is Bilibili's
+     partition names, which arrive as a video's `tname` straight from the platform and are shown as the category of
+     any saved note that has no category of its own — notes from before saving started classifying, which is most of
+     a library that has been in use for a while. They are the platform's published partitions, not a guess about any
+     particular library; a name that is not here is shown exactly as it arrived, so a partition added later reads as
+     itself rather than as a blank. */
   var CAT_EN = {
     '美食':'Food', '旅行':'Travel', '穿搭':'Fashion', '美妆':'Beauty', '护肤':'Skincare',
     '数码':'Tech', '家居':'Home', '健身':'Fitness', '学习':'Study', '职场':'Career',
     '母婴':'Parenting', '宠物':'Pets', '摄影':'Photography', '读书观影':'Books & Film',
     '情感':'Emotions', '理财':'Finance', '其他':'Other',
-    '视频':'Video', 'B站视频':'Bilibili video', 'B站':'Bilibili'
+    '视频':'Video', 'B站视频':'Bilibili video', 'B站':'Bilibili',
+    // Bilibili partitions
+    '动画':'Animation', '番剧':'Anime', '国创':'Chinese anime', '音乐':'Music', '舞蹈':'Dance',
+    '游戏':'Gaming', '知识':'Knowledge', '科技':'Technology', '运动':'Sports', '汽车':'Cars',
+    '生活':'Life', '动物圈':'Animals', '鬼畜':'Remixes', '时尚':'Fashion', '资讯':'News',
+    '娱乐':'Entertainment', '影视':'Film & TV', '纪录片':'Documentary', '电影':'Film', '电视剧':'TV series',
+    '单机游戏':'Single-player games', '手机游戏':'Mobile games', '网络游戏':'Online games', '电子竞技':'Esports',
+    '美妆护肤':'Beauty & skincare', '搞笑':'Comedy', '亲子':'Family', '出行':'Travel', '三农':'Rural life',
+    '家居房产':'Home & property', '手工':'Crafts', '绘画':'Drawing', '日常':'Daily life', '演讲·公开课':'Talks & lectures',
+    '野生技能协会':'Skills', '数码前沿':'Gadgets', '软件应用':'Software', '计算机技术':'Computing',
+    '校园学习':'Campus', '职业职场':'Work', '设计·创意':'Design', '人文历史':'History & culture'
   };
   function catLabel(name){
     var en = CAT_EN[name];
