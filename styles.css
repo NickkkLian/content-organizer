@@ -197,6 +197,66 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .comp__ed-h{font-weight:var(--weight-semibold)}
 .comp__ed-c{font:var(--weight-regular) var(--text-sm)/var(--leading-relaxed) var(--font-sans);white-space:pre-wrap;resize:vertical}
 
+/* ===== the reading view: the compilation as a piece you read =====
+   A modal dialog over the library, scrolling in its own box: the bar and the two side columns are sticky against
+   that box, not against the page. --read-bar-h is the bar's height measured in the browser (63px at 1280 — the two
+   buttons, --space-3 of padding either side and the hairline) rounded up to 4rem, and every sticky offset and
+   scroll-margin is derived from it, so a taller bar moves them all together.
+   The numbers beside the sections point into the source list; js/refs.js decides what they are, and they are in the
+   markup rather than list counters: a li laid out as a grid is no longer display:list-item, so counter(list-item)
+   stops incrementing and every row renders 0. */
+.read{--read-bar-h:4rem;
+  width:min(100% - 2 * var(--gutter),76rem);max-width:none;height:min(100% - 2 * var(--space-6),58rem);max-height:none;
+  padding:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);color:var(--text);
+  box-shadow:var(--shadow-2);overflow:auto;overscroll-behavior:contain}
+/* ::backdrop only inherits the page's custom properties in newer browsers; the literal is the same overlay, for older ones */
+.read::backdrop{background:var(--overlay,rgb(23 16 30 / 0.55))}
+.read__bar{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between;
+  padding:var(--space-3) var(--space-4);background:var(--surface-raised);border-bottom:1px solid var(--hairline)}
+.read__meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);color:var(--text-3);
+  font:var(--weight-regular) var(--text-2xs)/1.4 var(--font-mono);font-variant-numeric:tabular-nums}
+.read__badge{border:1px solid var(--hairline);border-radius:var(--radius-full);padding:1px var(--space-2)}
+.read__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-6);padding:var(--space-6) var(--space-5) var(--space-12)}
+@media (min-width:900px){
+  /* the middle column is the measure, so the piece is centred in the dialog rather than stretched across it */
+  .read__grid{grid-template-columns:11rem minmax(0,var(--measure)) 13rem;gap:var(--space-8);align-items:start;
+    justify-content:center;padding:var(--space-8) var(--space-6) var(--space-12)}
+  .read__toc,.read__sources{position:sticky;top:calc(var(--read-bar-h) + var(--space-5))}
+}
+.read__aside-h{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);
+  text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-3)}
+.read__toc,.read__sources{min-width:0}
+.read__toc ol,.read__sources ol{margin:0;padding:0;list-style:none;display:grid;gap:var(--space-2)}
+.read__toc li,.read__sources li{display:grid;grid-template-columns:1.5rem minmax(0,1fr);align-items:baseline;
+  font-size:var(--text-xs);line-height:var(--leading-relaxed);overflow-wrap:break-word}
+.read__n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--text-2xs);color:var(--text-3)}
+.read__toc a{color:var(--text-2);text-decoration:none}
+.read__toc a:hover{text-decoration:underline}
+.read__toc a[aria-current]{color:var(--text);font-weight:var(--weight-medium)}
+.read__toc li a[aria-current]::after{content:"";display:inline-block;width:5px;height:5px;margin-left:var(--space-2);
+  border-radius:50%;background:var(--point);vertical-align:middle}
+.read__sources li.is-uncited{color:var(--text-3)}
+.read__tag{grid-column:2;justify-self:start;margin-top:var(--space-1);padding:0 var(--space-2);
+  border:1px solid var(--hairline);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:var(--text-2xs)}
+.read__body{min-width:0;max-width:var(--measure)}
+.read__body h1{font-size:var(--text-3xl);font-variation-settings:"opsz" var(--opsz-display);letter-spacing:var(--tracking-display)}
+.read__lede{margin-top:var(--space-4);color:var(--text-2);font-size:var(--text-lg);line-height:var(--leading-lede)}
+.read__sec{margin-top:var(--space-8);scroll-margin-top:calc(var(--read-bar-h) + var(--space-4))}
+.read__sec h2{font-size:var(--text-xl);margin-bottom:var(--space-3)}
+.read__text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:var(--leading-relaxed)}
+.read__cites{margin-top:var(--space-3);font-family:var(--font-mono);font-size:var(--text-2xs);color:var(--text-3)}
+.read__cites a{color:var(--accent-text);text-decoration:none;padding:0 .1em}
+.read__cites a:hover{text-decoration:underline}
+.read__body .gallery{margin-top:var(--space-8)}
+/* on a phone the dialog is the whole screen and the contents become a strip above the piece */
+@media (max-width:899px){
+  /* the bar's three items no longer fit on one line and it wraps to two; measured at 112px on a 375px viewport */
+  .read{--read-bar-h:7rem;width:100%;height:100%;border:0;border-radius:0}
+  .read__toc ol{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;overscroll-behavior-x:contain;
+    gap:var(--space-4);padding-bottom:var(--space-2)}
+  .read__toc li{grid-template-columns:auto auto;gap:var(--space-1);white-space:nowrap}
+}
+
 /* ===== states ===== */
 .status{margin-top:var(--space-3);padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-left:3px solid var(--info);
   background:var(--info-tint);color:var(--info-tint-text);border-radius:var(--radius-sm);font-size:var(--text-sm);max-width:var(--measure)}

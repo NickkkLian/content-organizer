@@ -14,6 +14,8 @@ window.XHS = window.XHS || {};
   var viewArchived = false;      // archive view: consolidated source notes land here automatically
   var viewCompArchived = false;  // compilation archive view (separate from the note archive)
   var editingCompId = null;      // compilation currently being edited by hand
+  var readingCompId = null;      // compilation open in the reading view
+  var readOpener = null;         // the button that opened it, to give the keyboard back to on close
 
   /* Runtime class names are spelled out in full rather than assembled from a prefix and a variable — a name built as
      'status--' + type is invisible to check-css.mjs, and the rules for all three states were once lost that way. */
@@ -466,7 +468,8 @@ window.XHS = window.XHS || {};
       (c.summary ? '<div class="comp__summary">' + esc(c.summary) + '</div>' : '') +
       '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
       '<div class="note__actions">' +
-        '<button class="btn btn--primary" data-cact="reorg" data-id="' + c.id + '">' + T('🔄 重新整理','🔄 Re-organize') + '</button>' +
+        '<button class="btn btn--primary" data-cact="read" data-id="' + c.id + '">' + T('阅读','Read') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="reorg" data-id="' + c.id + '">' + T('🔄 重新整理','🔄 Re-organize') + '</button>' +
         '<button class="btn btn--ghost" data-cact="edit" data-id="' + c.id + '">' + T('✏️ 编辑','✏️ Edit') + '</button>' +
         '<button class="btn btn--ghost" data-cact="copy" data-id="' + c.id + '">' + T('复制 MD','Copy MD') + '</button>' +
         arch +
@@ -491,6 +494,106 @@ window.XHS = window.XHS || {};
         '<button class="btn btn--ghost" data-cact="cancel-edit" data-id="' + c.id + '">' + T('取消','Cancel') + '</button>' +
       '</div></article>';
   }
+  /* ---------- Reading view ----------
+     A compilation is a piece of writing, and the card grid is a filing cabinet: four folded cards to a row, actions
+     under each. So reading happens in its own surface — a modal dialog over the library, with the sections in reading
+     order down the middle, a table of contents beside them, and one numbered list of everything the piece was made
+     from. js/refs.js builds that list: the numbers under each section point into it. */
+  function compById(id){
+    return X.store.getComps().find(function (c) { return c.id === id; }) || null;
+  }
+  function reduceMotion(){
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function readCitesHtml(refs){
+    if (!refs.length) return '';
+    return '<p class="read__cites">' + T('来源','From') + ' ' + refs.map(function (n) {
+      return '<a href="#read-src-' + n + '" data-read="src" data-n="' + n + '">[' + n + ']</a>';
+    }).join(' ') + '</p>';
+  }
+
+  function compReadHtml(c){
+    var b = X.refs.bind(c);
+    var secs = b.sections.map(function (s, i) {
+      return '<section class="read__sec" id="read-sec-' + (i + 1) + '">' +
+        '<h2 tabindex="-1">' + esc(s.heading || T('无标题板块','Untitled section')) + '</h2>' +
+        '<div class="read__text">' + esc(s.content) + '</div>' +
+        readCitesHtml(s.refs) + '</section>';
+    }).join('');
+    var toc = b.sections.map(function (s, i) {
+      return '<li><span class="read__n">' + (i + 1) + '</span>' +
+        '<a href="#read-sec-' + (i + 1) + '" data-read="jump" data-i="' + (i + 1) + '">' +
+        esc(s.heading || T('无标题板块','Untitled section')) + '</a></li>';
+    }).join('');
+    var sources = b.sources.map(function (x) {
+      var text = esc(X.refs.label(x));
+      return '<li id="read-src-' + x.n + '"' + (x.cited ? '' : ' class="is-uncited"') + '>' +
+        '<span class="read__n">' + x.n + '</span>' +
+        (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + text + ' ↗</a>' : '<span>' + text + '</span>') +
+        (x.cited ? '' : '<span class="read__tag" title="' +
+          T('这篇被并进了正文，但没有哪一节单独标注它。','Folded into the piece, but no section cites it on its own.') + '">' +
+          T('未单独引用','uncited') + '</span>') + '</li>';
+    }).join('');
+    var model = c.model ? '<span class="read__badge">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '';
+    var when = c.savedAt ? '<span>' + esc(String(c.savedAt).slice(0, 10)) + '</span>' : '';
+    return '<div class="read__bar">' +
+        '<button class="btn btn--ghost" data-read="close">' + T('← 回收藏库','← Back to the library') + '</button>' +
+        '<span class="read__meta">' + model + when +
+          '<span>' + b.sources.length + T(' 篇来源',' sources') + '</span></span>' +
+        '<button class="btn btn--ghost" data-read="copy">' + T('复制 MD','Copy MD') + '</button>' +
+      '</div>' +
+      '<div class="read__grid">' +
+        (toc ? '<nav class="read__toc" aria-label="' + T('板块','Sections') + '">' +
+          '<p class="read__aside-h">' + T('板块','Sections') + '</p><ol>' + toc + '</ol></nav>' : '') +
+        '<article class="read__body">' +
+          '<h1 id="read-title">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</h1>' +
+          (c.summary ? '<p class="read__lede">' + esc(c.summary) + '</p>' : '') +
+          (secs || '<p class="empty">' + T('这篇合集还没有板块。','This compilation has no sections yet.') + '</p>') +
+          renderImages(c) +
+        '</article>' +
+        (sources ? '<aside class="read__sources" aria-label="' + T('来源','Sources') + '">' +
+          '<p class="read__aside-h">' + T('来源','Sources') + '</p><ol>' + sources + '</ol></aside>' : '') +
+      '</div>';
+  }
+
+  /* Built once, when it opens: while a modal dialog is up the rest of the page is inert, so neither the language
+     button nor anything else can change what is under it. `opener` is the button that opened it — a dialog returns
+     focus to whatever had it, and a compilation can also be opened from code, where that is the document body. */
+  function openRead(id, opener){
+    var c = compById(id); if (!c || !els.readDlg) return;
+    readingCompId = id;
+    readOpener = opener || null;
+    els.readDlg.innerHTML = compReadHtml(c);
+    if (!els.readDlg.open) els.readDlg.showModal();
+    els.readDlg.scrollTop = 0;
+    X.images.hydrate(els.readDlg);   // images kept in the compilation are archived in the repo and load asynchronously
+  }
+  function closeRead(){
+    var opener = readOpener;
+    readingCompId = null; readOpener = null;
+    if (els.readDlg && els.readDlg.open) els.readDlg.close();
+    /* Closing puts the keyboard back on the button that opened the view. The browser does this by itself when the
+       reader clicked or tabbed to that button; it does not when the view was opened from code, and then focus is
+       left inside a dialog that is no longer displayed. */
+    if (opener && opener.isConnected) opener.focus();
+  }
+
+  /* An in-page link has to take the keyboard with it, or the next Tab carries on from wherever the reader was. */
+  function readJump(link, id){
+    var target = els.readDlg.querySelector('#' + id);
+    if (!target) return;
+    /* the heading of a section, the link of a source entry, and the entry itself when it has no link to offer */
+    var land = target.querySelector('h2, a') || target;
+    if (land.tagName !== 'A' && !land.hasAttribute('tabindex')) land.setAttribute('tabindex', '-1');
+    target.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+    land.focus({ preventScroll: true });
+    if (link.getAttribute('data-read') === 'jump') {
+      els.readDlg.querySelectorAll('.read__toc a[aria-current]').forEach(function (a) { a.removeAttribute('aria-current'); });
+      link.setAttribute('aria-current', 'true');
+    }
+  }
+
   function renderComps(){
     var all = X.store.getComps();
     var archN = all.filter(function (c) { return c.archived; }).length;
@@ -764,7 +867,8 @@ window.XHS = window.XHS || {};
       var id = b.getAttribute('data-id');
       var act = b.getAttribute('data-cact');
       var comp = X.store.getComps().find(function (c) { return c.id === id; });
-      if (act === 'copy') { if (comp) copyText(compToMarkdown(comp)); }
+      if (act === 'read') { openRead(id, b); }
+      else if (act === 'copy') { if (comp) copyText(compToMarkdown(comp)); }
       else if (act === 'reorg') { if (comp && confirm(T('对这篇合集再整理一次？会去重合并、剔除无效信息、精炼重排。','Re-organize this compilation? It will dedupe, clean and tighten.'))) runConsolidate(comp, true); }
       else if (act === 'edit') { editingCompId = id; renderComps(); }
       else if (act === 'cancel-edit') { editingCompId = null; renderComps(); }
@@ -790,6 +894,18 @@ window.XHS = window.XHS || {};
       }
       else if (act === 'del') { if (confirm(T('删除这篇合集？','Delete this compilation?'))) { X.store.removeComp(id); renderComps(); updateSelBar(); scheduleSync(); } }
     });
+    /* The reading view: close, copy, and the two kinds of in-page link (a section from the contents, a source from a
+       section). Esc closes the dialog itself; nothing here depends on the close event firing, because whether it
+       does has turned out to vary between browser versions — everything that matters reads dialog.open instead. */
+    if (els.readDlg) els.readDlg.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-read]'); if (!el) return;
+      var act = el.getAttribute('data-read');
+      if (act === 'close') { closeRead(); return; }
+      if (act === 'copy') { var c = compById(readingCompId); if (c) copyText(compToMarkdown(c)); return; }
+      e.preventDefault();
+      readJump(el, act === 'jump' ? 'read-sec-' + el.getAttribute('data-i') : 'read-src-' + el.getAttribute('data-n'));
+    });
+
     // Card folding: click the title / arrow to expand or collapse (shared by note and compilation cards)
     document.addEventListener('click', function (e) {
       var f = e.target.closest('[data-fold]'); if (!f) return;
@@ -882,7 +998,7 @@ window.XHS = window.XHS || {};
      'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
      'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs',
      'videoInput','fetchVideoBtn','fetchStatus','fetchTokenInput','saveFetchTokenBtn','testFetchBtn','fetchTokenStatus',
-     'jumpComps','jumpLib','compArchToggle','compArchCount'
+     'jumpComps','jumpLib','compArchToggle','compArchCount','readDlg'
     ].forEach(function (id) { els[id] = document.getElementById(id); });
     X.i18n.applyStatic();
     bind();

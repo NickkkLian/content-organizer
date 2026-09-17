@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      # the merge rules the two devices depend on, and the same file the browser loads
+      # the merge rules the two devices depend on and the reference list the reading view prints, from the files the browser loads
       - run: node check.mjs
 
   break:
