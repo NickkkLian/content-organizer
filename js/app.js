@@ -15,9 +15,15 @@ window.XHS = window.XHS || {};
   var viewCompArchived = false;  // compilation archive view (separate from the note archive)
   var editingCompId = null;      // compilation currently being edited by hand
 
+  /* Runtime class names are spelled out in full rather than assembled from a prefix and a variable — a name built as
+     'status--' + type is invisible to check-css.mjs, and the rules for all three states were once lost that way. */
+  var STATUS_CLASS = { ok: 'status status--ok', err: 'status status--err', loading: 'status status--loading' };
+  var SYNC_CLASS = { ok: 'sync-pill is-ok', err: 'sync-pill is-err', syncing: 'sync-pill is-syncing' };
+  var DOT_CLASS = { on: 'dot dot--on', off: 'dot dot--off' };
+
   function setStatus(msg, type){
     els.status.textContent = msg || '';
-    els.status.className = 'status' + (type ? ' status--' + type : '');
+    els.status.className = STATUS_CLASS[type] || 'status';
     els.status.style.display = msg ? 'block' : 'none';
   }
 
@@ -585,7 +591,7 @@ window.XHS = window.XHS || {};
 
   function setSyncStatus(state, text, title){
     if (!els.syncStatus) return;
-    els.syncStatus.className = 'sync-pill' + (state ? ' is-' + state : '');
+    els.syncStatus.className = SYNC_CLASS[state] || 'sync-pill';
     els.syncStatus.textContent = text;
     els.syncStatus.title = title || T('云同步状态（点击设置）','Cloud sync status (click to set up)');
   }
@@ -804,7 +810,7 @@ window.XHS = window.XHS || {};
   async function refreshFetchStatus(){
     if (!els.fetchStatus) return;
     var ok = await X.fetchsvc.health();
-    els.fetchStatus.className = 'dot ' + (ok ? 'dot--on' : 'dot--off');
+    els.fetchStatus.className = ok ? DOT_CLASS.on : DOT_CLASS.off;
     /* Offline should not read as "a dependency is missing". Running this step locally is a
        design decision: yt-dlp needs the browser's logged-in session, and transcription and
        frame extraction happen on the same machine, so neither the session nor the media

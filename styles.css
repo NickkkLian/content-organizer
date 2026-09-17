@@ -23,7 +23,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .topbar :focus-visible,.foot :focus-visible,.skip:focus-visible{outline-color:var(--on-band)}
 button{font:inherit;color:inherit}
 a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness:from-font}
-code,kbd,.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
+code,kbd{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
 code{font-size:.92em;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:0 .3em}
 img,svg{max-width:100%;display:block}
 p{margin:0}
@@ -33,7 +33,6 @@ h1{font-size:var(--text-2xl)}
 h2{font-size:var(--text-xl)}
 h3{font-size:var(--text-lg)}
 .muted,.hint{color:var(--text-2);font-size:var(--text-xs);line-height:var(--leading-relaxed);max-width:var(--measure)}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .skip{position:absolute;left:var(--space-2);top:-48px;z-index:var(--z-toast);background:var(--surface);color:var(--text);
   padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm)}
 .skip:focus{top:var(--space-2)}
@@ -88,6 +87,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .btn:active{transform:scale(var(--press-scale))}
 .btn--primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn--danger{background:var(--surface);border-color:var(--danger);color:var(--danger)}
+.btn-icon{width:var(--control-h);min-width:var(--control-h);padding:0}
 .btn--ghost{border-color:transparent;background:transparent}
 .btn[disabled]{opacity:.55;cursor:not-allowed}
 @media (hover:hover) and (pointer:fine){
@@ -103,6 +103,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 @media (pointer:coarse){.btn,.chip,.tab{min-height:var(--touch-min)}}
 
 /* ===== chips: filters and small toggles ===== */
+.chips__sep{width:1px;align-self:center;height:16px;background:var(--border);margin:0 var(--space-1)}
 .chips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-3) 0}
 .chip{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border:1px solid var(--border);
   border-radius:var(--radius-full);background:var(--surface);color:var(--text-2);font-size:var(--text-xs);cursor:pointer;min-height:var(--control-h)}
@@ -114,6 +115,8 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
   font-size:var(--text-2xs);border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
 .badge--soft{background:var(--neutral-tint);color:var(--neutral-tint-text)}
 .badge--plat{background:var(--accent-tint);color:var(--accent-tint-text);border-color:var(--accent)}
+.badge--xhs{background:var(--point-tint);color:var(--point-tint-text);border-color:var(--point)}
+.badge--bili{background:var(--sage-tint);color:var(--sage-tint-text);border-color:var(--brand-sage)}
 
 /* ===== the library: a grid of cards, folded by default =====
    4 per row → 2 on narrow windows → 1 on phones. minmax(0,1fr), never 1fr: 1fr is minmax(auto,1fr), and auto's floor
@@ -158,6 +161,11 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .note__ts[open] > summary::before{content:"▾ "}
 .note__ts-body{margin-top:var(--space-2);max-height:15rem;overflow:auto}
 .selbox{width:1.05em;height:1.05em;flex:none}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:var(--space-2);margin:var(--space-3) 0}
+.gallery img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--radius-sm);background:var(--surface-2)}
+/* an image whose original expired before it was archived into the private repo */
+.img-dead{display:flex;align-items:center;justify-content:center;min-height:90px;padding:var(--space-2);text-align:center;
+  border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-3);font-size:var(--text-2xs)}
 .tags{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-top:var(--space-2)}
 .tag{font-size:var(--text-2xs);color:var(--text-3);background:var(--surface-2);border:1px solid var(--hairline);
   border-radius:var(--radius-full);padding:1px var(--space-2)}
@@ -174,17 +182,38 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .comp__meta{color:var(--text-3);font-size:var(--text-2xs);font-family:var(--font-mono);margin-top:var(--space-1)}
 .comp__sec{margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--hairline)}
 .comp__sec h4{margin:0 0 var(--space-2);font-family:var(--font-display);font-size:var(--text-md)}
-.comp__sec p{color:var(--text-2);line-height:var(--leading-relaxed);max-width:var(--measure)}
+.comp__summary{margin-top:var(--space-2);padding:var(--space-3);max-width:var(--measure);background:var(--surface-2);
+  border-left:3px solid var(--point);border-radius:var(--radius-sm);color:var(--text-2);font-size:var(--text-sm);line-height:var(--leading-relaxed)}
+.comp__sec .body{white-space:pre-wrap;overflow-wrap:anywhere;max-width:var(--measure);color:var(--text-2);
+  font-size:var(--text-sm);line-height:var(--leading-relaxed)}
+.comp__src{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2)}
+.comp__src a{padding:1px var(--space-2);border:1px solid var(--hairline);border-radius:var(--radius-sm);
+  background:var(--surface-2);color:var(--text-2);font-size:var(--text-2xs);text-decoration:none}
+.comp__src a:hover{text-decoration:underline}
+/* editing a compilation by hand: the fields take the card's whole width */
+.comp.is-editing input,.comp.is-editing textarea{width:100%;margin:var(--space-2) 0;font-family:inherit}
+.comp__ed-title{font-family:var(--font-display);font-size:var(--text-md);font-weight:var(--display-weight)}
+.comp__ed-sum{font-size:var(--text-sm);resize:vertical}
+.comp__ed-h{font-weight:var(--weight-semibold)}
+.comp__ed-c{font:var(--weight-regular) var(--text-sm)/var(--leading-relaxed) var(--font-sans);white-space:pre-wrap;resize:vertical}
 
 /* ===== states ===== */
 .status{margin-top:var(--space-3);padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-left:3px solid var(--info);
   background:var(--info-tint);color:var(--info-tint-text);border-radius:var(--radius-sm);font-size:var(--text-sm);max-width:var(--measure)}
-.status--error{border-left-color:var(--danger);background:var(--danger-tint);color:var(--danger-tint-text)}
-.status--done{border-left-color:var(--success);background:var(--success-tint);color:var(--success-tint-text)}
+.status--err{border-left-color:var(--danger);background:var(--danger-tint);color:var(--danger-tint-text)}
+.status--ok{border-left-color:var(--success);background:var(--success-tint);color:var(--success-tint-text)}
+.status--loading{border-left-color:var(--warning);background:var(--warning-tint);color:var(--warning-tint-text)}
 .empty{padding:var(--space-8) var(--space-4);text-align:center;color:var(--text-2)}
 .empty b{display:block;font-family:var(--font-display);font-size:var(--text-lg);color:var(--text);margin-bottom:var(--space-2)}
 .sync-pill{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);
   border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:var(--text-xs);cursor:pointer;min-height:var(--control-h)}
+.sync-pill.is-ok{border-color:var(--success);background:var(--success-tint);color:var(--success-tint-text)}
+.sync-pill.is-syncing{border-color:var(--warning);background:var(--warning-tint);color:var(--warning-tint-text)}
+.sync-pill.is-err{border-color:var(--danger);background:var(--danger-tint);color:var(--danger-tint-text)}
+/* whether the local fetch service is answering */
+.dot{font-size:var(--text-2xs);vertical-align:middle}
+.dot--on{color:var(--success-tint-text)}
+.dot--off{color:var(--text-3)}
 
 /* ===== footer: the band again ===== */
 .foot{position:relative;z-index:1;flex:none;background:var(--band);color:var(--on-band-2);border-top:1px solid var(--band-line);

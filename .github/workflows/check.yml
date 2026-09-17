@@ -26,6 +26,18 @@ jobs:
       # each rule broken in a copy; green only when the case written for that rule is the one that fails
       - run: node check.mjs --break
 
+  stylesheet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # every class the app renders has a rule, every rule is for a class it renders
+      - run: node check-css.mjs
+      # and the check goes red when a rule is deleted
+      - run: node check-css.mjs --break
+
   no-build-step:
     runs-on: ubuntu-latest
     steps:

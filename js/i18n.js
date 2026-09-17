@@ -15,7 +15,6 @@ window.XHS = window.XHS || {};
 
   // Static HTML dictionary: key -> {zh, en}
   var I18N = {
-    h1:           { zh: '📚 收藏整理库', en: '📚 Content Organizer' },
     sub:          { zh: '小红书与 B 站上收藏的东西，装订成一篇能读的稿子。', en: 'What you saved on Xiaohongshu and Bilibili, bound into one piece you can read.' },
     demoPillTitle:{ zh: '一切只留在这个浏览器和你自己的私有仓里。', en: 'Everything stays in this browser and in a private repository you own.' },
     langTitle:    { zh: '切换语言', en: 'Switch language' },
@@ -66,8 +65,7 @@ window.XHS = window.XHS || {};
     clearSel:     { zh: '取消选择', en: 'Clear selection' },
     myComps:      { zh: '我的合集', en: 'My compilations' },
     settingsTitle:{ zh: '设置', en: 'Settings' },
-    syncPillTitle:{ zh: '云同步状态（点击设置）', en: 'Cloud sync status (click to set up)' },
-    foot:         { zh: '本地缓存 + 私有仓库云同步 + AI 整理合集 · 令牌只存本机浏览器', en: 'Local cache + private-repo cloud sync + AI consolidation · tokens stay in this browser' }
+    syncPillTitle:{ zh: '云同步状态（点击设置）', en: 'Cloud sync status (click to set up)' }
   };
 
   function L(k) {
@@ -83,7 +81,7 @@ window.XHS = window.XHS || {};
     root.querySelectorAll('[data-i18n-title]').forEach(function (el) { el.setAttribute('title', L(el.getAttribute('data-i18n-title'))); });
     root.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', L(el.getAttribute('data-i18n-aria'))); });
     document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-    document.title = lang === 'en' ? 'Content Organizer' : '收藏整理库 · Content Organizer';
+    document.title = lang === 'en' ? 'Clipbind' : 'Clipbind · 收藏整理库';
     var lb = document.getElementById('langBtn');
     if (lb) lb.textContent = lang === 'en' ? '中文' : 'EN';
   }
