@@ -199,9 +199,10 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 
 /* ===== the reading view: the compilation as a piece you read =====
    A modal dialog over the library, scrolling in its own box: the bar and the two side columns are sticky against
-   that box, not against the page. --read-bar-h is the bar's height measured in the browser (63px at 1280 — the two
-   buttons, --space-3 of padding either side and the hairline) rounded up to 4rem, and every sticky offset and
-   scroll-margin is derived from it, so a taller bar moves them all together.
+   that box, not against the page. --read-bar-h is the bar's own height: js/app.js measures it when the view opens
+   and sets it on the dialog, because the bar wraps to two rows on a phone and to three when the model's name is
+   long. The values here are for the frame before that runs — 4rem is the measured 63px at 1280, 7rem the measured
+   112px at 375, and neither is load-bearing. Every sticky offset and scroll-margin is derived from it.
    The numbers beside the sections point into the source list; js/refs.js decides what they are, and they are in the
    markup rather than list counters: a li laid out as a grid is no longer display:list-item, so counter(list-item)
    stops incrementing and every row renders 0. */
@@ -250,7 +251,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .read__body .gallery{margin-top:var(--space-8)}
 /* on a phone the dialog is the whole screen and the contents become a strip above the piece */
 @media (max-width:899px){
-  /* the bar's three items no longer fit on one line and it wraps to two; measured at 112px on a 375px viewport */
+  /* the bar's three items no longer fit on one line and it wraps; this is the two-row case, measured at 375px */
   .read{--read-bar-h:7rem;width:100%;height:100%;border:0;border-radius:0}
   .read__toc ol{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;overscroll-behavior-x:contain;
     gap:var(--space-4);padding-bottom:var(--space-2)}

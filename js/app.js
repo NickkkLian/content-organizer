@@ -568,6 +568,12 @@ window.XHS = window.XHS || {};
     els.readDlg.innerHTML = compReadHtml(c);
     if (!els.readDlg.open) els.readDlg.showModal();
     els.readDlg.scrollTop = 0;
+    /* The bar is sticky and everything below it is scrolled to a position that has to clear it, so its height is
+       measured here rather than written in the stylesheet: it wraps to two rows on a phone and to three when the
+       model's name is long, and a number typed into CSS is right only for the case someone happened to look at.
+       The stylesheet keeps a value for the frame before this runs. */
+    var bar = els.readDlg.querySelector('.read__bar');
+    if (bar) els.readDlg.style.setProperty('--read-bar-h', bar.getBoundingClientRect().height + 'px');
     X.images.hydrate(els.readDlg);   // images kept in the compilation are archived in the repo and load asynchronously
   }
   function closeRead(){
