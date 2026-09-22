@@ -455,9 +455,13 @@ window.XHS = window.XHS || {};
     return md;
   }
   function compCardHtml(c){
-    var meta = '<span class="badge">🧩 ' + esc(c.topic || T('合集','Compilation')) + '</span>' +
+    var meta = '<span class="badge badge--clip"' + (c.topic ? ' title="' + esc(c.topic) + '"' : '') +
+        '>🧩 <span>' + esc(c.topic || T('合集','Compilation')) + '</span></span>' +
       (c.model ? '<span class="badge badge--soft">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '') +
-      '<span class="src">' + ((c.sourceUrls && c.sourceUrls.length) || 0) + T(' 篇来源',' sources') + '</span>';
+      /* The same count the reading view shows, from the same place: js/refs.js binds the sources a compilation
+         actually cites. Counting c.sourceUrls instead made the shipped demo say "0 sources" on a card whose
+         three sections each cite one — that field only carries notes that had a link, and a pasted note has none. */
+      '<span class="src">' + X.refs.bind(c).sources.length + T(' 篇来源',' sources') + '</span>';
     var secs = (c.sections || []).map(function (s) {
       var src = (s.sources && s.sources.length)
         ? '<div class="comp__src">' + s.sources.map(function (x) {

@@ -114,6 +114,11 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .badge{display:inline-flex;align-items:center;gap:var(--space-1);padding:2px var(--space-2);border-radius:var(--radius-full);
   font-size:var(--text-2xs);border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
 .badge--soft{background:var(--neutral-tint);color:var(--neutral-tint-text)}
+/* A compilation's topic is a sentence the model wrote, not a short tag, so its pill has to be allowed to run
+   out of room. Measured on the shipped demo: a 134-character topic made a 941px pill that pushed the page
+   19px past a 1280 viewport. min-width on the inner span because a flex item will not shrink below its text. */
+.badge--clip{max-width:100%}
+.badge--clip>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .badge--plat{background:var(--accent-tint);color:var(--accent-tint-text);border-color:var(--accent)}
 .badge--xhs{background:var(--point-tint);color:var(--point-tint-text);border-color:var(--point)}
 .badge--bili{background:var(--sage-tint);color:var(--sage-tint-text);border-color:var(--brand-sage)}
