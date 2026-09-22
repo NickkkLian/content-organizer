@@ -197,14 +197,23 @@ window.XHS = window.XHS || {};
     if (X.store.getAll().length) return;
     seedSamples();
     if (X.store.getComps().length) return;
-    fetch('demo/compilation.json', { cache: 'no-cache' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (c) {
-        if (!c || !Array.isArray(c.sections)) return;
-        X.store.saveComp(c);
-        renderComps();
-      })
-      .catch(function () {});
+    /* One cached compilation per language: the model answers in the language the interface was in when the run was
+       made, so a reader in English gets the English one. Falling back the other way is better than showing nothing —
+       a compilation in the other language still shows what the reading view is — and the view prints the language
+       and date the file records, so it is never passed off as something it is not. */
+    var want = X.i18n.lang === 'zh' ? ['demo/compilation.zh.json', 'demo/compilation.json']
+                                    : ['demo/compilation.json', 'demo/compilation.zh.json'];
+    (function attempt(i){
+      if (i >= want.length) return;
+      fetch(want[i], { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (c) {
+          if (!c || !Array.isArray(c.sections)) return attempt(i + 1);
+          X.store.saveComp(c);
+          renderComps();
+        })
+        .catch(function () { attempt(i + 1); });
+    })(0);
   }
 
   // ---------- Library ----------

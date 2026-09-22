@@ -133,14 +133,16 @@ repo of yours; AI features need an Anthropic API key. Both are entered under **C
 only in the browser. The video service is optional — see [`local/README.md`](local/README.md).
 
 `demo/compilation.json` is the sample notes put through the AI step once and kept; where it is present,
-`?demo=1` opens the reading view with no key of your own. To make one (one API call, a few cents):
+`?demo=1` opens the reading view with no key of your own. The model answers in the language the interface was in, so
+there is one file per language and the page loads yours first. To make them (one API call each, a few cents):
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-… node make-demo-compilation.mjs
+ANTHROPIC_API_KEY=sk-ant-… node make-demo-compilation.mjs            # demo/compilation.json
+ANTHROPIC_API_KEY=sk-ant-… node make-demo-compilation.mjs --lang zh  # demo/compilation.zh.json
 ```
 
 It loads `js/ai.js` — the same file the browser runs, not a copy of the prompt — so what the demo shows
-is what the app does. The file records the model and the date, and the reading view shows both.
+is what the app does. Each file records the model, the language and the date, and the reading view shows them.
 
 ## Limitations
 
