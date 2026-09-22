@@ -901,9 +901,14 @@ window.XHS = window.XHS || {};
       }
       else if (act === 'del') { if (confirm(T('删除这篇合集？','Delete this compilation?'))) { X.store.removeComp(id); renderComps(); updateSelBar(); scheduleSync(); } }
     });
+    /* Esc closes the dialog without going through closeRead(), so the two variables it would have cleared are
+       cleared here instead. Best effort on purpose: whether a dialog fires `close` after Esc has turned out to vary
+       between browser versions, so nothing depends on this — everything that matters reads dialog.open, and the
+       opener is only focused if it is still connected. */
+    if (els.readDlg) els.readDlg.addEventListener('close', function () { readingCompId = null; readOpener = null; });
+
     /* The reading view: close, copy, and the two kinds of in-page link (a section from the contents, a source from a
-       section). Esc closes the dialog itself; nothing here depends on the close event firing, because whether it
-       does has turned out to vary between browser versions — everything that matters reads dialog.open instead. */
+       section). */
     if (els.readDlg) els.readDlg.addEventListener('click', function (e) {
       var el = e.target.closest('[data-read]'); if (!el) return;
       var act = el.getAttribute('data-read');
