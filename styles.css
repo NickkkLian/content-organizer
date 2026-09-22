@@ -210,13 +210,22 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
   width:min(100% - 2 * var(--gutter),76rem);max-width:none;height:min(100% - 2 * var(--space-6),58rem);max-height:none;
   padding:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);color:var(--text);
   box-shadow:var(--shadow-2);overflow:auto;overscroll-behavior:contain}
-/* ::backdrop only inherits the page's custom properties in newer browsers; the literal is the same overlay, for older ones */
-.read::backdrop{background:var(--overlay,rgb(23 16 30 / 0.55))}
+/* The backdrop is this product's own anchor, not the shared overlay: the first screenshot of this view was measured
+   at #16253e for the top bar and #8e8199 for the canvas, and the owner asked why it was not his palette — those are
+   exactly #053333 and #f7e9e8 seen through rgb(40 23 74 / .5), the shared purple. A view of this product photographs
+   as this product now: the point colour at 45% leaves the canvas reading as the canvas (#e1afba measured) and the
+   band as the band, where the anchor at 62% veils everything in one green (#607978 measured) and loses the pink. The first declaration is the fallback where color-mix is not supported; ::backdrop only
+   inherits the page's custom properties in newer browsers, hence the literal inside var(). */
+.read::backdrop{background:var(--overlay,rgb(23 16 30 / 0.55));
+  background:color-mix(in srgb,var(--point) 45%,transparent)}
 .read__bar{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between;
-  padding:var(--space-3) var(--space-4);background:var(--surface-raised);border-bottom:1px solid var(--hairline)}
-.read__meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);color:var(--text-3);
+  padding:var(--space-3) var(--space-4);background:var(--band);color:var(--on-band);border-bottom:1px solid var(--band-line)}
+.read__bar .btn{color:var(--on-band);border-color:transparent;background:transparent}
+.read__bar :focus-visible{outline-color:var(--on-band)}
+.read__bar ::selection{background:var(--on-band-2);color:var(--band)}
+.read__meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);color:var(--on-band-2);
   font:var(--weight-regular) var(--text-2xs)/1.4 var(--font-mono);font-variant-numeric:tabular-nums}
-.read__badge{border:1px solid var(--hairline);border-radius:var(--radius-full);padding:1px var(--space-2)}
+.read__badge{border:1px solid var(--band-line);border-radius:var(--radius-full);padding:1px var(--space-2)}
 .read__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-6);padding:var(--space-6) var(--space-5) var(--space-12)}
 @media (min-width:900px){
   /* the middle column is the measure, so the piece is centred in the dialog rather than stretched across it */
@@ -236,6 +245,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .read__toc a[aria-current]{color:var(--text);font-weight:var(--weight-medium)}
 .read__toc li a[aria-current]::after{content:"";display:inline-block;width:5px;height:5px;margin-left:var(--space-2);
   border-radius:50%;background:var(--point);vertical-align:middle}
+.read__toc li:first-child .read__n{color:var(--point-text)}
 .read__sources li.is-uncited{color:var(--text-3)}
 .read__tag{grid-column:2;justify-self:start;margin-top:var(--space-1);padding:0 var(--space-2);
   border:1px solid var(--hairline);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:var(--text-2xs)}
@@ -246,7 +256,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .read__sec h2{font-size:var(--text-xl);margin-bottom:var(--space-3)}
 .read__text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:var(--leading-relaxed)}
 .read__cites{margin-top:var(--space-3);font-family:var(--font-mono);font-size:var(--text-2xs);color:var(--text-3)}
-.read__cites a{color:var(--accent-text);text-decoration:none;padding:0 .1em}
+.read__cites a{color:var(--point-text);text-decoration:none;padding:0 .1em}
 .read__cites a:hover{text-decoration:underline}
 .read__body .gallery{margin-top:var(--space-8)}
 /* on a phone the dialog is the whole screen and the contents become a strip above the piece */
