@@ -1,0 +1,46 @@
+{
+  "id": "demo-compilation",
+  "title": "Three Saved Guides: Kitsilano Brunch, 3 Days in Kyoto, and Buying Your First Mechanical Keyboard",
+  "topic": "A mixed compilation of practical guides covering weekend brunch in Vancouver, a Kyoto itinerary, and mechanical keyboard buying advice",
+  "summary": "Three unrelated but practical guides collected together: where to eat brunch in Kitsilano, how to spend three days in Kyoto, and what actually matters when buying your first mechanical keyboard.",
+  "sections": [
+    {
+      "heading": "Kitsilano Weekend Brunch (Vancouver)",
+      "content": "Five brunch spots worth the wait, ranked by value:\n1. Sourdough pancakes at the corner bakery — arrive before 9:30 am or expect a 40-minute wait.\n2. The shakshuka place on 4th Avenue — ask for extra bread; the sauce is worth it.\n3. The best flat white is not at the much-posted café but at the spot by the beach.\n4. Skip the big-chain brunch on weekends — over an hour of waiting for the same eggs you'd get elsewhere.\n5. A cash-only dumpling spot serves an under-the-radar savoury breakfast set that few people mention.",
+      "sources": [
+        {
+          "title": "Weekend brunch in Kitsilano — 5 spots worth the line",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "heading": "Kyoto in 3 Days: Temples Early, Everything Else Later",
+      "content": "The strategy is to hit temples before 8 am while they're empty, then do everything else afterward.\n\nDay 1 — Fushimi Inari at 7 am (stays quiet until about 9), then Tofuku-ji, and Gion at dusk.\nDay 2 — Arashiyama bamboo grove at sunrise, Tenryu-ji garden, then an afternoon in Nishiki market.\nDay 3 — Philosopher's Path, the Nanzen-ji aqueduct, and a tea house in Higashiyama.\n\nA bus day pass works better than the subway for this route. Carry coins for temple entry fees.",
+      "sources": [
+        {
+          "title": "Kyoto in 3 days: temples before 8 am, everything else after",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "heading": "Buying Your First Mechanical Keyboard: What Actually Matters",
+      "content": "Three things decide whether you'll enjoy a keyboard — the switch, the layout, and the case. Everything else is decoration.\n\nSwitches come in three families. Linear switches move straight down with no bump, feel smooth, and are preferred by most fast typists. Tactile switches have a small bump partway through the press so you feel the moment it registers, which can aid accuracy. Clicky switches add a click bar for a deliberate, loud sound — fun, but disruptive in an office. Test switches in person if you can, since a bump feels nothing like it reads; otherwise buy a cheap switch tester before committing to a full board.\n\nLayout: Full-size boards include a number pad, but it pushes your mouse hand out roughly 15 cm all day. Tenkeyless drops the number pad. 75% keeps the function row and arrow keys but packs everything tightly — the sweet spot for most people. 60% removes the arrows onto a layer, fine if you'll build the muscle memory. Be honest about the number pad: keep it if you do accounting, drop it if you've barely used it.\n\nThe case is what you actually hear when typing, and it's the part people skip. A hollow plastic case with the board bolted straight in sounds thin. A gasket-mounted board — where the plate rests on soft strips rather than being screwed down — sounds fuller and feels softer to bottom out on. Added weight (aluminium or a brass plate) makes it quieter and more solid. This is the single biggest difference between a $40 board and a $200 board — more so than the switches.\n\nBudgets: Under $100, insist on hot-swap sockets, which let you pull and change switches without soldering, so a cheap board stays experiment-friendly. Between $100 and $200 you gain gasket mounting and better sound dampening. Above that you're mostly paying for materials and finish — enjoyable, but not a performance upgrade.\n\nKeycaps: PBT plastic resists the shine ABS develops after a year, and the profile (row shape and height) affects finger travel more than expected. Cherry profile is low, sculpted, and a safe default. If your board ships with cheap keycaps, swapping them is the cheapest upgrade that meaningfully changes the experience.\n\nBottom line: pick the switch by feel, choose 75% unless you have a reason not to, make sure it's hot-swap, and spend what's left on the case rather than extras.",
+      "sources": [
+        {
+          "title": "Mechanical keyboard buying guide: switches, layouts and budgets",
+          "url": ""
+        }
+      ]
+    }
+  ],
+  "images": [],
+  "imagesRepo": [],
+  "archived": false,
+  "sourceNoteIds": [],
+  "sourceUrls": [],
+  "model": "claude-opus-4-8",
+  "lang": "en",
+  "savedAt": "2026-09-22T22:45:43.368Z"
+}
