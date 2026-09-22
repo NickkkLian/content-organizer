@@ -546,10 +546,16 @@ window.XHS = window.XHS || {};
           T('未单独引用','uncited') + '</span>') + '</li>';
     }).join('');
     var model = c.model ? '<span class="read__badge">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '';
-    var when = c.savedAt ? '<span>' + esc(String(c.savedAt).slice(0, 10)) + '</span>' : '';
+    /* runAt is when the model wrote this, which is the date worth showing; savedAt is when this browser stored it
+       and js/store.js sets it on every save, because the merge rule between two devices is latest-savedAt-wins.
+       Showing savedAt made a cached compilation look as though it had been made today, every day — the opposite of
+       what the cache was supposed to make visible (found by an auditor, 2026-09-22). */
+    var when = (c.runAt || c.savedAt) ? '<span>' + esc(String(c.runAt || c.savedAt).slice(0, 10)) + '</span>' : '';
+    /* the language it was written in, when the file says: a compilation can be read in the other language */
+    var inLang = c.lang ? '<span class="read__badge">' + esc(c.lang) + '</span>' : '';
     return '<div class="read__bar">' +
         '<button class="btn btn--ghost" data-read="close">' + T('← 回收藏库','← Back to the library') + '</button>' +
-        '<span class="read__meta">' + model + when +
+        '<span class="read__meta">' + model + inLang + when +
           '<span>' + b.sources.length + T(' 篇来源',' sources') + '</span></span>' +
         '<button class="btn btn--ghost" data-read="copy">' + T('复制 MD','Copy MD') + '</button>' +
       '</div>' +

@@ -17,8 +17,9 @@
    localStorage, so it is evaluated in a small context that supplies both — the alternative, copying the prompt into
    this file, is the kind of second copy that drifts and then quietly tells a different story than the product.
 
-   Re-run it whenever the prompt or the sample notes change; the file records the model and the date, and the page
-   shows both, so a stale cache is visible rather than silently passed off as current. */
+   Re-run it whenever the prompt or the sample notes change. The file records the model, the language and the date
+   of the run, and the reading view shows all three — so a cache from six months ago says six months ago instead of
+   quietly wearing today's date. */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -85,13 +86,16 @@ const comp = {
   sourceNoteIds: [], sourceUrls: notes.map((n) => n.url).filter(Boolean),
   model: ai.getConfig().model,
   lang,
+  /* runAt is this run. savedAt is rewritten by js/store.js every time a browser saves the compilation — that field
+     is the merge key between two devices (latest wins), so it cannot also mean "when the model wrote this". */
+  runAt: new Date().toISOString(),
   savedAt: new Date().toISOString()
 };
 
 /* An English run that comes back in Chinese is the failure this script has already had once, and it is silent
    unless something looks: the file writes, the demo loads, and only a reader notices. So look. */
 const HAN = /[\u4e00-\u9fff]/;
-const text = [comp.title, comp.summary, ...comp.sections.flatMap((s) => [s.heading, s.content])].join(' ');
+const text = [comp.title, comp.topic, comp.summary, ...comp.sections.flatMap((s) => [s.heading, s.content])].join(' ');
 if (lang === 'en' && HAN.test(text)) {
   console.error(`The run came back with Han characters in it, and --lang en asked for English:\n  ${comp.title}\n` +
                 'Nothing was written. js/ai.js takes the output language from the interface language, so check that ' +
