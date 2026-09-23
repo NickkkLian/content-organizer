@@ -57,6 +57,25 @@ window.XHS = window.XHS || {};
     var d = note.durationText || fmtDur(note.duration);
     return '<span class="badge badge--soft">' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
   }
+  /* Card actions are icons; each one's name shows as a tooltip on hover, on keyboard focus and on a long press, and is
+     the button's accessible name. Owner 2026-09-22: "use icons only. when move mouse on the icon, popup 'archive',
+     'copy md',...". The primary action on a card (Read, or Restore in the archive) keeps its word.
+     Drawn like the family's gear: 24-unit grid, 2px stroke in the text colour, round caps and joins. */
+  var ICON_PATH = {
+    copy:    '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+    open:    '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    archive: '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/>',
+    edit:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    reorg:   '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/>',
+    fix:     '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-3-3z"/>',
+    del:     '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/><path d="M9 7V4h6v3"/>'
+  };
+  function iconBtn(attrs, zh, en, icon, danger){
+    var name = T(zh, en);
+    return '<button class="btn ' + (danger ? 'btn--danger' : 'btn--ghost') + ' btn-icon" ' + attrs + ' aria-label="' + esc(name) + '" data-tip="' + esc(name) + '">' +
+      '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+      ICON_PATH[icon] + '</svg></button>';
+  }
   function renderTranscript(note){
     var t = note.transcript || ''; if (!t) return '';
     return '<details class="note__ts"><summary>' + T('语音转写','Transcript') + ' · ' + t.length + T(' 字',' chars') +
@@ -281,16 +300,16 @@ window.XHS = window.XHS || {};
     if (!list.length) { els.libList.innerHTML = '<p class="empty">' + T('没有匹配的笔记。','No matching notes.') + '</p>'; return; }
     els.libList.innerHTML = list.map(function (n) {
       var needFix = (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
-      var fixBtn = needFix ? '<button class="btn btn--ghost" data-act="fiximg" data-id="' + n.id + '">' + T('修复图片','Fix images') + '</button>' : '';
+      var fixBtn = needFix ? iconBtn('data-act="fiximg" data-id="' + n.id + '"', '修复图片', 'Fix images', 'fix') : '';
       var actions = viewArchived
-        ? '<button class="btn btn--ghost" data-act="copy-lib" data-id="' + n.id + '">' + T('复制 MD','Copy MD') + '</button>' +
-          '<button class="btn btn--ghost" data-act="open" data-id="' + n.id + '">' + T('原文','Original') + '</button>' + fixBtn +
+        ? iconBtn('data-act="copy-lib" data-id="' + n.id + '"', '复制 MD', 'Copy MD', 'copy') +
+          iconBtn('data-act="open" data-id="' + n.id + '"', '原文', 'Original', 'open') + fixBtn +
           '<button class="btn btn--primary" data-act="unarch" data-id="' + n.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>' +
-          '<button class="btn btn--danger" data-act="del" data-id="' + n.id + '">' + T('删除','Delete') + '</button>'
-        : '<button class="btn btn--ghost" data-act="copy-lib" data-id="' + n.id + '">' + T('复制 MD','Copy MD') + '</button>' +
-          '<button class="btn btn--ghost" data-act="open" data-id="' + n.id + '">' + T('原文','Original') + '</button>' + fixBtn +
-          '<button class="btn btn--ghost" data-act="arch" data-id="' + n.id + '">' + T('归档','Archive') + '</button>' +
-          '<button class="btn btn--danger" data-act="del" data-id="' + n.id + '">' + T('删除','Delete') + '</button>';
+          iconBtn('data-act="del" data-id="' + n.id + '"', '删除', 'Delete', 'del', true)
+        : iconBtn('data-act="copy-lib" data-id="' + n.id + '"', '复制 MD', 'Copy MD', 'copy') +
+          iconBtn('data-act="open" data-id="' + n.id + '"', '原文', 'Original', 'open') + fixBtn +
+          iconBtn('data-act="arch" data-id="' + n.id + '"', '归档', 'Archive', 'archive') +
+          iconBtn('data-act="del" data-id="' + n.id + '"', '删除', 'Delete', 'del', true);
       return noteCardHtml(n, actions, { selectable: !viewArchived, selected: selectedIds.has(n.id) });
     }).join('');
     X.images.hydrate(els.libList);
@@ -474,7 +493,7 @@ window.XHS = window.XHS || {};
     }).join('');
     var arch = viewCompArchived
       ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + c.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
-      : '<button class="btn btn--ghost" data-cact="arch" data-id="' + c.id + '">' + T('归档','Archive') + '</button>';
+      : iconBtn('data-cact="arch" data-id="' + c.id + '"', '归档', 'Archive', 'archive');
     return '<article class="card comp is-fold">' +
       '<div class="comp__meta">' + meta +
         '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
@@ -484,11 +503,11 @@ window.XHS = window.XHS || {};
       '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
       '<div class="note__actions">' +
         '<button class="btn btn--primary" data-cact="read" data-id="' + c.id + '">' + T('阅读','Read') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="reorg" data-id="' + c.id + '">' + T('重新整理','Re-organize') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="edit" data-id="' + c.id + '">' + T('编辑','Edit') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="copy" data-id="' + c.id + '">' + T('复制 MD','Copy MD') + '</button>' +
+        iconBtn('data-cact="reorg" data-id="' + c.id + '"', '重新整理', 'Re-organize', 'reorg') +
+        iconBtn('data-cact="edit" data-id="' + c.id + '"', '编辑', 'Edit', 'edit') +
+        iconBtn('data-cact="copy" data-id="' + c.id + '"', '复制 MD', 'Copy MD', 'copy') +
         arch +
-        '<button class="btn btn--danger" data-cact="del" data-id="' + c.id + '">' + T('删除','Delete') + '</button>' +
+        iconBtn('data-cact="del" data-id="' + c.id + '"', '删除', 'Delete', 'del', true) +
       '</div></article>';
   }
 
@@ -1023,7 +1042,63 @@ window.XHS = window.XHS || {};
     } finally { els.fetchVideoBtn.disabled = false; }
   }
 
+  /* One tooltip for every [data-tip] control (the icon-only card actions). It is a single fixed layer placed by
+     script, so it never pushes the page sideways at 375 and never sits on another button: above the control if there
+     is room and nothing is there, otherwise below. It shows on hover after a short delay (so sweeping across a row does
+     not flash every name), at once on keyboard focus, and on a long press on touch screens — where a long press shows
+     the name instead of running the action; an ordinary tap still runs it. The text is the button's own aria-label,
+     so it follows the interface language. */
+  function initTips(){
+    var tip = document.createElement('div');
+    tip.className = 'tip'; tip.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(tip);
+    var hoverTimer = null, pressTimer = null, pressShown = false, current = null;
+    function tipFor(el){ return el && el.closest ? el.closest('[data-tip]') : null; }
+    function overlaps(a, b){ return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
+    function show(btn){
+      clearTimeout(hoverTimer); current = btn;
+      tip.textContent = btn.getAttribute('data-tip') || '';
+      tip.classList.add('is-on');
+      var r = btn.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, gap = 6, pad = 8;
+      var left = Math.min(Math.max(pad, r.left + r.width / 2 - w / 2), window.innerWidth - w - pad);
+      var others = Array.prototype.filter.call(document.querySelectorAll('button, a, input, select'), function (o) { return o !== btn && o.offsetParent; })
+        .map(function (o) { return o.getBoundingClientRect(); });
+      function placeAt(top){ return { left: left, right: left + w, top: top, bottom: top + h }; }
+      var above = placeAt(r.top - gap - h), below = placeAt(r.bottom + gap);
+      var clear = function (box) { return box.top >= pad && box.bottom <= window.innerHeight - pad && !others.some(function (o) { return overlaps(box, o); }); };
+      var box = clear(above) ? above : clear(below) ? below : (r.top - gap - h >= pad ? above : below);
+      tip.style.left = Math.round(box.left) + 'px'; tip.style.top = Math.round(box.top) + 'px';
+    }
+    function hide(){ clearTimeout(hoverTimer); current = null; tip.classList.remove('is-on'); }
+    document.addEventListener('mouseover', function (e) {
+      var b = tipFor(e.target); if (!b || b === current) return;
+      clearTimeout(hoverTimer); hoverTimer = setTimeout(function () { show(b); }, 120);
+    });
+    document.addEventListener('mouseout', function (e) {
+      var b = tipFor(e.target); if (b && !b.contains(e.relatedTarget)) hide();
+    });
+    document.addEventListener('focusin', function (e) { var b = tipFor(e.target); if (b) show(b); });
+    document.addEventListener('focusout', function (e) { if (tipFor(e.target)) hide(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
+    document.addEventListener('touchstart', function (e) {
+      var b = tipFor(e.target); if (!b) return;
+      pressShown = false; clearTimeout(pressTimer);
+      pressTimer = setTimeout(function () { pressShown = true; show(b); }, 450);
+    }, { passive: true });
+    document.addEventListener('touchmove', function () { clearTimeout(pressTimer); }, { passive: true });
+    document.addEventListener('touchend', function () { clearTimeout(pressTimer); if (pressShown) setTimeout(hide, 1400); }, { passive: true });
+    /* capture phase: runs before the card's own click handler, so a long press does not also run the action */
+    document.addEventListener('click', function (e) {
+      if (pressShown && tipFor(e.target)) { e.preventDefault(); e.stopPropagation(); pressShown = false; return; }
+      if (!tipFor(e.target)) hide();
+    }, true);
+    X.tips = { show: show, hide: hide, el: tip };   // for the evidence probe
+  }
+
   function init(){
+    initTips();
     ['status','result','urlInput','fetchBtn','manualText','manualImages','parseManualBtn',
      'catFilter','platFilter','search','libList','libCount','exportJson','exportMd','clearAll',
      'syncStatus','syncBtn','settingsBtn','settingsPanel','tokenInput','saveTokenBtn','settingsStatus','repoLabel',

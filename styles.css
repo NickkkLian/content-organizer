@@ -158,7 +158,11 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .note__body{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hairline);
   border-radius:var(--radius-sm);padding:var(--space-3);font-size:var(--text-sm);line-height:var(--leading-relaxed);margin:var(--space-2) 0}
 .note__link{display:inline-block;font-size:var(--text-xs);margin:var(--space-1) 0}
-.note__actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+.note__actions{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-top:var(--space-3)}
+/* icon buttons carry their own padding, so the row needs less gap than words did; the primary action (Read,
+   Restore) keeps a little more room after it. Measured: at 8px the compilation card's six controls needed 265px
+   of a 259px row at 1280 and the delete button wrapped onto its own line. */
+.note__actions .btn--primary{margin-right:var(--space-1)}
 .note__ts{margin:var(--space-2) 0}
 .note__ts > summary{cursor:pointer;color:var(--text-2);font-size:var(--text-xs);list-style:none;user-select:none}
 .note__ts > summary::-webkit-details-marker{display:none}
@@ -320,3 +324,15 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 /* below 560 the bar carries the wordmark and the three controls; the marker's sentence is in the footer anyway */
 @media (max-width:560px){.topbar .pill{display:none}}
 @media (max-width:419px){.topbar{gap:var(--space-2);padding:0 var(--space-3)}}
+
+/* The name of an icon-only card action (see initTips in js/app.js): one fixed layer on the band's colour pair,
+   placed by script. No arrow, no delay on the way out; motion is a 2px lift that reduced motion turns off. */
+.tip{position:fixed;left:0;top:0;z-index:var(--z-toast);pointer-events:none;white-space:nowrap;max-width:calc(100vw - 16px);
+  padding:4px 8px;border-radius:var(--radius-sm);background:var(--band);color:var(--on-band);box-shadow:var(--shadow-1);
+  font:var(--weight-medium) var(--text-xs)/1.35 var(--font-sans);opacity:0;visibility:hidden;transform:translateY(2px);
+  transition:opacity .12s ease,transform .12s ease,visibility 0s linear .12s}
+.tip.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .12s ease,transform .12s ease}
+@media (prefers-reduced-motion:reduce){.tip,.tip.is-on{transition:none;transform:none}}
+.btn-icon svg{flex:none}
+.btn-icon{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+@media (pointer:coarse){.btn-icon{width:var(--touch-min);min-width:var(--touch-min)}}
