@@ -1052,13 +1052,13 @@ window.XHS = window.XHS || {};
     var tip = document.createElement('div');
     tip.className = 'tip'; tip.setAttribute('aria-hidden', 'true');
     document.body.appendChild(tip);
-    var hoverTimer = null, pressTimer = null, pressShown = false, current = null;
+    /* `via` is why the name is showing, and it decides what a scroll does. A keyboard focus keeps the name and moves it with
+       its button: Tab scrolls the page to an off-screen button, and that scroll used to hide the name the moment it
+       appeared (a real Tab walk, 2026-09-22). A hover or a long press hides it: the finger or pointer is no longer there. */
+    var hoverTimer = null, pressTimer = null, pressClear = null, pressShown = false, current = null, via = null;
     function tipFor(el){ return el && el.closest ? el.closest('[data-tip]') : null; }
     function overlaps(a, b){ return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
-    function show(btn){
-      clearTimeout(hoverTimer); current = btn;
-      tip.textContent = btn.getAttribute('data-tip') || '';
-      tip.classList.add('is-on');
+    function place(btn){
       var r = btn.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, gap = 6, pad = 8;
       var left = Math.min(Math.max(pad, r.left + r.width / 2 - w / 2), window.innerWidth - w - pad);
       var others = Array.prototype.filter.call(document.querySelectorAll('button, a, input, select'), function (o) { return o !== btn && o.offsetParent; })
@@ -1069,30 +1069,55 @@ window.XHS = window.XHS || {};
       var box = clear(above) ? above : clear(below) ? below : (r.top - gap - h >= pad ? above : below);
       tip.style.left = Math.round(box.left) + 'px'; tip.style.top = Math.round(box.top) + 'px';
     }
-    function hide(){ clearTimeout(hoverTimer); current = null; tip.classList.remove('is-on'); }
-    document.addEventListener('mouseover', function (e) {
+    function show(btn, why){
+      clearTimeout(hoverTimer);
+      if (!btn.isConnected) return;   // re-rendered away while the hover delay ran
+      current = btn; via = why;
+      tip.textContent = btn.getAttribute('data-tip') || '';
+      tip.classList.add('is-on');
+      place(btn);
+    }
+    function hide(){ clearTimeout(hoverTimer); current = null; via = null; tip.classList.remove('is-on'); }
+    function keyboardFocus(el){ try { return el.matches(':focus-visible'); } catch (err) { return true; } }
+    function follow(){ if (via === 'focus' && current && document.activeElement === current) place(current); else hide(); }
+    /* hover means a mouse or a pen. A tap sends pointerover with pointerType "touch" and then a compatibility mouseover,
+       so a mouseover listener would name the button after every tap and leave the name on screen */
+    document.addEventListener('pointerover', function (e) {
+      if (e.pointerType === 'touch') return;
       var b = tipFor(e.target); if (!b || b === current) return;
-      clearTimeout(hoverTimer); hoverTimer = setTimeout(function () { show(b); }, 120);
+      clearTimeout(hoverTimer); hoverTimer = setTimeout(function () { show(b, 'hover'); }, 120);
     });
-    document.addEventListener('mouseout', function (e) {
-      var b = tipFor(e.target); if (b && !b.contains(e.relatedTarget)) hide();
+    document.addEventListener('pointerout', function (e) {
+      if (e.pointerType === 'touch') return;
+      var b = tipFor(e.target); if (!b || b.contains(e.relatedTarget)) return;
+      clearTimeout(hoverTimer); if (current === b && via === 'hover') hide();
     });
-    document.addEventListener('focusin', function (e) { var b = tipFor(e.target); if (b) show(b); });
-    document.addEventListener('focusout', function (e) { if (tipFor(e.target)) hide(); });
+    /* keyboard focus only: a click or a tap focuses the button too, and :focus-visible is how the browser tells them apart */
+    document.addEventListener('focusin', function (e) { var b = tipFor(e.target); if (b && keyboardFocus(b)) show(b, 'focus'); });
+    document.addEventListener('focusout', function (e) { var b = tipFor(e.target); if (b && current === b && via === 'focus') hide(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
-    window.addEventListener('scroll', hide, true);
-    window.addEventListener('resize', hide);
+    window.addEventListener('scroll', follow, true);
+    window.addEventListener('resize', follow);
+    /* touch: a long press names the button; a tap runs the action and names nothing */
     document.addEventListener('touchstart', function (e) {
+      clearTimeout(pressTimer); clearTimeout(pressClear); pressShown = false;
       var b = tipFor(e.target); if (!b) return;
-      pressShown = false; clearTimeout(pressTimer);
-      pressTimer = setTimeout(function () { pressShown = true; show(b); }, 450);
+      pressTimer = setTimeout(function () { pressShown = true; show(b, 'press'); }, 450);
     }, { passive: true });
     document.addEventListener('touchmove', function () { clearTimeout(pressTimer); }, { passive: true });
-    document.addEventListener('touchend', function () { clearTimeout(pressTimer); if (pressShown) setTimeout(hide, 1400); }, { passive: true });
-    /* capture phase: runs before the card's own click handler, so a long press does not also run the action */
+    document.addEventListener('touchend', function () {
+      clearTimeout(pressTimer);
+      if (!pressShown) return;
+      setTimeout(function () { if (via === 'press') hide(); }, 1400);
+      /* some browsers send a click when a long press ends (Chrome's touch emulation does) and some do not: the click
+         listener below swallows it, and if none comes the flag is dropped rather than left to eat a later click */
+      pressClear = setTimeout(function () { pressShown = false; }, 800);
+    }, { passive: true });
+    /* capture phase: runs before the card's own click handler, so a long press does not also run the action. Any other
+       click hides the name: the action ran (it may have re-rendered the card away) or the click was somewhere else. */
     document.addEventListener('click', function (e) {
-      if (pressShown && tipFor(e.target)) { e.preventDefault(); e.stopPropagation(); pressShown = false; return; }
-      if (!tipFor(e.target)) hide();
+      if (pressShown && tipFor(e.target)) { e.preventDefault(); e.stopPropagation(); pressShown = false; clearTimeout(pressClear); return; }
+      hide();
     }, true);
     X.tips = { show: show, hide: hide, el: tip };   // for the evidence probe
   }

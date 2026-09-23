@@ -336,3 +336,10 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .btn-icon svg{flex:none}
 .btn-icon{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 @media (pointer:coarse){.btn-icon{width:var(--touch-min);min-width:var(--touch-min)}}
+/* On a touch screen the icons are 44px, and they no longer fit beside Read (and Restore) in one row: measured at 375 the
+   compilation card put Read and four icons on the first line and Delete alone on the second. So a row that has a text
+   action gives the text action(s) the first line and the icons the next one; the empty ::before is the line break. */
+@media (pointer:coarse){
+  .note__actions:has(.btn--primary)::before{content:'';flex-basis:100%;order:-1}
+  .note__actions .btn--primary{order:-2;flex:1 1 auto;margin-right:0}
+}
