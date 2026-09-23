@@ -301,6 +301,10 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
   text-transform:uppercase;color:var(--on-band);margin-bottom:var(--space-2)}
 .foot dd{margin:0;line-height:var(--leading-relaxed);max-width:var(--measure)}
 .foot a,.foot code{color:var(--on-band)}
+/* The shared `code` chip is a light fill with a light border — right on the page, wrong on the band: on-band text on
+   that fill measured 1.18:1. On the band the chip keeps its outline, drops the fill, and stays on one line, so the
+   text sits on the band and uses the band's own pair. */
+.foot code{background:transparent;border-color:var(--band-line);white-space:nowrap}
 .foot a{text-decoration-color:var(--band-line)}
 
 /* Grids collapse to one column on a phone; the note row keeps its tick box beside the text.

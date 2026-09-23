@@ -270,7 +270,7 @@ window.XHS = window.XHS || {};
       var hay = ((n.title || '') + ' ' + (n.body || '') + ' ' + (n.transcript || '') + ' ' + (n.author || '') + ' ' + (n.tags || []).join(' ')).toLowerCase();
       return hay.indexOf(q) !== -1;
     });
-    els.libCount.textContent = list.length + ' / ' + ptBase.length + T(' 篇',' notes') + (viewArchived ? T('（已归档）',' (archived)') : '');
+    els.libCount.textContent = list.length + ' / ' + ptBase.length + T(' 篇', ptBase.length === 1 ? ' note' : ' notes') + (viewArchived ? T('（已归档）',' (archived)') : '');
     if (!base.length) {
       els.libList.innerHTML = '<p class="empty">' + (viewArchived
         ? T('还没有已归档的笔记。整理成合集后，作为素材的笔记会自动归档到这里。','No archived notes yet. After you consolidate, the source notes are auto-archived here.')
@@ -347,7 +347,7 @@ window.XHS = window.XHS || {};
     var n = selectedIds.size;
     els.selBar.style.display = n ? 'flex' : 'none';
     if (!n) return;
-    els.selCount.textContent = T('已选 ','Selected ') + n + T(' 篇',' notes');
+    els.selCount.textContent = T('已选 ','Selected ') + n + T(' 篇', n === 1 ? ' note' : ' notes');
     var comps = X.store.getComps();
     els.addToComp.innerHTML = '<option value="">' + T('加入已有合集…','Add to an existing compilation…') + '</option>' +
       comps.map(function (c) { return '<option value="' + c.id + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
@@ -455,13 +455,14 @@ window.XHS = window.XHS || {};
     return md;
   }
   function compCardHtml(c){
+    var nSrc = X.refs.bind(c).sources.length;
     var meta = '<span class="badge badge--clip"' + (c.topic ? ' title="' + esc(c.topic) + '"' : '') +
         '>🧩 <span>' + esc(c.topic || T('合集','Compilation')) + '</span></span>' +
       (c.model ? '<span class="badge badge--soft">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '') +
       /* The same count the reading view shows, from the same place: js/refs.js binds the sources a compilation
          actually cites. Counting c.sourceUrls instead made the shipped demo say "0 sources" on a card whose
          three sections each cite one — that field only carries notes that had a link, and a pasted note has none. */
-      '<span class="src">' + X.refs.bind(c).sources.length + T(' 篇来源',' sources') + '</span>';
+      '<span class="src">' + nSrc + T(' 篇来源', nSrc === 1 ? ' source' : ' sources') + '</span>';
     var secs = (c.sections || []).map(function (s) {
       var src = (s.sources && s.sources.length)
         ? '<div class="comp__src">' + s.sources.map(function (x) {
@@ -560,7 +561,7 @@ window.XHS = window.XHS || {};
     return '<div class="read__bar">' +
         '<button class="btn btn--ghost" data-read="close">' + T('← 回收藏库','← Back to the library') + '</button>' +
         '<span class="read__meta">' + model + inLang + when +
-          '<span>' + b.sources.length + T(' 篇来源',' sources') + '</span></span>' +
+          '<span>' + b.sources.length + T(' 篇来源', b.sources.length === 1 ? ' source' : ' sources') + '</span></span>' +
         '<button class="btn btn--ghost" data-read="copy">' + T('复制 MD','Copy MD') + '</button>' +
       '</div>' +
       '<div class="read__grid">' +
@@ -627,7 +628,7 @@ window.XHS = window.XHS || {};
     if (els.compArchToggle) els.compArchToggle.classList.toggle('chip--on', viewCompArchived);
     var comps = all.filter(function (c) { return viewCompArchived ? c.archived : !c.archived; });
     els.compCount.textContent = comps.length
-      ? '· ' + comps.length + T(' 篇',' items') + (viewCompArchived ? T('（已归档）',' (archived)') : '') : '';
+      ? '· ' + comps.length + T(' 篇', comps.length === 1 ? ' item' : ' items') + (viewCompArchived ? T('（已归档）',' (archived)') : '') : '';
     els.compList.innerHTML = comps.length
       ? comps.map(function (c) { return c.id === editingCompId ? compEditHtml(c) : compCardHtml(c); }).join('')
       : '<p class="empty">' + (viewCompArchived
