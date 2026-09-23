@@ -1063,10 +1063,16 @@ window.XHS = window.XHS || {};
       var left = Math.min(Math.max(pad, r.left + r.width / 2 - w / 2), window.innerWidth - w - pad);
       var others = Array.prototype.filter.call(document.querySelectorAll('button, a, input, select'), function (o) { return o !== btn && o.offsetParent; })
         .map(function (o) { return o.getBoundingClientRect(); });
+      /* the sticky top bar and the selection bar stay put while the page scrolls: a name drawn over them sits on the same
+         dark band and reads as part of the bar (auditor, 2026-09-23: an icon just under the top bar put its name over the
+         "Your data" pill). They are no-go areas like the other controls, and they win over the other controls. */
+      var bars = Array.prototype.filter.call(document.querySelectorAll('.topbar, .selbar'), function (b) { return b.offsetParent; })
+        .map(function (b) { return b.getBoundingClientRect(); });
       function placeAt(top){ return { left: left, right: left + w, top: top, bottom: top + h }; }
       var above = placeAt(r.top - gap - h), below = placeAt(r.bottom + gap);
-      var clear = function (box) { return box.top >= pad && box.bottom <= window.innerHeight - pad && !others.some(function (o) { return overlaps(box, o); }); };
-      var box = clear(above) ? above : clear(below) ? below : (r.top - gap - h >= pad ? above : below);
+      var free = function (box) { return box.top >= pad && box.bottom <= window.innerHeight - pad && !bars.some(function (o) { return overlaps(box, o); }); };
+      var clear = function (box) { return free(box) && !others.some(function (o) { return overlaps(box, o); }); };
+      var box = clear(above) ? above : clear(below) ? below : free(above) ? above : free(below) ? below : (r.top - gap - h >= pad ? above : below);
       tip.style.left = Math.round(box.left) + 'px'; tip.style.top = Math.round(box.top) + 'px';
     }
     function show(btn, why){
