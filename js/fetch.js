@@ -23,7 +23,7 @@ window.XHS = window.XHS || {};
   // SSE fetch: onLog(line) progress callback; resolves {note, frames:[b64...]}, rejects with Error
   function fetchVideo(url, onLog){
     return new Promise(function (resolve, reject) {
-      if (!getToken()) { reject(new Error(T('未设置本地抓取口令（在 ⚙️ 设置里填，菜单栏小程序里能看到）', 'Local fetch token not set (enter it in ⚙️ Settings; the toggle app shows it)'))); return; }
+      if (!getToken()) { reject(new Error(T('未设置本地抓取口令（在「连接设置」里填，菜单栏小程序里能看到）', 'Local fetch token not set (enter it under Connections; the toggle app shows it)'))); return; }
       var q = BASE + '/fetch?token=' + encodeURIComponent(getToken()) + '&url=' + encodeURIComponent(url);
       var es, done = false;
       try { es = new EventSource(q); }

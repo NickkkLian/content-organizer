@@ -49,17 +49,17 @@ window.XHS = window.XHS || {};
   }
   function platBadge(note){
     return note.platform === 'bili'
-      ? '<span class="badge badge--plat badge--bili">📺 ' + T('B站','Bilibili') + '</span>'
-      : '<span class="badge badge--plat badge--xhs">📕 ' + T('小红书','XHS') + '</span>';
+      ? '<span class="badge badge--plat badge--bili">' + T('B站','Bilibili') + '</span>'
+      : '<span class="badge badge--plat badge--xhs">' + T('小红书','XHS') + '</span>';
   }
   function typeBadge(note){
-    if (!isVideo(note)) return '<span class="badge badge--soft">🖼 ' + T('图文','Post') + '</span>';
+    if (!isVideo(note)) return '<span class="badge badge--soft">' + T('图文','Post') + '</span>';
     var d = note.durationText || fmtDur(note.duration);
-    return '<span class="badge badge--soft">🎬 ' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
+    return '<span class="badge badge--soft">' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
   }
   function renderTranscript(note){
     var t = note.transcript || ''; if (!t) return '';
-    return '<details class="note__ts"><summary>🗣 ' + T('语音转写','Transcript') + ' · ' + t.length + T(' 字',' chars') +
+    return '<details class="note__ts"><summary>' + T('语音转写','Transcript') + ' · ' + t.length + T(' 字',' chars') +
       '</summary><pre class="note__body note__ts-body">' + esc(t) + '</pre></details>';
   }
 
@@ -102,7 +102,7 @@ window.XHS = window.XHS || {};
       var cls = X.classify(note);
       secondary = cls.ranked.slice(note.category ? 0 : 1, 3)
         .filter(function (c) { return c.name !== cat.name; })
-        .map(function (c) { return '<span class="badge badge--soft">' + c.emoji + ' ' + esc(X.catLabel(c.name)) + '</span>'; })
+        .map(function (c) { return '<span class="badge badge--soft">' + esc(X.catLabel(c.name)) + '</span>'; })
         .join('');
     }
     var sel = opts.selectable
@@ -113,13 +113,13 @@ window.XHS = window.XHS || {};
     var peek = esc(String(note.body || note.transcript || '').replace(/\s+/g, ' ').trim().slice(0, 70));
     var nImg = Math.max((note.images || []).length, (note.imagesRepo || []).length);
     var meta = [];
-    if (nImg) meta.push('🖼' + nImg);
-    if (note.transcript) meta.push('🗣' + note.transcript.length + T('字','ch'));
+    if (nImg) meta.push(nImg + T(' 张图', nImg === 1 ? ' image' : ' images'));
+    if (note.transcript) meta.push(T('转写 ', 'transcript ') + note.transcript.length + T(' 字', ' ch'));
     return '' +
       '<article class="card note' + (opts.expanded ? '' : ' is-fold') + (opts.selected ? ' is-sel' : '') + '">' + sel +
         '<div class="note__head">' +
           platBadge(note) +
-          '<span class="badge">' + cat.emoji + ' ' + esc(X.catLabel(cat.name)) + '</span>' +
+          '<span class="badge">' + esc(X.catLabel(cat.name)) + '</span>' +
           typeBadge(note) + secondary +
           (meta.length ? '<span class="src">' + meta.join(' · ') + '</span>' : '') +
           '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
@@ -240,12 +240,12 @@ window.XHS = window.XHS || {};
     var biliN = base.filter(function (n) { return n.platform === 'bili'; }).length;
     var vidN = base.filter(isVideo).length, postN = base.length - vidN;
     var h = ptChip('plat', 'all', '全部', 'All', base.length, activePlatform === 'all');
-    if (xhsN) h += ptChip('plat', 'xhs', '📕 小红书', '📕 XHS', xhsN, activePlatform === 'xhs');
-    if (biliN) h += ptChip('plat', 'bili', '📺 B站', '📺 Bilibili', biliN, activePlatform === 'bili');
+    if (xhsN) h += ptChip('plat', 'xhs', '小红书', 'XHS', xhsN, activePlatform === 'xhs');
+    if (biliN) h += ptChip('plat', 'bili', 'B站', 'Bilibili', biliN, activePlatform === 'bili');
     h += '<span class="chips__sep"></span>';
     h += ptChip('type', 'all', '全部', 'All', base.length, activeType === 'all');
-    if (postN) h += ptChip('type', 'post', '🖼 图文', '🖼 Posts', postN, activeType === 'post');
-    if (vidN) h += ptChip('type', 'video', '🎬 视频', '🎬 Videos', vidN, activeType === 'video');
+    if (postN) h += ptChip('type', 'post', '图文', 'Posts', postN, activeType === 'post');
+    if (vidN) h += ptChip('type', 'video', '视频', 'Videos', vidN, activeType === 'video');
     els.platFilter.innerHTML = h;
   }
 
@@ -281,7 +281,7 @@ window.XHS = window.XHS || {};
     if (!list.length) { els.libList.innerHTML = '<p class="empty">' + T('没有匹配的笔记。','No matching notes.') + '</p>'; return; }
     els.libList.innerHTML = list.map(function (n) {
       var needFix = (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
-      var fixBtn = needFix ? '<button class="btn btn--ghost" data-act="fiximg" data-id="' + n.id + '">' + T('🔧 修复图片','🔧 Fix images') + '</button>' : '';
+      var fixBtn = needFix ? '<button class="btn btn--ghost" data-act="fiximg" data-id="' + n.id + '">' + T('修复图片','Fix images') + '</button>' : '';
       var actions = viewArchived
         ? '<button class="btn btn--ghost" data-act="copy-lib" data-id="' + n.id + '">' + T('复制 MD','Copy MD') + '</button>' +
           '<button class="btn btn--ghost" data-act="open" data-id="' + n.id + '">' + T('原文','Original') + '</button>' + fixBtn +
@@ -289,7 +289,7 @@ window.XHS = window.XHS || {};
           '<button class="btn btn--danger" data-act="del" data-id="' + n.id + '">' + T('删除','Delete') + '</button>'
         : '<button class="btn btn--ghost" data-act="copy-lib" data-id="' + n.id + '">' + T('复制 MD','Copy MD') + '</button>' +
           '<button class="btn btn--ghost" data-act="open" data-id="' + n.id + '">' + T('原文','Original') + '</button>' + fixBtn +
-          '<button class="btn btn--ghost" data-act="arch" data-id="' + n.id + '">' + T('📥 归档','📥 Archive') + '</button>' +
+          '<button class="btn btn--ghost" data-act="arch" data-id="' + n.id + '">' + T('归档','Archive') + '</button>' +
           '<button class="btn btn--danger" data-act="del" data-id="' + n.id + '">' + T('删除','Delete') + '</button>';
       return noteCardHtml(n, actions, { selectable: !viewArchived, selected: selectedIds.has(n.id) });
     }).join('');
@@ -301,7 +301,7 @@ window.XHS = window.XHS || {};
     var note = X.store.getAll().find(function (n) { return n.id === id; });
     if (!note) return { ok: 0, fail: 0 };
     if (!X.images.ready()) {
-      setStatus(T('请先在 ⚙️ 设置里连接 GitHub（归档图片需要令牌）','Connect GitHub in ⚙️ Settings first (archiving needs a token)'), 'err');
+      setStatus(T('请先在「连接设置」里连接 GitHub（归档图片需要令牌）','Connect GitHub under Connections first (archiving needs a token)'), 'err');
       throw new Error('no token');
     }
     // Links expired and the post URL is known → re-fetch for freshly signed links first
@@ -326,7 +326,7 @@ window.XHS = window.XHS || {};
       return (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
     });
     if (!todo.length) { setStatus(T('所有图片都已归档 ✓','All images already archived ✓'), 'ok'); return; }
-    if (!X.images.ready()) { setStatus(T('请先在 ⚙️ 设置里连接 GitHub（归档图片需要令牌）','Connect GitHub in ⚙️ Settings first (archiving needs a token)'), 'err'); return; }
+    if (!X.images.ready()) { setStatus(T('请先在「连接设置」里连接 GitHub（归档图片需要令牌）','Connect GitHub under Connections first (archiving needs a token)'), 'err'); return; }
     els.fixAllBtn.disabled = true;
     var ok = 0, fail = 0;
     try {
@@ -355,7 +355,7 @@ window.XHS = window.XHS || {};
 
   async function runConsolidate(existingComp, reorgOnly){
     if (!X.ai || !X.ai.isReady()){
-      setStatus(T('请先在 ⚙️ 设置里填入 Anthropic API 令牌','Enter your Anthropic API key in ⚙️ Settings first'), 'err');
+      setStatus(T('请先在「连接设置」里填入 Anthropic API 令牌','Enter your Anthropic API key under Connections first'), 'err');
       els.settingsPanel.style.display = 'block';
       els.settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -457,7 +457,7 @@ window.XHS = window.XHS || {};
   function compCardHtml(c){
     var nSrc = X.refs.bind(c).sources.length;
     var meta = '<span class="badge badge--clip"' + (c.topic ? ' title="' + esc(c.topic) + '"' : '') +
-        '>🧩 <span>' + esc(c.topic || T('合集','Compilation')) + '</span></span>' +
+        '><span>' + esc(c.topic || T('合集','Compilation')) + '</span></span>' +
       (c.model ? '<span class="badge badge--soft">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '') +
       /* The same count the reading view shows, from the same place: js/refs.js binds the sources a compilation
          actually cites. Counting c.sourceUrls instead made the shipped demo say "0 sources" on a card whose
@@ -474,7 +474,7 @@ window.XHS = window.XHS || {};
     }).join('');
     var arch = viewCompArchived
       ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + c.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
-      : '<button class="btn btn--ghost" data-cact="arch" data-id="' + c.id + '">' + T('📥 归档','📥 Archive') + '</button>';
+      : '<button class="btn btn--ghost" data-cact="arch" data-id="' + c.id + '">' + T('归档','Archive') + '</button>';
     return '<article class="card comp is-fold">' +
       '<div class="comp__meta">' + meta +
         '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
@@ -484,8 +484,8 @@ window.XHS = window.XHS || {};
       '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
       '<div class="note__actions">' +
         '<button class="btn btn--primary" data-cact="read" data-id="' + c.id + '">' + T('阅读','Read') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="reorg" data-id="' + c.id + '">' + T('🔄 重新整理','🔄 Re-organize') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="edit" data-id="' + c.id + '">' + T('✏️ 编辑','✏️ Edit') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="reorg" data-id="' + c.id + '">' + T('重新整理','Re-organize') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="edit" data-id="' + c.id + '">' + T('编辑','Edit') + '</button>' +
         '<button class="btn btn--ghost" data-cact="copy" data-id="' + c.id + '">' + T('复制 MD','Copy MD') + '</button>' +
         arch +
         '<button class="btn btn--danger" data-cact="del" data-id="' + c.id + '">' + T('删除','Delete') + '</button>' +
@@ -500,7 +500,7 @@ window.XHS = window.XHS || {};
         '<textarea class="comp__ed-c" data-i="' + i + '" rows="8">' + esc(s.content || '') + '</textarea></div>';
     }).join('');
     return '<article class="card comp is-editing">' +
-      '<div class="comp__meta"><span class="badge">✏️ ' + T('编辑中','Editing') + '</span></div>' +
+      '<div class="comp__meta"><span class="badge">' + T('编辑中','Editing') + '</span></div>' +
       '<input class="comp__ed-title" value="' + esc(c.title || '') + '" placeholder="' + T('合集标题','Compilation title') + '">' +
       '<textarea class="comp__ed-sum" rows="2" placeholder="' + T('一句话概括','One-line summary') + '">' + esc(c.summary || '') + '</textarea>' +
       secs +
@@ -633,7 +633,7 @@ window.XHS = window.XHS || {};
       ? comps.map(function (c) { return c.id === editingCompId ? compEditHtml(c) : compCardHtml(c); }).join('')
       : '<p class="empty">' + (viewCompArchived
           ? T('没有已归档的合集。','No archived compilations.')
-          : T('还没有合集。在收藏库勾选几篇同主题的笔记，点「✨ AI 整理成合集」。','No compilations yet. Tick a few same-topic notes in the library, then click "✨ AI consolidate".')) + '</p>';
+          : T('还没有合集。在收藏库勾选几篇同主题的笔记，点「AI 整理成合集」。','No compilations yet. Tick a few same-topic notes in the library, then click "AI consolidate".')) + '</p>';
     X.images.hydrate(els.compList);   // images kept in compilations (archived in the repo) get blob URLs asynchronously
   }
 
@@ -976,8 +976,8 @@ window.XHS = window.XHS || {};
       /* The line a first-time visitor is most likely to hit. Phrased as "go install something"
          it reads as unfinished; it should say why this step is local at all, and offer a way
          to see the output without installing anything. */
-      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在 ⚙️ 里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
-                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token into ⚙️. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
+      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在「连接设置」里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
+                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token under Connections. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
       return;
     }
     els.fetchVideoBtn.disabled = true;
@@ -995,8 +995,8 @@ window.XHS = window.XHS || {};
       var imagesRepo = [], imgErr = '';
       if (kept.length) {
         if (!X.images.ready()) {
-          imgErr = T('未连接 GitHub（⚙️ 设置里填令牌）→ 截图没法归档，本次未保存图片',
-                     'GitHub not connected (set the token in ⚙️) → screenshots were not archived');
+          imgErr = T('未连接 GitHub（在「连接设置」里填令牌）→ 截图没法归档，本次未保存图片',
+                     'GitHub not connected (set the token under Connections) → screenshots were not archived');
         } else {
           setStatus(T('存截图 0/' + kept.length + '…','Saving screenshots 0/' + kept.length + '…'), 'loading');
           try {
@@ -1016,7 +1016,7 @@ window.XHS = window.XHS || {};
       showResult(note);
       var doneMsg = T('抓取完成 — 转写 ' + ((note.transcript || '').length) + ' 字，截图 ' + imagesRepo.length + '/' + kept.length + ' 张已存。点「★ 收藏」入库。',
         'Done — ' + ((note.transcript || '').length) + ' transcript chars, ' + imagesRepo.length + '/' + kept.length + ' screenshots saved. Click Save.');
-      setStatus(imgErr ? (doneMsg + ' ⚠️ ' + imgErr) : doneMsg, imgErr ? 'err' : 'ok');
+      setStatus(imgErr ? (doneMsg + ' — ' + imgErr) : doneMsg, imgErr ? 'err' : 'ok');
       els.videoInput.value = '';
     } catch (e) {
       setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');
