@@ -1,7 +1,7 @@
 /* The three sample notes: what a visitor sees at ?demo=1, and what the cached demo compilation was made from.
 
    In their own file because two things need them and one of them has no DOM: the app renders them, and
-   tools/make-demo-compilation.mjs sends them to the model once to produce demo/compilation.json. Loaded as a classic
+   make-demo-compilation.mjs sends them to the model once to produce demo/compilation.json. Loaded as a classic
    <script> in the browser (window.XHS.samples) and with require() in node, like js/merge.js and js/refs.js.
 
    Every note is invented. The tags are Chinese because the posts they imitate are — this library is for what you save

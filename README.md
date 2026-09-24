@@ -12,7 +12,7 @@ data lives in your browser and in a private GitHub repo you control, and every A
 machine.
 
 **Live demo:** https://nickkklian.github.io/content-organizer/?demo=1 — three sample notes, English by
-default, 中文 toggle in the corner. Nothing is fetched or saved until you connect your own repo. The
+default, 中文 toggle in the corner. The demo keeps its three sample notes in this browser. They leave it only if you send them: AI consolidation sends what you ask it to consolidate to Anthropic with the key you enter, and nothing is saved to a repository until you connect your own. Adding a note from a link fetches that page through r.jina.ai (or allorigins.win). The
 sample notes are what this library is for: saved social posts, with Chinese tags, because that is what
 they carry.
 

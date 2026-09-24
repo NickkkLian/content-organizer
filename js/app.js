@@ -1124,7 +1124,7 @@ window.XHS = window.XHS || {};
       if (pressShown && tipFor(e.target)) { e.preventDefault(); e.stopPropagation(); pressShown = false; clearTimeout(pressClear); return; }
       hide();
     }, true);
-    X.tips = { show: show, hide: hide, el: tip };   // for the evidence probe
+    X.tips = { show: show, hide: hide, el: tip };   // exposed for UI checks
   }
 
   function init(){
