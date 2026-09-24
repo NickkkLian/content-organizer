@@ -1,5 +1,7 @@
 # Clipbind
 
+![Clipbind](.github/header.png)
+
 **What you saved on Xiaohongshu and Bilibili, bound into one piece you can read.**
 
 One library for the things you save on **Xiaohongshu** (posts and videos) and **Bilibili** (videos),
