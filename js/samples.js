@@ -6,7 +6,7 @@
 
    Every note is invented. The tags are Chinese because the posts they imitate are — this library is for what you save
    on Xiaohongshu and Bilibili, and js/classify.js scores Chinese keywords, so an English-only sample would also
-   demonstrate a classifier that cannot classify (ruled on 2026-09-17: the tags are content, not interface text). */
+   demonstrate a classifier that cannot classify (the tags are content, not interface text). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else {

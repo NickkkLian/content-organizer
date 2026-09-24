@@ -58,8 +58,7 @@ window.XHS = window.XHS || {};
     return '<span class="badge badge--soft">' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
   }
   /* Card actions are icons; each one's name shows as a tooltip on hover, on keyboard focus and on a long press, and is
-     the button's accessible name. Owner 2026-09-22: "use icons only. when move mouse on the icon, popup 'archive',
-     'copy md',...". The primary action on a card (Read, or Restore in the archive) keeps its word.
+     the button's accessible name. The primary action on a card (Read, or Restore in the archive) keeps its word.
      Drawn like the family's gear: 24-unit grid, 2px stroke in the text colour, round caps and joins. */
   var ICON_PATH = {
     copy:    '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
@@ -573,7 +572,7 @@ window.XHS = window.XHS || {};
     /* runAt is when the model wrote this, which is the date worth showing; savedAt is when this browser stored it
        and js/store.js sets it on every save, because the merge rule between two devices is latest-savedAt-wins.
        Showing savedAt made a cached compilation look as though it had been made today, every day — the opposite of
-       what the cache was supposed to make visible (found by an auditor, 2026-09-22). */
+       what the cache was supposed to make visible (found 2026-09-22). */
     var when = (c.runAt || c.savedAt) ? '<span>' + esc(String(c.runAt || c.savedAt).slice(0, 10)) + '</span>' : '';
     /* the language it was written in, when the file says: a compilation can be read in the other language */
     var inLang = c.lang ? '<span class="read__badge">' + esc(c.lang) + '</span>' : '';
@@ -1064,7 +1063,7 @@ window.XHS = window.XHS || {};
       var others = Array.prototype.filter.call(document.querySelectorAll('button, a, input, select'), function (o) { return o !== btn && o.offsetParent; })
         .map(function (o) { return o.getBoundingClientRect(); });
       /* the sticky top bar and the selection bar stay put while the page scrolls: a name drawn over them sits on the same
-         dark band and reads as part of the bar (auditor, 2026-09-23: an icon just under the top bar put its name over the
+         dark band and reads as part of the bar (2026-09-23: an icon just under the top bar put its name over the
          "Your data" pill). They are no-go areas like the other controls, and they win over the other controls. */
       var bars = Array.prototype.filter.call(document.querySelectorAll('.topbar, .selbar'), function (b) { return b.offsetParent; })
         .map(function (b) { return b.getBoundingClientRect(); });
