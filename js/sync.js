@@ -68,15 +68,31 @@ window.XHS = window.XHS || {};
   }
 
   // ---------- read / write the data file (file defaults to content.json) ----------
+  // Files over 1 MiB come back from the contents API with encoding "none" and no content;
+  // the same bytes are readable through the git blobs API.
+  function blobUrl(cfg, sha){
+    return 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/git/blobs/' + sha;
+  }
   async function getFile(cfg, file){
-    var r = await fetch(contentsUrl(cfg, file), { headers: headers(cfg.token) });
+    var r = await fetch(contentsUrl(cfg, file), { headers: headers(cfg.token), cache: 'no-store' });
     if (r.status === 404) return { doc: emptyDoc(), sha: null, missing: true };
     if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
     if (!r.ok) throw new Error(T('读取失败 HTTP ','Read failed HTTP ') + r.status);
     var j = await r.json();
+    var text = j.content ? b64decode(j.content) : '';
+    if (!text && j.sha && j.size > 0) {
+      var br = await fetch(blobUrl(cfg, j.sha), { headers: headers(cfg.token), cache: 'no-store' });
+      if (!br.ok) throw new Error(T('读取大文件失败 HTTP ','Reading the large file failed HTTP ') + br.status);
+      text = b64decode((await br.json()).content);
+    }
+    // A file that exists but cannot be read stops the sync. Treating it as an empty library
+    // would write this device's copy over everything the other devices saved.
     var doc;
-    try { doc = normalizeDoc(JSON.parse(b64decode(j.content))); }
-    catch (e) { doc = emptyDoc(); }
+    try { doc = normalizeDoc(JSON.parse(text)); }
+    catch (e) {
+      throw new Error(T('读不懂仓库里的 ','Cannot read ') + (file || DATA_PATH) +
+        T('，已停止同步，没有覆盖任何内容','; sync stopped and nothing was overwritten'));
+    }
     return { doc: doc, sha: j.sha, missing: false };
   }
   async function putFile(cfg, doc, sha, message, file){
