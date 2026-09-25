@@ -92,13 +92,20 @@ window.XHS = window.XHS || {};
     }
     // A file that exists but cannot be read stops the sync. Treating it as an empty library
     // would write this device's copy over everything the other devices saved.
-    var doc;
-    try { doc = normalizeDoc(JSON.parse(text)); }
+    var parsed;
+    try { parsed = JSON.parse(text); }
     catch (e) {
       throw new Error(T('读不懂仓库里的 ','Cannot read ') + (file || DATA_PATH) +
         T('，已停止同步，没有覆盖任何内容','; sync stopped and nothing was overwritten'));
     }
-    return { doc: doc, sha: j.sha, missing: false };
+    // Valid JSON of the wrong shape stops it too: a list field holding something else would be read as empty and
+    // the save would write that empty list over it. A field that is simply missing is fine and starts empty.
+    var bad = shapeProblems(parsed);
+    if (bad.length) {
+      throw new Error((file || DATA_PATH) + T(' 的格式不对（',' has the wrong shape (') + bad.join(', ') +
+        T('），已停止同步，没有覆盖任何内容',' is not what this app expects); sync stopped and nothing was overwritten'));
+    }
+    return { doc: normalizeDoc(parsed), sha: j.sha, missing: false };
   }
   async function putFile(cfg, doc, sha, message, file){
     var body = { message: message || 'content-organizer sync', content: b64encode(JSON.stringify(doc, null, 2)) };
@@ -112,7 +119,7 @@ window.XHS = window.XHS || {};
 
   // ---------- the merge rules live in js/merge.js: DOM-free, and the same file the tests in check.mjs run ----------
   var M = (window.XHS && window.XHS.merge) || (typeof require === 'function' ? require('./merge.js') : null);
-  var emptyDoc = M.emptyDoc, normalizeDoc = M.normalizeDoc, mergeDocs = M.mergeDocs, sig = M.sig, combineLegacy = M.combineLegacy;
+  var emptyDoc = M.emptyDoc, normalizeDoc = M.normalizeDoc, shapeProblems = M.shapeProblems, mergeDocs = M.mergeDocs, sig = M.sig, combineLegacy = M.combineLegacy;
 
   async function bootstrapFromLegacy(cfg){
     var docs = [];

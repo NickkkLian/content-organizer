@@ -24,17 +24,39 @@
     return { version: 1, updatedAt: null, notes: [], deleted: [], compilations: [], deletedComps: [] };
   }
 
-  /* Anything read from a file may be missing fields or hold the wrong type; every later rule assumes these six. */
+  var LISTS = ['notes', 'deleted', 'compilations', 'deletedComps'];
+  var KNOWN = ['version', 'updatedAt'].concat(LISTS);
+
+  /* What is wrong with the shape of a document read from a file, as a list of field names ([] when it is fine).
+     A field that is absent (or null) is fine: it starts empty. A field that is present with the wrong type is not:
+     normalizeDoc would read it as empty and the next sync would write that empty value over whatever it held, so the
+     caller refuses the file instead. */
+  function shapeProblems(d) {
+    if (d === null || typeof d !== 'object' || Array.isArray(d)) return ['(the file is not a JSON object)'];
+    var bad = [];
+    LISTS.forEach(function (k) { if (d[k] != null && !Array.isArray(d[k])) bad.push(k); });
+    if (d.version != null && typeof d.version !== 'number') bad.push('version');
+    if (d.updatedAt != null && typeof d.updatedAt !== 'string') bad.push('updatedAt');
+    return bad;
+  }
+
+  /* Anything read from a file may be missing fields; every later rule assumes these six. Fields this version does
+     not know about are carried along untouched, so a file written by a newer version keeps them. */
   function normalizeDoc(d) {
     d = d || {};
-    return {
-      version: d.version || 1,
-      updatedAt: d.updatedAt || null,
-      notes: Array.isArray(d.notes) ? d.notes : [],
-      deleted: Array.isArray(d.deleted) ? d.deleted : [],
-      compilations: Array.isArray(d.compilations) ? d.compilations : [],
-      deletedComps: Array.isArray(d.deletedComps) ? d.deletedComps : []
-    };
+    var out = unknownFields(d);
+    out.version = d.version || 1;
+    out.updatedAt = d.updatedAt || null;
+    LISTS.forEach(function (k) { out[k] = Array.isArray(d[k]) ? d[k] : []; });
+    return out;
+  }
+
+  /* The fields normalizeDoc carried along without knowing what they are. */
+  function unknownFields(d) {
+    var out = {};
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return out;
+    Object.keys(d).forEach(function (k) { if (KNOWN.indexOf(k) === -1) out[k] = d[k]; });
+    return out;
   }
 
   /* One list: union by id, tombstones removed, latest savedAt wins, newest first. */
@@ -60,12 +82,13 @@
     b = normalizeDoc(b);
     var n = mergeList(a.notes, b.notes, a.deleted, b.deleted);
     var c = mergeList(a.compilations, b.compilations, a.deletedComps, b.deletedComps);
-    return {
+    // unknown fields survive the merge; where both sides have one, the first document (the file just read) wins
+    return Object.assign(unknownFields(b), unknownFields(a), {
       version: 1,
       updatedAt: now || new Date().toISOString(),
       notes: n.items, deleted: n.deleted,
       compilations: c.items, deletedComps: c.deleted
-    };
+    });
   }
 
   /* Content signature: two documents with the same items in a different order have the same signature, so a sync
@@ -101,6 +124,6 @@
     };
   }
 
-  return { VERSION: VERSION, emptyDoc: emptyDoc, normalizeDoc: normalizeDoc, mergeList: mergeList,
+  return { VERSION: VERSION, emptyDoc: emptyDoc, normalizeDoc: normalizeDoc, shapeProblems: shapeProblems, mergeList: mergeList,
            mergeDocs: mergeDocs, sig: sig, combineLegacy: combineLegacy };
 });

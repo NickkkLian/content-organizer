@@ -120,6 +120,21 @@ function cases(M, R) {
       const m = M.mergeDocs({ notes: 'not a list', deleted: null }, doc({ notes: [note('a', '2026-01-01')] }), NOW);
       t.eq(ids(m.notes), ['a'], 'a file that is not shaped like a document does not throw');
     }],
+    ['a_file_whose_list_field_has_the_wrong_type_is_refused', () => {
+      t.eq(M.shapeProblems({ version: 1, notes: { a: { id: 'a' } }, deleted: [] }), ['notes'],
+           'read as empty, the notes held there would be written over by the next save');
+      t.eq(M.shapeProblems({ compilations: 'x', deletedComps: 3 }), ['compilations', 'deletedComps'], 'every list field is checked');
+      t.eq(M.shapeProblems([]), ['(the file is not a JSON object)'], 'a top-level list is not a library');
+    }],
+    ['a_file_that_lacks_a_field_is_accepted', () => {
+      t.eq(M.shapeProblems({ version: 1, notes: [note('a', '2026-01-01')] }), [], 'a missing field starts empty');
+      t.eq(M.shapeProblems({}), [], 'so does an empty object');
+    }],
+    ['fields_this_version_does_not_know_are_kept', () => {
+      const m = M.mergeDocs(doc({ future: { x: 1 } }), doc({ notes: [note('a', '2026-01-01')] }), NOW);
+      t.eq(m.future, { x: 1 }, 'a field written by another version survives the save');
+      t.eq(ids(m.notes), ['a'], 'and the merge itself is unchanged');
+    }],
     ['merging_stamps_the_time_it_was_merged', () => {
       t.eq(M.mergeDocs(doc(), doc(), NOW).updatedAt, NOW, 'updatedAt says when, and a test can pin it');
     }],
@@ -256,6 +271,12 @@ const BREAKS = [
    'return { sources: sources, sections: sections };',
    'return { sources: sources.slice().sort(function (a, b) { return a.url.localeCompare(b.url); }), sections: sections };',
    'sources_are_numbered_in_reading_order'],
+  ['a list field of the wrong type is read as empty', 'merge',
+   "LISTS.forEach(function (k) { if (d[k] != null && !Array.isArray(d[k])) bad.push(k); });", '',
+   'a_file_whose_list_field_has_the_wrong_type_is_refused'],
+  ['unknown fields are dropped by the merge', 'merge',
+   'return Object.assign(unknownFields(b), unknownFields(a), {', 'return Object.assign({}, {',
+   'fields_this_version_does_not_know_are_kept'],
 ];
 
 const SOURCES = { merge: path.join(HERE, 'js', 'merge.js'), refs: path.join(HERE, 'js', 'refs.js') };
