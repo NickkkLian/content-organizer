@@ -224,6 +224,12 @@ function cases(M, R) {
       const r = R.bind({});
       t.eq([r.sources, r.sections], [[], []], 'an older compilation, or a half-written one, renders empty rather than throwing');
     }],
+    ['only_http_and_https_links_are_rendered_as_links', () => {
+      t.eq(['https://x.test/1', 'http://x.test/1'].map(R.isWebUrl), [true, true], 'a web address is a link');
+      t.eq(['javascript:alert(1)', ' JavaScript:alert(1)', 'java\tscript:alert(1)', 'data:text/html,x', '/relative', '', null]
+             .map(R.isWebUrl), [false, false, false, false, false, false, false],
+           'anything else a file holds is shown as text, including a scheme the browser would read through spaces and tabs');
+    }],
     ['a_source_without_a_title_is_labelled_by_its_link', () => {
       t.eq(R.label({ title: '', url: 'https://www.xiaohongshu.com/explore/abc/' }), 'xiaohongshu.com/explore/abc',
            'the scheme and the www say nothing to a reader');
@@ -277,6 +283,8 @@ const BREAKS = [
   ['unknown fields are dropped by the merge', 'merge',
    'return Object.assign(unknownFields(b), unknownFields(a), {', 'return Object.assign({}, {',
    'fields_this_version_does_not_know_are_kept'],
+  ['any scheme is rendered as a link', 'refs', "return p === 'http:' || p === 'https:';", 'return true;',
+   'only_http_and_https_links_are_rendered_as_links'],
 ];
 
 const SOURCES = { merge: path.join(HERE, 'js', 'merge.js'), refs: path.join(HERE, 'js', 'refs.js') };

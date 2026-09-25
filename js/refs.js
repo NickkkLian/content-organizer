@@ -30,6 +30,17 @@
     return String(src.url || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   }
 
+  /* Whether a saved link may be rendered as a link: only http: and https:: anything else a file holds (javascript:,
+     data:, a relative path) is shown as text. Parsed the way the browser will parse the href, so tabs, newlines and
+     leading spaces inside the scheme do not slip through. */
+  function isWebUrl(u) {
+    if (u == null || u === '') return false;
+    try {
+      var p = new URL(String(u)).protocol;
+      return p === 'http:' || p === 'https:';
+    } catch (e) { return false; }
+  }
+
   function bind(comp) {
     comp = comp || {};
     var sources = [], seen = Object.create(null);
@@ -66,5 +77,5 @@
     return { sources: sources, sections: sections };
   }
 
-  return { VERSION: VERSION, bind: bind, label: label };
+  return { VERSION: VERSION, bind: bind, label: label, isWebUrl: isWebUrl };
 });

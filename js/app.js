@@ -94,6 +94,8 @@ window.XHS = window.XHS || {};
         // archived: prefer the repo copy (hydrate fills the blob URL asynchronously), original link as fallback
         items.push('<a target="_blank" rel="noreferrer"><img data-repo="' + esc(rp) + '"' +
           (u ? ' data-orig="' + esc(u) + '"' : '') + ' loading="lazy" alt=""></a>');
+      } else if (u && !X.refs.isWebUrl(u)) {
+        items.push('<span>' + esc(u) + '</span>');   // not a web address: shown as text, never as a link or image
       } else if (u) {
         // not archived: direct (no-referrer) → on failure the weserv proxy → then an "expired" placeholder
         items.push('<a href="' + esc(u) + '" target="_blank" rel="noreferrer">' +
@@ -124,7 +126,7 @@ window.XHS = window.XHS || {};
         .join('');
     }
     var sel = opts.selectable
-      ? '<label class="note__sel"><input type="checkbox" class="selbox" data-id="' + note.id + '"' + (opts.selected ? ' checked' : '') + '> ' + T('选入合集','Add to compilation') + '</label>'
+      ? '<label class="note__sel"><input type="checkbox" class="selbox" data-id="' + esc(note.id) + '"' + (opts.selected ? ' checked' : '') + '> ' + T('选入合集','Add to compilation') + '</label>'
       : '';
     // Folded by default (badges + title + one-line peek); click the title/arrow to expand — so a card
     // doesn't fill the screen and the next one isn't half a scroll away
@@ -150,7 +152,9 @@ window.XHS = window.XHS || {};
           (note.body ? '<pre class="note__body">' + esc(note.body) + '</pre>' : '') +
           renderTranscript(note) +
           renderImages(note) +
-          (note.url ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>' : '') +
+          (note.url ? (X.refs.isWebUrl(note.url)
+            ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>'
+            : '<span class="note__link">' + esc(note.url) + '</span>') : '') +
         '</div>' +
         '<div class="note__actions">' + actionsHtml + '</div>' +
       '</article>';
@@ -299,16 +303,16 @@ window.XHS = window.XHS || {};
     if (!list.length) { els.libList.innerHTML = '<p class="empty">' + T('没有匹配的笔记。','No matching notes.') + '</p>'; return; }
     els.libList.innerHTML = list.map(function (n) {
       var needFix = (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
-      var fixBtn = needFix ? iconBtn('data-act="fiximg" data-id="' + n.id + '"', '修复图片', 'Fix images', 'fix') : '';
+      var fixBtn = needFix ? iconBtn('data-act="fiximg" data-id="' + esc(n.id) + '"', '修复图片', 'Fix images', 'fix') : '';
       var actions = viewArchived
-        ? iconBtn('data-act="copy-lib" data-id="' + n.id + '"', '复制 MD', 'Copy MD', 'copy') +
-          iconBtn('data-act="open" data-id="' + n.id + '"', '原文', 'Original', 'open') + fixBtn +
-          '<button class="btn btn--primary" data-act="unarch" data-id="' + n.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>' +
-          iconBtn('data-act="del" data-id="' + n.id + '"', '删除', 'Delete', 'del', true)
-        : iconBtn('data-act="copy-lib" data-id="' + n.id + '"', '复制 MD', 'Copy MD', 'copy') +
-          iconBtn('data-act="open" data-id="' + n.id + '"', '原文', 'Original', 'open') + fixBtn +
-          iconBtn('data-act="arch" data-id="' + n.id + '"', '归档', 'Archive', 'archive') +
-          iconBtn('data-act="del" data-id="' + n.id + '"', '删除', 'Delete', 'del', true);
+        ? iconBtn('data-act="copy-lib" data-id="' + esc(n.id) + '"', '复制 MD', 'Copy MD', 'copy') +
+          iconBtn('data-act="open" data-id="' + esc(n.id) + '"', '原文', 'Original', 'open') + fixBtn +
+          '<button class="btn btn--primary" data-act="unarch" data-id="' + esc(n.id) + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>' +
+          iconBtn('data-act="del" data-id="' + esc(n.id) + '"', '删除', 'Delete', 'del', true)
+        : iconBtn('data-act="copy-lib" data-id="' + esc(n.id) + '"', '复制 MD', 'Copy MD', 'copy') +
+          iconBtn('data-act="open" data-id="' + esc(n.id) + '"', '原文', 'Original', 'open') + fixBtn +
+          iconBtn('data-act="arch" data-id="' + esc(n.id) + '"', '归档', 'Archive', 'archive') +
+          iconBtn('data-act="del" data-id="' + esc(n.id) + '"', '删除', 'Delete', 'del', true);
       return noteCardHtml(n, actions, { selectable: !viewArchived, selected: selectedIds.has(n.id) });
     }).join('');
     X.images.hydrate(els.libList);
@@ -368,7 +372,7 @@ window.XHS = window.XHS || {};
     els.selCount.textContent = T('已选 ','Selected ') + n + T(' 篇', n === 1 ? ' note' : ' notes');
     var comps = X.store.getComps();
     els.addToComp.innerHTML = '<option value="">' + T('加入已有合集…','Add to an existing compilation…') + '</option>' +
-      comps.map(function (c) { return '<option value="' + c.id + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
+      comps.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
   }
 
   async function runConsolidate(existingComp, reorgOnly){
@@ -484,15 +488,16 @@ window.XHS = window.XHS || {};
     var secs = (c.sections || []).map(function (s) {
       var src = (s.sources && s.sources.length)
         ? '<div class="comp__src">' + s.sources.map(function (x) {
-            return x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + esc(x.title || T('链接','link')) + ' ↗</a>'
-                         : '<a>' + esc(x.title || '') + '</a>';
+            if (x.url && X.refs.isWebUrl(x.url))
+              return '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + esc(x.title || T('链接','link')) + ' ↗</a>';
+            return '<a>' + esc(x.title || x.url || '') + '</a>';   // no href: plain text
           }).join('') + '</div>'
         : '';
       return '<div class="comp__sec"><h4>' + esc(s.heading) + '</h4><div class="body">' + esc(s.content) + '</div>' + src + '</div>';
     }).join('');
     var arch = viewCompArchived
-      ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + c.id + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
-      : iconBtn('data-cact="arch" data-id="' + c.id + '"', '归档', 'Archive', 'archive');
+      ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + esc(c.id) + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
+      : iconBtn('data-cact="arch" data-id="' + esc(c.id) + '"', '归档', 'Archive', 'archive');
     return '<article class="card comp is-fold">' +
       '<div class="comp__meta">' + meta +
         '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
@@ -501,12 +506,12 @@ window.XHS = window.XHS || {};
       (c.summary ? '<div class="comp__summary">' + esc(c.summary) + '</div>' : '') +
       '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
       '<div class="note__actions">' +
-        '<button class="btn btn--primary" data-cact="read" data-id="' + c.id + '">' + T('阅读','Read') + '</button>' +
-        iconBtn('data-cact="reorg" data-id="' + c.id + '"', '重新整理', 'Re-organize', 'reorg') +
-        iconBtn('data-cact="edit" data-id="' + c.id + '"', '编辑', 'Edit', 'edit') +
-        iconBtn('data-cact="copy" data-id="' + c.id + '"', '复制 MD', 'Copy MD', 'copy') +
+        '<button class="btn btn--primary" data-cact="read" data-id="' + esc(c.id) + '">' + T('阅读','Read') + '</button>' +
+        iconBtn('data-cact="reorg" data-id="' + esc(c.id) + '"', '重新整理', 'Re-organize', 'reorg') +
+        iconBtn('data-cact="edit" data-id="' + esc(c.id) + '"', '编辑', 'Edit', 'edit') +
+        iconBtn('data-cact="copy" data-id="' + esc(c.id) + '"', '复制 MD', 'Copy MD', 'copy') +
         arch +
-        iconBtn('data-cact="del" data-id="' + c.id + '"', '删除', 'Delete', 'del', true) +
+        iconBtn('data-cact="del" data-id="' + esc(c.id) + '"', '删除', 'Delete', 'del', true) +
       '</div></article>';
   }
 
@@ -523,8 +528,8 @@ window.XHS = window.XHS || {};
       '<textarea class="comp__ed-sum" rows="2" placeholder="' + T('一句话概括','One-line summary') + '">' + esc(c.summary || '') + '</textarea>' +
       secs +
       '<div class="note__actions">' +
-        '<button class="btn btn--primary" data-cact="save-edit" data-id="' + c.id + '">' + T('保存','Save') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="cancel-edit" data-id="' + c.id + '">' + T('取消','Cancel') + '</button>' +
+        '<button class="btn btn--primary" data-cact="save-edit" data-id="' + esc(c.id) + '">' + T('保存','Save') + '</button>' +
+        '<button class="btn btn--ghost" data-cact="cancel-edit" data-id="' + esc(c.id) + '">' + T('取消','Cancel') + '</button>' +
       '</div></article>';
   }
   /* ---------- Reading view ----------
@@ -563,7 +568,7 @@ window.XHS = window.XHS || {};
       var text = esc(X.refs.label(x));
       return '<li id="read-src-' + x.n + '"' + (x.cited ? '' : ' class="is-uncited"') + '>' +
         '<span class="read__n">' + x.n + '</span>' +
-        (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + text + ' ↗</a>' : '<span>' + text + '</span>') +
+        (X.refs.isWebUrl(x.url) ? '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + text + ' ↗</a>' : '<span>' + text + '</span>') +
         (x.cited ? '' : '<span class="read__tag" title="' +
           T('这篇被并进了正文，但没有哪一节单独标注它。','Folded into the piece, but no section cites it on its own.') + '">' +
           T('未单独引用','uncited') + '</span>') + '</li>';
@@ -660,7 +665,7 @@ window.XHS = window.XHS || {};
     if (!X.ai) return;
     var cfg = X.ai.getConfig();
     if (els.aiModel) {
-      els.aiModel.innerHTML = X.ai.MODELS.map(function (m) { return '<option value="' + m.id + '">' + (X.i18n.lang === 'en' ? m.nameEn : m.name) + '</option>'; }).join('');
+      els.aiModel.innerHTML = X.ai.MODELS.map(function (m) { return '<option value="' + esc(m.id) + '">' + esc(X.i18n.lang === 'en' ? m.nameEn : m.name) + '</option>'; }).join('');
     }
     if (els.aiModel) els.aiModel.value = cfg.model;
     if (els.aiStatus) els.aiStatus.textContent = X.ai.isReady()
@@ -860,7 +865,7 @@ window.XHS = window.XHS || {};
       if (act === 'demo') { seedSamples(); scheduleSync(); }
       else if (act === 'del') { if (confirm(T('删除这篇收藏？','Delete this saved note?'))) { X.store.remove(id); renderLibrary(); scheduleSync(); } }
       else if (act === 'copy-lib') { copyText(noteToMarkdown(note)); }
-      else if (act === 'open') { if (note && note.url) window.open(note.url, '_blank', 'noreferrer'); }
+      else if (act === 'open') { if (note && X.refs.isWebUrl(note.url)) window.open(note.url, '_blank', 'noreferrer'); }
       else if (act === 'arch') { X.store.archive([id]); selectedIds.delete(id); renderLibrary(); updateSelBar(); scheduleSync(); }
       else if (act === 'unarch') { X.store.unarchive([id]); renderLibrary(); scheduleSync(); }
       else if (act === 'fiximg') {
