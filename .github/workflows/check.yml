@@ -26,6 +26,16 @@ jobs:
       # each rule broken in a copy; green only when the case written for that rule is the one that fails
       - run: node check.mjs --break
 
+  original-button:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # the library's Original button hands a saved url to window.open only when it is http(s)
+      - run: node check-open.mjs
+
   stylesheet:
     runs-on: ubuntu-latest
     steps:
