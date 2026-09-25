@@ -2,14 +2,18 @@
    (Xiaohongshu + Bilibili in one file, each note tagged with `platform`).
    On first run, if content.json does not exist it is bootstrapped by merging the legacy
    xhs.json + bilibili.json (the originals are left untouched as backups).
-   Owner / repo / token live in localStorage (`pha-config`) on this machine only and are never
+   Owner / repo / token live in localStorage (`pha-config`; `pha-config:content-organizer` on GitHub Pages) on
+   this machine only and are never
    written to any repo. Only the data files inside the repo are touched. */
 window.XHS = window.XHS || {};
 (function (X) {
   'use strict';
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function (zh, en) { return en; };
 
-  var PHA_KEY = 'pha-config';           // localStorage key holding owner / repo / token
+  // localStorage key holding owner / repo / token. On the hub the product family shares one connection on purpose.
+  // On GitHub Pages every public demo shares the origin nickkklian.github.io, so a shared key would let a token
+  // entered in one demo connect the others: there this demo keeps its own key.
+  var PHA_KEY = /\.github\.io$/.test(location.hostname) ? 'pha-config:content-organizer' : 'pha-config';
   var DATA_PATH = 'content.json';       // the unified library file
   var LEGACY = [                        // first-run bootstrap: per-platform files → tagged and merged
     { platform: 'xhs',  file: 'xhs.json' },
