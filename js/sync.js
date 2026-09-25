@@ -10,10 +10,11 @@ window.XHS = window.XHS || {};
   'use strict';
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function (zh, en) { return en; };
 
-  // localStorage key holding owner / repo / token. On the hub the product family shares one connection on purpose.
-  // On GitHub Pages every public demo shares the origin nickkklian.github.io, so a shared key would let a token
-  // entered in one demo connect the others: there this demo keeps its own key.
-  var PHA_KEY = /\.github\.io$/.test(location.hostname) ? 'pha-config:content-organizer' : 'pha-config';
+  // localStorage key holding owner / repo / token. On GitHub Pages every public demo shares the origin
+  // nickkklian.github.io, so a shared key would let a token entered in one demo connect the others: there this demo
+  // keeps its own key (a trailing dot in the host name is the same site). Elsewhere the product family shares one
+  // connection on purpose.
+  var PHA_KEY = /\.github\.io\.?$/.test(location.hostname) ? 'pha-config:content-organizer' : 'pha-config';
   var DATA_PATH = 'content.json';       // the unified library file
   var LEGACY = [                        // first-run bootstrap: per-platform files → tagged and merged
     { platform: 'xhs',  file: 'xhs.json' },
