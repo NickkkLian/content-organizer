@@ -133,6 +133,7 @@ node check-css.mjs                 # every rendered class has a rule, and back
 node check-css.mjs --break         # deletes rules to show the check can go red
 node check-csp.mjs                 # the Content-Security-Policy is script-src 'self' + the inline scripts' hashes
 node check-csp.mjs --write         # after editing an inline script in index.html: update the hashes
+node check-models.mjs              # every AI request names Claude Opus 5.5 or Sonnet 5 (fetch replaced by a recorder)
 ```
 
 Cloud sync and image archiving need a fine-grained GitHub token with Contents read/write on a private

@@ -43,7 +43,7 @@ if (lang !== 'en' && lang !== 'zh') {
   console.error(`--lang takes en or zh, not ${lang}`);
   process.exit(2);
 }
-const store = new Map([['xhs_ai_config', JSON.stringify({ apiKey: key, model: process.env.MODEL || 'claude-opus-4-8' })]]);
+const store = new Map([['xhs_ai_config', JSON.stringify({ apiKey: key, model: process.env.MODEL || 'claude-opus-5-5' })]]);
 const context = {
   /* i18n is what js/ai.js reads to decide the output language; in the browser it is a loaded module, here it is
      this one field, and leaving it out is not neutral — it picks the other language. */

@@ -8,22 +8,28 @@ window.XHS = window.XHS || {};
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function (zh, en) { return en; };
 
   var KEY = 'xhs_ai_config';
-  var DEFAULT_MODEL = 'claude-opus-4-8';
+  /* Two models only. Opus 5.5 writes the compilation (long writing, distilling); Sonnet 5 is the cheaper choice for it
+     and always does the routine frame judging. Both think on every request, and thinking counts toward max_tokens. */
+  var DEFAULT_MODEL = 'claude-opus-5-5';
+  var FRAME_MODEL = 'claude-sonnet-5';
   var MODELS = [
-    { id: 'claude-opus-4-8', name: 'Opus 4.8（最强 · 推荐）', nameEn: 'Opus 4.8 (best · recommended)' },
-    { id: 'claude-sonnet-5', name: 'Sonnet 5（更快更省）', nameEn: 'Sonnet 5 (faster & cheaper)' },
-    { id: 'claude-haiku-4-5', name: 'Haiku 4.5（最便宜）', nameEn: 'Haiku 4.5 (cheapest)' }
+    { id: 'claude-opus-5-5', name: 'Opus 5.5（最强 · 推荐）', nameEn: 'Opus 5.5 (best · recommended)' },
+    { id: 'claude-sonnet-5', name: 'Sonnet 5（更快更省）', nameEn: 'Sonnet 5 (faster & cheaper)' }
   ];
+  // a model saved by an older version of the page (Opus 4.8, Haiku 4.5) is no longer offered: fall back to the default
+  function allowedModel(id) {
+    return MODELS.some(function (m) { return m.id === id; }) ? id : DEFAULT_MODEL;
+  }
 
   function getConfig() {
     try {
       var c = JSON.parse(localStorage.getItem(KEY) || '{}');
-      return { apiKey: c.apiKey || '', model: c.model || DEFAULT_MODEL };
+      return { apiKey: c.apiKey || '', model: allowedModel(c.model) };
     } catch (e) { return { apiKey: '', model: DEFAULT_MODEL }; }
   }
   function saveConfig(apiKey, model) {
     var cur = getConfig();
-    var next = { apiKey: apiKey != null ? apiKey : cur.apiKey, model: model || cur.model || DEFAULT_MODEL };
+    var next = { apiKey: apiKey != null ? apiKey : cur.apiKey, model: allowedModel(model || cur.model) };
     localStorage.setItem(KEY, JSON.stringify(next));
     return next;
   }
@@ -119,11 +125,11 @@ window.XHS = window.XHS || {};
     });
 
     var body = {
-      model: cfg.model || DEFAULT_MODEL,
-      max_tokens: 16000,
+      model: allowedModel(cfg.model),
+      max_tokens: 16000,   // the model's thinking counts toward this, so it stays well above the compilation itself
       system: systemPrompt(),
       messages: [{ role: 'user', content: content }],
-      output_config: { format: { type: 'json_schema', schema: SCHEMA } }
+      output_config: { effort: 'high', format: { type: 'json_schema', schema: SCHEMA } }
     };
 
     var r;
@@ -147,8 +153,10 @@ window.XHS = window.XHS || {};
 
     var j = await r.json();
     if (j.stop_reason === 'refusal') throw new Error(T('模型拒绝了该请求','The model refused the request'));
+    // cut off at max_tokens: whatever text came back is half a JSON document, so say why instead of failing to parse it
+    if (j.stop_reason === 'max_tokens') throw new Error(T('输出过长被截断，请减少笔记数量','Output too long and cut off; reduce the number of notes'));
     var textBlock = (j.content || []).filter(function (b) { return b.type === 'text'; })[0];
-    if (!textBlock) throw new Error(T('未返回内容','No content returned') + (j.stop_reason === 'max_tokens' ? T('（输出过长，请减少笔记数量）',' (output too long, reduce the number of notes)') : ''));
+    if (!textBlock) throw new Error(T('未返回内容','No content returned'));
     var data;
     try { data = JSON.parse(textBlock.text); }
     catch (e) { throw new Error(T('解析返回的 JSON 失败','Failed to parse returned JSON')); }
@@ -168,9 +176,9 @@ window.XHS = window.XHS || {};
       content.push({ type: 'image', source: { type: 'base64', media_type: 'image/webp', data: b } });
     });
     var reqBody = {
-      model: cfg.model || DEFAULT_MODEL, max_tokens: 300,
+      model: FRAME_MODEL, max_tokens: 16000,   // thinking counts toward max_tokens; 300 would cut the answer off
       messages: [{ role: 'user', content: content }],
-      output_config: { format: { type: 'json_schema', schema: {
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: {
         type: 'object', properties: { keep: { type: 'array', items: { type: 'integer' } } },
         required: ['keep'], additionalProperties: false } } }
     };
@@ -185,6 +193,7 @@ window.XHS = window.XHS || {};
     } catch (e) { return []; }
     if (!r.ok) return [];
     var j = await r.json();
+    if (j.stop_reason === 'refusal' || j.stop_reason === 'max_tokens') return [];
     var tb = (j.content || []).filter(function (b) { return b.type === 'text'; })[0];
     if (!tb) return [];
     try {
@@ -195,6 +204,6 @@ window.XHS = window.XHS || {};
 
   X.ai = {
     getConfig: getConfig, saveConfig: saveConfig, isReady: isReady,
-    consolidate: consolidate, judgeFrames: judgeFrames, MODELS: MODELS, DEFAULT_MODEL: DEFAULT_MODEL
+    consolidate: consolidate, judgeFrames: judgeFrames, MODELS: MODELS, DEFAULT_MODEL: DEFAULT_MODEL, FRAME_MODEL: FRAME_MODEL
   };
 })(window.XHS);
