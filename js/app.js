@@ -29,6 +29,15 @@ window.XHS = window.XHS || {};
     els.status.style.display = msg ? 'block' : 'none';
   }
 
+  /* The local date of a saved timestamp. Saved timestamps are UTC (toISOString), so their first ten characters are the
+     UTC date, which west of UTC is already tomorrow in the evening. A value that is not a full ISO timestamp is shown
+     as it is. */
+  function localDay(v){
+    var s = String(v || ''), d = /^\d{4}-\d{2}-\d{2}T\d/.test(s) ? new Date(s) : null;
+    if (!d || isNaN(d)) return s.slice(0, 10);
+    var p = function (x) { return String(x).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
@@ -578,7 +587,7 @@ window.XHS = window.XHS || {};
        and js/store.js sets it on every save, because the merge rule between two devices is latest-savedAt-wins.
        Showing savedAt made a cached compilation look as though it had been made today, every day — the opposite of
        what the cache was supposed to make visible (found 2026-09-22). */
-    var when = (c.runAt || c.savedAt) ? '<span>' + esc(String(c.runAt || c.savedAt).slice(0, 10)) + '</span>' : '';
+    var when = (c.runAt || c.savedAt) ? '<span>' + esc(localDay(c.runAt || c.savedAt)) + '</span>' : '';
     /* the language it was written in, when the file says: a compilation can be read in the other language */
     var inLang = c.lang ? '<span class="read__badge">' + esc(c.lang) + '</span>' : '';
     return '<div class="read__bar">' +
