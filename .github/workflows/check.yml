@@ -9,8 +9,8 @@ jobs:
   merge-rules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       # the merge rules the two devices depend on and the reference list the reading view prints, from the files the browser loads
@@ -19,8 +19,8 @@ jobs:
   break:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       # each rule broken in a copy; green only when the case written for that rule is the one that fails
@@ -29,8 +29,8 @@ jobs:
   original-button:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       # the library's Original button hands a saved url to window.open only when it is http(s)
@@ -39,8 +39,8 @@ jobs:
   stylesheet:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       # every class the app renders has a rule, every rule is for a class it renders
@@ -51,8 +51,8 @@ jobs:
   content-security-policy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       # exactly script-src 'self' + the sha256 of each inline script, before the first script; no inline handlers
@@ -63,7 +63,7 @@ jobs:
   no-build-step:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # the page is served as it is committed: every script it loads must be a file in the repository
       - run: |
           missing=0
