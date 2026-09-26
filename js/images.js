@@ -188,6 +188,12 @@ window.XHS = window.XHS || {};
     if (fb && img.src !== fb) { img.src = fb; return; }
     imgDead(img);
   }
+  // The page's Content-Security-Policy runs no inline event-handler attribute, so one listener takes every failed
+  // <img data-fb> (error does not bubble; it is caught on the way down)
+  document.addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.hasAttribute('data-fb')) imgFallback(t);
+  }, true);
 
   // Store the AI-selected base64 frames under xhs-images/<key>/; returns the repo paths (imagesRepo of the video note)
   async function saveFrames(key, b64list, onProgress){

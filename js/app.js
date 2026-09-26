@@ -100,7 +100,7 @@ window.XHS = window.XHS || {};
         // not archived: direct (no-referrer) → on failure the weserv proxy → then an "expired" placeholder
         items.push('<a href="' + esc(u) + '" target="_blank" rel="noreferrer">' +
           '<img src="' + esc(u) + '" loading="lazy" referrerpolicy="no-referrer" alt="" data-fb="' +
-          esc(X.images.proxyUrl(u)) + '" onerror="XHS.images.imgFallback(this)"></a>');
+          esc(X.images.proxyUrl(u)) + '"></a>');   // a failed load goes to imgFallback (images.js)
       }
     }
     return '<div class="gallery">' + items.join('') + '</div>';

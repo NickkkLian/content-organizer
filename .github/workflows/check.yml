@@ -48,6 +48,18 @@ jobs:
       # and the check goes red when a rule is deleted
       - run: node check-css.mjs --break
 
+  content-security-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # exactly script-src 'self' + the sha256 of each inline script, before the first script; no inline handlers
+      - run: node check-csp.mjs
+      # and the check goes red on each way of removing, loosening or unpinning it
+      - run: node check-csp.mjs --self-test
+
   no-build-step:
     runs-on: ubuntu-latest
     steps:

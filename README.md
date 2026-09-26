@@ -45,6 +45,7 @@ they carry.
 | Front end | Vanilla JS modules, one HTML file, no bundler. Loads in the order `i18n → samples → classify → parse → merge → refs → store → sync → images → fetch → ai → app` |
 | Rules under test | The two things that would fail silently are pure functions in files of their own, DOM-free, loaded by the browser with `<script>` and by node with `require` — the file the browser runs is the file the tests run. `js/merge.js` is what happens when two devices have both written; `js/refs.js` is the numbered source list the reading view prints. `node check.mjs` runs 36 cases; `node check.mjs --break` breaks each rule in a copy and requires **the case written for it** to be the one that fails |
 | Stylesheet under test | `node check-css.mjs`: every class the app puts on an element has a rule, every rule is for a class it renders. Written after a restyle silently dropped the rules for twenty-two classes — error messages rendered in the neutral information style and nothing threw |
+| Content-Security-Policy | A `<meta>` right after `<meta charset>`: scripts only from this site's own files and from the page's two inline scripts, pinned by sha256; no `'unsafe-inline'`, no `'unsafe-eval'`. The keys this app keeps in the browser share an origin with the author's other GitHub Pages sites, and the library shows text saved from other sites, so the browser itself refuses a script from another host, text run as code and inline event handlers. There is no build step: `node check-csp.mjs --write` computes the hashes and `node check-csp.mjs` (in CI) fails when the policy is missing, loosened or out of step with the page |
 | Local storage | IndexedDB, with a one-time migration from localStorage. The origin hosts many apps and the ~5 MB localStorage quota is shared, so transcripts were silently failing to save — the store now throws visibly instead |
 | Cloud sync | A single `content.json` in a private GitHub repo via the Contents API. Merge is union + tombstones + latest-`savedAt`-wins, so several devices can write concurrently; a `sha` conflict triggers one re-pull-and-retry |
 | Image archiving | Fetched through an image proxy (CORS), compressed to 1080px WebP, committed to the repo; rendered back as blob URLs with the token. A cache-key subtlety with GitHub's `Accept`-negotiated responses is documented inline in `js/images.js` |
@@ -71,6 +72,7 @@ js/app.js             UI, sample data, event wiring
 local/                the optional video service and its double-click toggle app (see local/README.md)
 check.mjs             36 cases over js/merge.js and js/refs.js; --break has to make the right one fail
 check-css.mjs         every rendered class has a rule, every rule is rendered; --break deletes rules to show it goes red
+check-csp.mjs         the page's Content-Security-Policy: --write puts it in, the default run checks it, --self-test breaks it
 make-demo-compilation.mjs   runs the AI step once with your key and writes demo/compilation.json
 ```
 
@@ -129,6 +131,8 @@ node check.mjs                     # 36 cases over the merge rules and the sourc
 node check.mjs --break             # breaks each rule; the case written for it has to be the one that fails
 node check-css.mjs                 # every rendered class has a rule, and back
 node check-css.mjs --break         # deletes rules to show the check can go red
+node check-csp.mjs                 # the Content-Security-Policy is script-src 'self' + the inline scripts' hashes
+node check-csp.mjs --write         # after editing an inline script in index.html: update the hashes
 ```
 
 Cloud sync and image archiving need a fine-grained GitHub token with Contents read/write on a private
