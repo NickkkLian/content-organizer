@@ -236,22 +236,15 @@ function main() {
   const probes = Array.from({ length: WANT }, (_, i) => candidates[Math.floor((i * candidates.length) / WANT)]);
   const caught = [];
   for (const name of probes) {
-    // A class can be styled by both the base sheet and an override. Remove it from
-    // every sheet: leaving an override behind is not a missing-class mutation.
-    let removed = 0;
-    const mutated = readSheets().map(([rel, text]) => {
-      const deletion = deleteRulesFor(text, name);
-      removed += deletion.removed;
-      return [rel, deletion.css];
-    });
+    const { css, removed } = deleteRulesFor(styles, name);
     if (!removed) {
       console.log(`NOT APPLIED  .${name} — no rule to delete in ${sheetFile}`);
       caught.push(false);
       continue;
     }
-    const { unstyled } = report(mutated);
+    const { unstyled } = report(readSheets({ [sheetFile]: css }));
     const ok = unstyled.includes(name);
-    console.log(`${ok ? 'CAUGHT     ' : 'NOT CAUGHT '} .${name} (${removed} rule${removed === 1 ? '' : 's'} deleted across all sheets)` +
+    console.log(`${ok ? 'CAUGHT     ' : 'NOT CAUGHT '} .${name} (${removed} rule${removed === 1 ? '' : 's'} deleted from ${sheetFile})` +
       (ok ? '' : `\n             reported instead: ${unstyled.join(', ') || 'nothing'}`));
     caught.push(ok);
   }
