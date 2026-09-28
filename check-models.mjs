@@ -2,7 +2,7 @@
 
      node check-models.mjs
 
-   The app offers exactly two models: claude-opus-5-5 and claude-sonnet-5. A model id saved by an older version of
+   The app offers exactly two models: claude-opus-5-5 and claude-sonnet-5-5 (a saved claude-sonnet-5 moves to claude-sonnet-5-5). A model id saved by an older version of
    the page (Opus 4.8, Haiku 4.5) must not reach the API. Both models think on every request and the thinking counts
    toward max_tokens, and both reject budget_tokens, temperature and a forced tool_choice.
    fetch is replaced by a recorder, so no request leaves this machine. */
@@ -12,7 +12,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ALLOWED = ['claude-opus-5-5', 'claude-sonnet-5'];
+const ALLOWED = ['claude-opus-5-5', 'claude-sonnet-5-5'];
 let failed = 0;
 const ok = (cond, name) => { console.log((cond ? 'ok   ' : 'FAIL ') + name); if (!cond) failed++; };
 
@@ -38,9 +38,9 @@ const compJson = JSON.stringify({ title: 't', topic: 'x', summary: 's', sections
 const good = { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: compJson }] };
 const posts = [{ title: 'a note', body: 'body', tags: [], url: '' }];
 
-ok(JSON.stringify([...load().ai.MODELS.map((m) => m.id)]) === JSON.stringify(ALLOWED), 'the picker offers exactly Opus 5.5 and Sonnet 5');
+ok(JSON.stringify([...load().ai.MODELS.map((m) => m.id)]) === JSON.stringify(ALLOWED), 'the picker offers exactly Opus 5.5 and Sonnet 5.5');
 
-for (const saved of [null, { apiKey: 'k' }, { apiKey: 'k', model: 'claude-opus-4-8' }, { apiKey: 'k', model: 'claude-haiku-4-5' }, { apiKey: 'k', model: 'claude-sonnet-5' }, { apiKey: 'k', model: 'claude-opus-5-5' }]) {
+for (const saved of [null, { apiKey: 'k' }, { apiKey: 'k', model: 'claude-opus-4-8' }, { apiKey: 'k', model: 'claude-haiku-4-5' }, { apiKey: 'k', model: 'claude-sonnet-5-5' }, { apiKey: 'k', model: 'claude-sonnet-5' }, { apiKey: 'k', model: 'claude-opus-5-5' }]) {
   const { ai, sent } = load(saved ? { apiKey: 'k', ...saved } : { apiKey: 'k' }, good);
   const res = await ai.consolidate(posts, null);
   await ai.judgeFrames(['AAAA']);
@@ -54,8 +54,9 @@ for (const saved of [null, { apiKey: 'k' }, { apiKey: 'k', model: 'claude-opus-4
     ok(!('temperature' in s.body) && !('tool_choice' in s.body) && !('thinking' in s.body), `${label}: ${what} sends no temperature, tool_choice or thinking budget`);
   }
   if (saved && ALLOWED.includes(saved.model)) ok(sent[0].body.model === saved.model, `${label}: the chosen model is the one used`);
-  if (saved && saved.model && !ALLOWED.includes(saved.model)) ok(sent[0].body.model === 'claude-opus-5-5', `${label}: an old saved model falls back to Opus 5.5`);
-  ok(sent[1].body.model === 'claude-sonnet-5', `${label}: frame judging uses Sonnet 5`);
+  if (saved && saved.model === 'claude-sonnet-5') ok(sent[0].body.model === 'claude-sonnet-5-5', `${label}: a saved Sonnet 5 moves to Sonnet 5.5`);
+  else if (saved && saved.model && !ALLOWED.includes(saved.model)) ok(sent[0].body.model === 'claude-opus-5-5', `${label}: an old saved model falls back to Opus 5.5`);
+  ok(sent[1].body.model === 'claude-sonnet-5-5', `${label}: frame judging uses Sonnet 5.5`);
 }
 
 { const { ai, store } = load({ apiKey: 'k' }, good);

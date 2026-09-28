@@ -81,5 +81,5 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
-      # every request js/ai.js sends names Opus 5.5 or Sonnet 5, with fetch replaced by a recorder
+      # every request js/ai.js sends names Opus 5.5 or Sonnet 5.5, with fetch replaced by a recorder
       - run: node check-models.mjs
