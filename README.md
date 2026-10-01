@@ -1,8 +1,12 @@
 # Clipbind
 
-![Clipbind](.github/header.png)
-
 **What you saved on Xiaohongshu and Bilibili, bound into one piece you can read.**
+
+**Try it:** [open the live demo](https://nickkklian.github.io/content-organizer/?demo=1) — three sample notes and one saved compilation; press **Read** on the compilation to open the reading view. No key, no sign-in.
+
+![Library view](docs/screenshot-library.png)
+
+![Clipbind](.github/header.png)
 
 One library for the things you save on **Xiaohongshu** (posts and videos) and **Bilibili** (videos),
 an AI step that binds a pile of them into one de-duplicated, sectioned write-up, and a reading view
@@ -15,8 +19,6 @@ machine.
 default, 中文 toggle in the corner. The demo keeps its three sample notes in this browser. They leave it only if you send them: AI consolidation sends what you ask it to consolidate to Anthropic with the key you enter, and nothing is saved to a repository until you connect your own. Adding a note from a link fetches that page through r.jina.ai (or allorigins.win). The
 sample notes are what this library is for: saved social posts, with Chinese tags, because that is what
 they carry.
-
-![Library view](docs/screenshot-library.png)
 
 ## What it does
 
@@ -43,7 +45,7 @@ they carry.
 | Concern | Approach |
 |---|---|
 | Front end | Vanilla JS modules, one HTML file, no bundler. Loads in the order `i18n → samples → classify → parse → merge → refs → store → sync → images → fetch → ai → app` |
-| Rules under test | The two things that would fail silently are pure functions in files of their own, DOM-free, loaded by the browser with `<script>` and by node with `require` — the file the browser runs is the file the tests run. `js/merge.js` is what happens when two devices have both written; `js/refs.js` is the numbered source list the reading view prints. `node check.mjs` runs 36 cases; `node check.mjs --break` breaks each rule in a copy and requires **the case written for it** to be the one that fails |
+| Rules under test | The two things that would fail silently are pure functions in files of their own, DOM-free, loaded by the browser with `<script>` and by node with `require` — the file the browser runs is the file the tests run. `js/merge.js` is what happens when two devices have both written; `js/refs.js` is the numbered source list the reading view prints. `node check.mjs` runs 40 cases; `node check.mjs --break` breaks each rule in a copy and requires **the case written for it** to be the one that fails |
 | Stylesheet under test | `node tools/check-css.mjs`: every class the app puts on an element has a rule, every rule is for a class it renders. Written after a restyle silently dropped the rules for twenty-two classes — error messages rendered in the neutral information style and nothing threw |
 | Content-Security-Policy | A `<meta>` right after `<meta charset>`: scripts only from this site's own files and from the page's two inline scripts, pinned by sha256; no `'unsafe-inline'`, no `'unsafe-eval'`. The keys this app keeps in the browser share an origin with the author's other GitHub Pages sites, and the library shows text saved from other sites, so the browser itself refuses a script from another host, text run as code and inline event handlers. There is no build step: `node check-csp.mjs --write` computes the hashes and `node check-csp.mjs` (in CI) fails when the policy is missing, loosened or out of step with the page |
 | Local storage | IndexedDB, with a one-time migration from localStorage. The origin hosts many apps and the ~5 MB localStorage quota is shared, so transcripts were silently failing to save — the store now throws visibly instead |
@@ -70,7 +72,7 @@ js/fetch.js           client for the local video service (EventSource)
 js/ai.js              consolidation + frame judging (structured outputs)
 js/app.js             UI, sample data, event wiring
 local/                the optional video service and its double-click toggle app (see local/README.md)
-check.mjs             36 cases over js/merge.js and js/refs.js; --break has to make the right one fail
+check.mjs             40 cases over js/merge.js and js/refs.js; --break has to make the right one fail
 tools/check-css.mjs   every rendered class has a rule, every rule is rendered; --break deletes rules to show it goes red
 check-csp.mjs         the page's Content-Security-Policy: --write puts it in, the default run checks it, --self-test breaks it
 make-demo-compilation.mjs   runs the AI step once with your key and writes demo/compilation.json
@@ -127,7 +129,7 @@ Those four decisions are also the four breaks `node check.mjs --break` makes in 
 
 ```bash
 python3 -m http.server 8765        # then open http://localhost:8765/?demo=1
-node check.mjs                     # 36 cases over the merge rules and the source list
+node check.mjs                     # 40 cases over the merge rules and the source list
 node check.mjs --break             # breaks each rule; the case written for it has to be the one that fails
 node tools/check-css.mjs           # every rendered class has a rule, and back
 node tools/check-css.mjs --break   # deletes rules to show the check can go red
@@ -141,7 +143,7 @@ repo of yours; AI features need an Anthropic API key. Both are entered under **C
 only in the browser. The video service is optional — see [`local/README.md`](local/README.md).
 
 `demo/compilation.json` is the sample notes put through the AI step once and kept; where it is present,
-`?demo=1` opens the reading view with no key of your own. The model answers in the language the interface was in, so
+`?demo=1` lists it under the sample notes and **Read** opens the reading view, with no key of your own. The model answers in the language the interface was in, so
 there is one file per language and the page loads yours first. To make them (one API call each, a few cents):
 
 ```bash
