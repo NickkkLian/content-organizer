@@ -8,13 +8,15 @@ window.XHS = window.XHS || {};
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function (zh, en) { return en; };
 
   var KEY = 'xhs_ai_config';
-  /* Two models only. Opus 5.5 writes the compilation (long writing, distilling); Sonnet 5.5 is the cheaper choice for it
-     and always does the routine frame judging. Both think on every request, and thinking counts toward max_tokens. */
+  /* Three models. Opus 5.5 writes the compilation (long writing, distilling); Sonnet 5.5 is the cheaper choice for it
+     and always does the routine frame judging; Haiku 5.5 (added 2026-10-07) is the cheapest choice for the compilation.
+     All three think by default, and thinking counts toward max_tokens. */
   var DEFAULT_MODEL = 'claude-opus-5-5';
   var FRAME_MODEL = 'claude-sonnet-5-5';
   var MODELS = [
     { id: 'claude-opus-5-5', name: 'Opus 5.5（最强 · 推荐）', nameEn: 'Opus 5.5 (best · recommended)' },
-    { id: 'claude-sonnet-5-5', name: 'Sonnet 5.5（更快更省）', nameEn: 'Sonnet 5.5 (faster & cheaper)' }
+    { id: 'claude-sonnet-5-5', name: 'Sonnet 5.5（更快更省）', nameEn: 'Sonnet 5.5 (faster & cheaper)' },
+    { id: 'claude-haiku-5-5', name: 'Haiku 5.5（最快最省）', nameEn: 'Haiku 5.5 (fastest & cheapest)' }
   ];
   // a model saved by an older version of the page (Opus 4.8, Haiku 4.5) is no longer offered: fall back to the default;
   // Sonnet 5, offered until 2026-09-28, becomes its successor Sonnet 5.5 so the reader keeps the cheaper choice

@@ -1,10 +1,10 @@
-/* check-models.mjs — every request js/ai.js sends names one of the two allowed models.
+/* check-models.mjs — every request js/ai.js sends names one of the three allowed models.
 
      node check-models.mjs
 
-   The app offers exactly two models: claude-opus-5-5 and claude-sonnet-5-5 (a saved claude-sonnet-5 moves to claude-sonnet-5-5). A model id saved by an older version of
-   the page (Opus 4.8, Haiku 4.5) must not reach the API. Both models think on every request and the thinking counts
-   toward max_tokens, and both reject budget_tokens, temperature and a forced tool_choice.
+   The app offers exactly three models: claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 (a saved claude-sonnet-5 moves to claude-sonnet-5-5). A model id saved by an older version of
+   the page (Opus 4.8, Haiku 4.5) must not reach the API. All three think by default and the thinking counts
+   toward max_tokens; all three reject budget_tokens and temperature, and Opus 5.5 and Sonnet 5.5 reject a forced tool_choice.
    fetch is replaced by a recorder, so no request leaves this machine. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +12,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ALLOWED = ['claude-opus-5-5', 'claude-sonnet-5-5'];
+const ALLOWED = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
 let failed = 0;
 const ok = (cond, name) => { console.log((cond ? 'ok   ' : 'FAIL ') + name); if (!cond) failed++; };
 
@@ -38,9 +38,9 @@ const compJson = JSON.stringify({ title: 't', topic: 'x', summary: 's', sections
 const good = { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: compJson }] };
 const posts = [{ title: 'a note', body: 'body', tags: [], url: '' }];
 
-ok(JSON.stringify([...load().ai.MODELS.map((m) => m.id)]) === JSON.stringify(ALLOWED), 'the picker offers exactly Opus 5.5 and Sonnet 5.5');
+ok(JSON.stringify([...load().ai.MODELS.map((m) => m.id)]) === JSON.stringify(ALLOWED), 'the picker offers exactly Opus 5.5, Sonnet 5.5 and Haiku 5.5');
 
-for (const saved of [null, { apiKey: 'k' }, { apiKey: 'k', model: 'claude-opus-4-8' }, { apiKey: 'k', model: 'claude-haiku-4-5' }, { apiKey: 'k', model: 'claude-sonnet-5-5' }, { apiKey: 'k', model: 'claude-sonnet-5' }, { apiKey: 'k', model: 'claude-opus-5-5' }]) {
+for (const saved of [null, { apiKey: 'k' }, { apiKey: 'k', model: 'claude-opus-4-8' }, { apiKey: 'k', model: 'claude-haiku-4-5' }, { apiKey: 'k', model: 'claude-sonnet-5-5' }, { apiKey: 'k', model: 'claude-sonnet-5' }, { apiKey: 'k', model: 'claude-opus-5-5' }, { apiKey: 'k', model: 'claude-haiku-5-5' }]) {
   const { ai, sent } = load(saved ? { apiKey: 'k', ...saved } : { apiKey: 'k' }, good);
   const res = await ai.consolidate(posts, null);
   await ai.judgeFrames(['AAAA']);
