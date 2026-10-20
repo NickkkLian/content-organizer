@@ -1,24 +1,24 @@
 # Clipbind
 
-**What you saved on Xiaohongshu and Bilibili, bound into one piece you can read.**
+**Read saved Xiaohongshu and Bilibili notes as one piece, with links back to its sources.**
 
-**Try it:** [open the live demo](https://nickkklian.github.io/content-organizer/?demo=1) — three sample notes and one saved compilation; press **Read** on the compilation to open the reading view. No key, no sign-in.
+For people whose useful saved posts are scattered across two platforms: keep a library, organise it, and read a sectioned compilation with numbered source references.
 
-![Library view](docs/screenshot-library.png)
+**[Try the live demo](https://nickkklian.github.io/content-organizer/?demo=1)** — three sample notes and a saved compilation. Open **Compilations**, then press **Read**. Viewing the saved result needs no key or sign-in; it does not run a new AI request.
 
-![Clipbind](.github/header.png)
+![Clipbind: the saved compilation in reading view, with sections and numbered source references](docs/launch-reading.png)
 
-One library for the things you save on **Xiaohongshu** (posts and videos) and **Bilibili** (videos),
-an AI step that binds a pile of them into one de-duplicated, sectioned write-up, and a reading view
-that shows the result as what it is: a piece of writing, with every section pointing back at the
-posts it was made from. A static single-page app with no build step and no server of its own: your
-data lives in your browser and in a private GitHub repo you control, and every API key stays on your
-machine.
+## Quick start
 
-**Live demo:** https://nickkklian.github.io/content-organizer/?demo=1 — three sample notes, English by
-default, 中文 toggle in the corner. The demo keeps its three sample notes in this browser. They leave it only if you send them: AI consolidation sends what you ask it to consolidate to Anthropic with the key you enter, and nothing is saved to a repository until you connect your own. Adding a note from a link fetches that page through r.jina.ai (or allorigins.win). The
-sample notes are what this library is for: saved social posts, with Chinese tags, because that is what
-they carry.
+Use the demo above, or serve a clone locally (Python 3, no packages):
+
+```sh
+git clone https://github.com/NickkkLian/content-organizer.git
+cd content-organizer
+python3 -m http.server 8000
+```
+
+Open **http://localhost:8000/?demo=1**. The app is static, with no build step. Notes live in this browser; syncing them requires your own private GitHub repository and token. Generating a new compilation requires an Anthropic key and sends the selected notes to Anthropic. Link capture uses public reader proxies; manual paste is available when a page cannot be fetched. Video transcription is an optional local service. Browser-stored credentials share this GitHub Pages origin with the author's other apps; use your own hosting for an isolated origin.
 
 ## What it does
 
