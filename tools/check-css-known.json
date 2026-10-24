@@ -1,0 +1,11 @@
+{
+  "unstyled": {
+    "open": "The pinned shared panel only checks Mind Archive's legacy overlay.open for its merge-dialog bridge; Clipbind does not create this class.",
+    "overlay": "The pinned shared panel only detects Mind Archive's reusable merge overlay. Clipbind uses its own native dialogs and never creates this class."
+  },
+  "dead": {
+    "map": "The CSS-in-JS heuristic reads A.palette.values.map inside the shared panel's palette template as CSS. This is a JavaScript array method, not a DOM class.",
+    "palette": "The CSS-in-JS heuristic reads A.palette in the shared panel's select template as a selector. The actual palette control is #suite-palette.",
+    "values": "The CSS-in-JS heuristic reads A.palette.values in the shared panel's template as a selector. This is an array property, not a DOM class."
+  }
+}

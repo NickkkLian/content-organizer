@@ -1,0 +1,8 @@
+.suite-panel,.suite-confirm{--ss-bg:var(--surface-raised);--ss-ink:var(--text);--ss-line:var(--border);--ss-control-line:var(--border-input)}
+.suite-panel input[type=checkbox]{display:inline-block;width:24px;min-height:24px;margin:8px 12px 8px 0;vertical-align:middle}
+.brand .app-logo{width:32px;height:32px;flex:none;object-fit:contain}
+.topbar .suite-gear{width:auto;padding-inline:12px}
+.settings-connection-note{background:var(--surface-raised);border:1px solid var(--border);color:var(--text)}
+.settings-connection-note[hidden]{display:none}
+.suite-panel #clearAll{margin-top:16px;border-color:var(--danger,currentColor)}
+@media(max-width:639px){.topbar{position:relative;flex-wrap:wrap}.topbar .brand{flex:1 1 calc(100% - 64px);padding-right:48px;min-width:0}.topbar #nl-settings-button{position:absolute;top:12px;right:var(--gutter,16px)}.topbar .brand>span{display:none}}

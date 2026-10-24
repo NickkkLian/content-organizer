@@ -20,6 +20,7 @@ window.XHS = window.XHS || {};
   var DB = 'xhs_store', STORE = 'kv';
   var mem = null;                // { key: value } in-memory working copy; null = not initialised yet
   var idbOk = false;
+  var activeSource=null,documentExtra={},pendingWrites=Promise.resolve(),storageFailure=null,demoMode=false;
 
   function openDB(){
     return new Promise(function (res) {
@@ -62,6 +63,8 @@ window.XHS = window.XHS || {};
 
   /** Call once at startup: load data into memory; on first run, migrate from localStorage. */
   function init(){
+    demoMode=typeof location!=='undefined'&&new URLSearchParams(location.search).get('demo')==='1';
+    if(demoMode){mem={};ALL_KEYS.forEach(function(k){mem[k]=[];});activeSource='demo';return Promise.resolve({migrated:0,idb:false});}
     return openDB().then(function (db) {
       dbHandle = db; idbOk = !!db; mem = {};
       if (!db) {                                  // no IndexedDB (private mode etc.) → keep using localStorage
@@ -87,6 +90,7 @@ window.XHS = window.XHS || {};
   /** Persist: IndexedDB first; fall back to localStorage only without it (keeping "throw when full") */
   function persist(key, val){
     if (mem) mem[key] = val;
+    if(activeSource){persistSource();return;}
     if (idbOk && dbHandle) {
       idbPut(dbHandle, key, val).then(function (ok) {
         if (!ok) console.warn('IndexedDB write failed; data is still in memory and in the cloud:', key);
@@ -193,7 +197,79 @@ window.XHS = window.XHS || {};
   }
   function replaceAllComps(list){ setComps(list || []); }
 
+  function storageError(error){
+    storageFailure=error;
+    if(typeof dispatchEvent==='function')dispatchEvent(new CustomEvent('clipbind-storage-error'));
+  }
+  function sourceScope(cfg){return cfg&&cfg.owner&&cfg.repo?encodeURIComponent(cfg.owner+'/'+cfg.repo):'offline';}
+  function sourceKey(scope){return 'xhs_source_v1:'+scope;}
+  function emptyCapsule(){return {version:1,values:Object.fromEntries(ALL_KEYS.map(k=>[k,[]])),extra:{version:1,updatedAt:null}};}
+  function checkCapsule(value){
+    if(!value||value.version!==1||!value.values||!value.extra||typeof value.extra!=='object'||Array.isArray(value.extra)||ALL_KEYS.some(k=>!Array.isArray(value.values[k])))throw Error('Invalid browser library');
+    return value;
+  }
+  function capsule(){
+    const values={};ALL_KEYS.forEach(k=>{const value=mem&&k in mem?mem[k]:lsRead(k);if(value!=null&&!Array.isArray(value))throw Error('Invalid browser collection');values[k]=structuredClone(value||[]);});
+    return {version:1,values,extra:structuredClone(documentExtra)};
+  }
+  function documentOf(value){
+    checkCapsule(value);return Object.assign({version:1,updatedAt:null},value.extra,{notes:value.values[KEY],deleted:value.values[DKEY],compilations:value.values['xhs_comps_v1'],deletedComps:value.values['xhs_comps_deleted_v1']});
+  }
+  function toCapsule(doc){
+    if(X.merge.shapeProblems(doc).length)throw Error('Invalid library');
+    const normalized=X.merge.normalizeDoc(doc),extra={};Object.keys(doc).forEach(k=>{if(!['notes','deleted','compilations','deletedComps'].includes(k))extra[k]=structuredClone(doc[k]);});
+    return checkCapsule({version:1,values:{[KEY]:structuredClone(normalized.notes),[DKEY]:structuredClone(normalized.deleted),xhs_comps_v1:structuredClone(normalized.compilations),xhs_comps_deleted_v1:structuredClone(normalized.deletedComps)},extra});
+  }
+  function useCapsule(value){checkCapsule(value);mem=structuredClone(value.values);documentExtra=structuredClone(value.extra);storageFailure=null;}
+  function writeFallback(key,value){
+    const raw=JSON.stringify(value);localStorage.setItem(key,raw);if(localStorage.getItem(key)!==raw)throw Error('Browser storage readback failed');
+  }
+  async function readSource(scope){
+    const key=sourceKey(scope),value=idbOk&&dbHandle?await idbGet(dbHandle,key):lsRead(key);
+    return value==null?null:checkCapsule(value);
+  }
+  async function atomicPut(scope,value){
+    if(demoMode)return;
+    const key=sourceKey(scope);
+    if(!idbOk||!dbHandle){writeFallback(key,value);return;}
+    await new Promise((resolve,reject)=>{try{const tx=dbHandle.transaction(STORE,'readwrite');tx.objectStore(STORE).put(structuredClone(value),key);tx.oncomplete=resolve;tx.onerror=()=>reject(Error('Browser library write failed'));tx.onabort=()=>reject(Error('Browser library write aborted'));}catch(error){reject(error);}});
+    const saved=await idbGet(dbHandle,key);if(JSON.stringify(saved)!==JSON.stringify(value))throw Error('Browser library readback failed');
+  }
+  function persistSource(){
+    const value=capsule(),scope=activeSource;
+    if(demoMode)return;
+    if(!idbOk||!dbHandle){try{writeFallback(sourceKey(scope),value);storageFailure=null;}catch(error){storageError(error);throw error;}return;}
+    pendingWrites=pendingWrites.catch(()=>{}).then(()=>atomicPut(scope,value)).then(()=>{storageFailure=null;},error=>{storageError(error);throw error;});
+    const work=typeof HubSettingsRuntime!=='undefined'?HubSettingsRuntime.track(()=>pendingWrites):pendingWrites;void work.catch(()=>{});
+  }
+  async function flush(){await pendingWrites;if(storageFailure)throw storageFailure;}
+  async function selectSource(cfg,carry){
+    if(demoMode)return;
+    await pendingWrites.catch(()=>{});if(storageFailure)throw storageFailure;
+    const scope=sourceScope(cfg);if(activeSource===scope)return;
+    let value=await readSource(scope);
+    if(!value){
+      if(activeSource===null){
+        const marker='co-cache-original-v1';let original=localStorage.getItem(marker);
+        if(original===null){localStorage.setItem(marker,scope);if(localStorage.getItem(marker)!==scope)throw Error('Browser source readback failed');original=scope;}
+        value=original===scope?capsule():emptyCapsule();
+      }else value=emptyCapsule();
+    }
+    if(carry)value=toCapsule(X.merge.mergeDocs(documentOf(value),carry));
+    await atomicPut(scope,value);activeSource=scope;useCapsule(value);
+  }
+  async function replaceSnapshot(doc){
+    const value=toCapsule(doc),scope=activeSource;if(!scope)throw Error('Browser source not ready');
+    await pendingWrites.catch(()=>{});
+    pendingWrites=atomicPut(scope,value).then(()=>useCapsule(value),error=>{storageError(error);throw error;});
+    await pendingWrites;
+  }
+  async function applyMerged(doc){
+    useCapsule(toCapsule(X.merge.mergeDocs(doc,documentOf(capsule()))));persistSource();await flush();
+  }
+  async function retryPersistence(){storageFailure=null;persistSource();await flush();}
   X.store = {
+    document:()=>documentOf(capsule()),source:()=>activeSource,sourceScope,selectSource,replaceSnapshot,applyMerged,flush,retryPersistence,error:()=>Boolean(storageFailure),
     init: init, _idb: function(){ return idbOk; },
     getAll: getAll, save: save, update: update, remove: remove, clear: clear,
     getDeleted: getDeleted, setDeleted: setDeleted, replaceAll: replaceAll,

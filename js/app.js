@@ -6,6 +6,7 @@ window.XHS = window.XHS || {};
   var T = X.i18n.T;   // bilingual T(zh, en)
 
   var els = {};
+  var currentNoteSaved=false;
   var currentNote = null;   // the note just organised, not yet saved
   var activeFilter = 'all';
   var activePlatform = 'all';    // platform filter: all / xhs / bili
@@ -170,6 +171,7 @@ window.XHS = window.XHS || {};
   }
 
   function showResult(note){
+    if(note!==currentNote)currentNoteSaved=false;
     currentNote = note;
     els.result.innerHTML = noteCardHtml(note,
       '<button class="btn btn--primary" data-act="save">' + T('★ 收藏到本地库','★ Save to library') + '</button>' +
@@ -194,14 +196,14 @@ window.XHS = window.XHS || {};
     return md;
   }
 
-  async function copyText(t){
+  async function copyText(t){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     try { await navigator.clipboard.writeText(t); setStatus(T('已复制到剪贴板 ✓','Copied to clipboard ✓'), 'ok'); }
     catch (e) {
       var ta = document.createElement('textarea');
       ta.value = t; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); ta.remove(); setStatus(T('已复制 ✓','Copied ✓'), 'ok');
     }
-  }
+  });}
 
   function download(name, content, type){
     var blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
@@ -328,11 +330,11 @@ window.XHS = window.XHS || {};
   }
 
   // ---------- Image repair (re-fetch the post for fresh links → archive into the private repo) ----------
-  async function fixNoteImages(id, quiet){
+  async function fixNoteImages(id, quiet){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var note = X.store.getAll().find(function (n) { return n.id === id; });
     if (!note) return { ok: 0, fail: 0 };
     if (!X.images.ready()) {
-      setStatus(T('请先在「连接设置」里连接 GitHub（归档图片需要令牌）','Connect GitHub under Connections first (archiving needs a token)'), 'err');
+      setStatus(T('请先在设置的连接部分里连接 GitHub（归档图片需要令牌）','Connect GitHub in Settings → Connection first (archiving needs a token)'), 'err');
       throw new Error('no token');
     }
     // Links expired and the post URL is known → re-fetch for freshly signed links first
@@ -350,14 +352,14 @@ window.XHS = window.XHS || {};
     });
     X.store.update(note.id, { images: note.images, imagesRepo: res.repo });
     return res;
-  }
+  });}
 
-  async function fixAllImages(){
+  async function fixAllImages(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var todo = X.store.getAll().filter(function (n) {
       return (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
     });
     if (!todo.length) { setStatus(T('所有图片都已归档 ✓','All images already archived ✓'), 'ok'); return; }
-    if (!X.images.ready()) { setStatus(T('请先在「连接设置」里连接 GitHub（归档图片需要令牌）','Connect GitHub under Connections first (archiving needs a token)'), 'err'); return; }
+    if (!X.images.ready()) { setStatus(T('请先在设置的连接部分里连接 GitHub（归档图片需要令牌）','Connect GitHub in Settings → Connection first (archiving needs a token)'), 'err'); return; }
     els.fixAllBtn.disabled = true;
     var ok = 0, fail = 0;
     try {
@@ -371,7 +373,7 @@ window.XHS = window.XHS || {};
       scheduleSync();
       setStatus(T('修复完成：归档 ','Done: archived ') + ok + T(' 张','') + (fail ? T('，','; ') + fail + T(' 张失败（原帖可能已删除或需登录）',' failed (post deleted or login required)') : ' ✓'), fail ? 'err' : 'ok');
     } finally { els.fixAllBtn.disabled = false; }
-  }
+  });}
 
   // ---------- Multi-select → AI consolidation ----------
   function updateSelBar(){
@@ -384,11 +386,10 @@ window.XHS = window.XHS || {};
       comps.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
   }
 
-  async function runConsolidate(existingComp, reorgOnly){
+  async function runConsolidate(existingComp, reorgOnly){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     if (!X.ai || !X.ai.isReady()){
-      setStatus(T('请先在「连接设置」里填入 Anthropic API 令牌','Enter your Anthropic API key under Connections first'), 'err');
-      els.settingsPanel.style.display = 'block';
-      els.settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setStatus(T('请先在设置的 AI 部分填写 Anthropic API 密钥','Enter your Anthropic API key in Settings → AI first'), 'err');
+      SuiteSettings.open('ai');
       return;
     }
     var notes = reorgOnly ? [] : X.store.getAll().filter(function (n) { return selectedIds.has(n.id); });
@@ -467,7 +468,7 @@ window.XHS = window.XHS || {};
     } finally {
       els.consolidateBtn.disabled = false; els.addToComp.disabled = false;
     }
-  }
+  });}
 
   // ---------- Compilation rendering ----------
   function compToMarkdown(c){
@@ -654,6 +655,7 @@ window.XHS = window.XHS || {};
   }
 
   function renderComps(){
+    if(editingCompId!==null&&document.querySelector('.comp.is-editing'))return;
     var all = X.store.getComps();
     var archN = all.filter(function (c) { return c.archived; }).length;
     if (els.compArchCount) els.compArchCount.textContent = archN;
@@ -669,31 +671,8 @@ window.XHS = window.XHS || {};
     X.images.hydrate(els.compList);   // images kept in compilations (archived in the repo) get blob URLs asynchronously
   }
 
-  // ---------- AI settings ----------
-  function updateAIUI(){
-    if (!X.ai) return;
-    var cfg = X.ai.getConfig();
-    if (els.aiModel) {
-      els.aiModel.innerHTML = X.ai.MODELS.map(function (m) { return '<option value="' + esc(m.id) + '">' + esc(X.i18n.lang === 'en' ? m.nameEn : m.name) + '</option>'; }).join('');
-    }
-    if (els.aiModel) els.aiModel.value = cfg.model;
-    if (els.aiStatus) els.aiStatus.textContent = X.ai.isReady()
-      ? (T('AI 已就绪 · ','AI ready · ') + String(cfg.model).replace('claude-', ''))
-      : T('AI 未设置：填入 Anthropic API Key 后即可「整理成合集」','AI not set up: enter your Anthropic API key to enable consolidation');
-  }
-  function onSaveAI(){
-    var key = (els.aiKeyInput.value || '').trim();
-    var model = els.aiModel.value;
-    X.ai.saveConfig(key || null, model);   // an empty key only updates the model and keeps the stored key
-    els.aiKeyInput.value = '';
-    updateAIUI();
-    els.aiStatus.textContent = X.ai.isReady()
-      ? (T('✓ 已保存 · ','✓ Saved · ') + String(model).replace('claude-', ''))
-      : T('已保存模型（仍未填令牌，整理功能不可用）','Model saved (still no key; consolidation unavailable)');
-  }
-
   // ---------- Events ----------
-  async function onFetch(){
+  async function onFetch(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var v = els.urlInput.value.trim();
     if (!v) { setStatus(T('请输入小红书链接','Enter an XHS link'), 'err'); return; }
     els.fetchBtn.disabled = true;
@@ -707,7 +686,7 @@ window.XHS = window.XHS || {};
     } finally {
       els.fetchBtn.disabled = false;
     }
-  }
+  });}
 
   function onParseManual(){
     var t = els.manualText.value.trim();
@@ -732,6 +711,7 @@ window.XHS = window.XHS || {};
                 T('｜这条还在上面，腾出空间后再点一次就能存。','｜The note is still shown above — free some space and click again.'), 'err');
       return;
     }
+    currentNoteSaved=true;
     setStatus(T('已收藏 ★','Saved ★'), 'ok');
     renderLibrary();
     scheduleSync();
@@ -755,22 +735,23 @@ window.XHS = window.XHS || {};
     if (!els.syncStatus) return;
     els.syncStatus.className = SYNC_CLASS[state] || 'sync-pill';
     els.syncStatus.textContent = text;
-    els.syncStatus.title = title || T('云同步状态（点击设置）','Cloud sync status (click to set up)');
+    els.syncStatus.title = title || T('云同步状态','Cloud sync status');
   }
 
   function updateSyncUI(){
     if (!X.sync) return;
-    if (els.repoLabel) els.repoLabel.textContent = X.sync.dataLabel();
-    if (X.sync.isConfigured()) setSyncStatus('ok', '☁ ' + X.sync.getConfig().owner, T('已连接 ','Connected ') + X.sync.dataLabel() + T('（点击设置）',' (click to set up)'));
-    else setSyncStatus('', T('● 本地','● Local'), T('未连接云同步，仅存本机（点击设置）','Not connected; local only (click to set up)'));
+    if (X.sync.isConfigured()) setSyncStatus('ok', '☁ ' + X.sync.getConfig().owner, T('已连接 ','Connected ') + X.sync.dataLabel());
+    else setSyncStatus('', T('● 本地','● Local'), T('未连接云同步，仅存本机','Not connected; local only'));
   }
 
-  async function doSync(){
+  async function doSync(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+    syncTimer=null;
     if (!X.sync || !X.sync.isConfigured() || syncing) return;
+    var syncCompleted=false;
     syncing = true;
     setSyncStatus('syncing', T('↻ 同步中…','↻ Syncing…'));
     try {
-      await X.sync.sync();
+      await X.sync.sync();syncCompleted=true;
       renderLibrary();
       renderComps();
       var t = new Date().toLocaleTimeString(X.i18n.lang === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -779,40 +760,16 @@ window.XHS = window.XHS || {};
       setSyncStatus('err', T('⚠ 同步失败','⚠ Sync failed'), e.message);
     } finally {
       syncing = false;
+      if(syncCompleted&&X.sync.isConfigured()&&X.sync.hasUnsynced())scheduleSync();
     }
-  }
+  });}
 
   function scheduleSync(){
     if (!X.sync || !X.sync.isConfigured()) return;
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(doSync, 800);   // debounce: a burst of edits triggers one sync
+    syncTimer = setTimeout(()=>{syncTimer=null;doSync();}, 800);   // debounce: a burst of edits triggers one sync
   }
 
-  function toggleSettings(){
-    var p = els.settingsPanel;
-    p.style.display = (p.style.display === 'none') ? 'block' : 'none';
-  }
-
-  async function onSaveToken(){
-    var token = (els.tokenInput.value || '').trim();
-    if (!token) { els.settingsStatus.textContent = T('请输入令牌','Enter a token'); return; }
-    els.saveTokenBtn.disabled = true;
-    els.settingsStatus.textContent = T('正在校验令牌…','Validating token…');
-    try {
-      var login = await X.sync.validate(token);
-      X.sync.saveToken(token, login);
-      els.tokenInput.value = '';
-      updateSyncUI();
-      els.settingsStatus.textContent = T('已连接账号 ','Connected as ') + login + T('，正在同步…',', syncing…');
-      await doSync();
-      els.settingsStatus.textContent = T('✓ 已连接并同步（','✓ Connected & synced (') + X.sync.dataLabel() + T('）',')');
-    } catch (e) {
-      els.settingsStatus.textContent = T('连接失败：','Connection failed: ') + e.message;
-      setSyncStatus('err', T('⚠ 未连接','⚠ Not connected'), e.message);
-    } finally {
-      els.saveTokenBtn.disabled = false;
-    }
-  }
 
   function bind(){
     $$('.tab').forEach(function (tab) {
@@ -831,21 +788,9 @@ window.XHS = window.XHS || {};
     els.urlInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onFetch(); });
     els.parseManualBtn.addEventListener('click', onParseManual);
 
-    // 🎬 Fetch video
-    if (els.fetchTokenInput) els.fetchTokenInput.value = X.fetchsvc.getToken();
-    els.fetchVideoBtn.addEventListener('click', onFetchVideo);
-    els.videoInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onFetchVideo(); });
-    els.saveFetchTokenBtn.addEventListener('click', function () {
-      X.fetchsvc.setToken(els.fetchTokenInput.value);
-      els.fetchTokenStatus.textContent = T('已保存 ✓','Saved ✓'); refreshFetchStatus();
-    });
-    els.testFetchBtn.addEventListener('click', async function () {
-      els.fetchTokenStatus.textContent = T('测试中…','Testing…');
-      var ok = await X.fetchsvc.health();
-      els.fetchTokenStatus.textContent = ok ? T('✓ 本地服务在线','✓ Local service online')
-        : T('✗ 连不上（菜单栏小程序启动了吗？）','✗ Unreachable (is the toggle app running?)');
-      refreshFetchStatus();
-    });
+    // The local service keeps its existing frontend transport; only its credential form moves.
+    els.fetchVideoBtn.addEventListener('click',onFetchVideo);
+    els.videoInput.addEventListener('keydown',function(e){if(e.key==='Enter')onFetchVideo();});
 
     els.result.addEventListener('click', function (e) {
       var b = e.target.closest('[data-act]'); if (!b) return;
@@ -895,16 +840,11 @@ window.XHS = window.XHS || {};
     els.exportMd.addEventListener('click', function () {
       download('xhs-notes.md', X.store.getAll().map(noteToMarkdown).join('\n\n---\n\n'), 'text/markdown');
     });
-    els.clearAll.addEventListener('click', function () {
-      if (confirm(T('清空收藏库？连接云同步时本地与云端都会删除，不可恢复。','Clear the whole library? When cloud sync is on, both local and cloud copies are deleted, irreversibly.'))) { X.store.clear(); renderLibrary(); scheduleSync(); }
-    });
     els.archToggle.addEventListener('click', function () { viewArchived = !viewArchived; activeFilter = 'all'; selectedIds.clear(); renderLibrary(); updateSelBar(); });
 
-    els.settingsBtn.addEventListener('click', toggleSettings);
-    els.syncStatus.addEventListener('click', toggleSettings);
     els.syncBtn.addEventListener('click', doSync);
-    els.saveTokenBtn.addEventListener('click', onSaveToken);
-    els.tokenInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onSaveToken(); });
+
+
 
     els.libList.addEventListener('change', function (e) {
       var cb = e.target.closest('input.selbox'); if (!cb) return;
@@ -982,12 +922,11 @@ window.XHS = window.XHS || {};
     if (els.compArchToggle) els.compArchToggle.addEventListener('click', function () {
       viewCompArchived = !viewCompArchived; editingCompId = null; renderComps();
     });
-    els.saveAiBtn.addEventListener('click', onSaveAI);
-    if (els.langBtn) els.langBtn.addEventListener('click', X.i18n.toggleLang);
+    // AI credentials and model defaults are owned by canonical Settings.
   }
 
   // ---------- 🎬 Fetch video (local service + AI frame judging) ----------
-  async function refreshFetchStatus(){
+  async function refreshFetchStatus(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     if (!els.fetchStatus) return;
     var ok = await X.fetchsvc.health();
     els.fetchStatus.className = ok ? DOT_CLASS.on : DOT_CLASS.off;
@@ -999,8 +938,8 @@ window.XHS = window.XHS || {};
       ? T('本地服务在线','Local service online')
       : T('本地服务未启动。转写和抽帧刻意放在你自己的电脑上跑——登录态和媒体文件都不出本机。启动方法见仓库 local/README.md',
           'Local service not running. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it. See local/README.md to start it.');
-  }
-  async function onFetchVideo(){
+  });}
+  async function onFetchVideo(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var url = (els.videoInput.value || '').trim();
     if (!url) { setStatus(T('粘一条视频链接','Paste a video link'), 'err'); return; }
     if (!(await X.fetchsvc.health())) {
@@ -1008,8 +947,8 @@ window.XHS = window.XHS || {};
       /* The line a first-time visitor is most likely to hit. Phrased as "go install something"
          it reads as unfinished; it should say why this step is local at all, and offer a way
          to see the output without installing anything. */
-      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在「连接设置」里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
-                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token under Connections. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
+      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在设置的连接部分里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
+                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token in Settings → Connection. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
       return;
     }
     els.fetchVideoBtn.disabled = true;
@@ -1027,8 +966,8 @@ window.XHS = window.XHS || {};
       var imagesRepo = [], imgErr = '';
       if (kept.length) {
         if (!X.images.ready()) {
-          imgErr = T('未连接 GitHub（在「连接设置」里填令牌）→ 截图没法归档，本次未保存图片',
-                     'GitHub not connected (set the token under Connections) → screenshots were not archived');
+          imgErr = T('未连接 GitHub（在设置的连接部分里填令牌）→ 截图没法归档，本次未保存图片',
+                     'GitHub not connected (set the token in Settings → Connection) → screenshots were not archived');
         } else {
           setStatus(T('存截图 0/' + kept.length + '…','Saving screenshots 0/' + kept.length + '…'), 'loading');
           try {
@@ -1053,7 +992,7 @@ window.XHS = window.XHS || {};
     } catch (e) {
       setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');
     } finally { els.fetchVideoBtn.disabled = false; }
-  }
+  });}
 
   /* One tooltip for every [data-tip] control (the icon-only card actions). It is a single fixed layer placed by
      script, so it never pushes the page sideways at 375 and never sits on another button: above the control if there
@@ -1145,17 +1084,16 @@ window.XHS = window.XHS || {};
     initTips();
     ['status','result','urlInput','fetchBtn','manualText','manualImages','parseManualBtn',
      'catFilter','platFilter','search','libList','libCount','exportJson','exportMd','clearAll',
-     'syncStatus','syncBtn','settingsBtn','settingsPanel','tokenInput','saveTokenBtn','settingsStatus','repoLabel',
+     'syncStatus','syncBtn',
      'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
-     'aiKeyInput','aiModel','saveAiBtn','aiStatus','archToggle','archCount','langBtn','fixAllBtn','includeImgs',
-     'videoInput','fetchVideoBtn','fetchStatus','fetchTokenInput','saveFetchTokenBtn','testFetchBtn','fetchTokenStatus',
+     'archToggle','archCount','fixAllBtn','includeImgs',
+     'videoInput','fetchVideoBtn','fetchStatus',
      'jumpComps','jumpLib','compArchToggle','compArchCount','readDlg'
     ].forEach(function (id) { els[id] = document.getElementById(id); });
     X.i18n.applyStatic();
-    bind();
+    bind();X.app.ready=true;
     renderLibrary();
     renderComps();
-    updateAIUI();
     setStatus('');
     updateSyncUI();
     if (X.sync && X.sync.isConfigured()) doSync();   // pull from the cloud on load: multi-device sync
@@ -1163,7 +1101,19 @@ window.XHS = window.XHS || {};
   }
 
   // Lets i18n.toggleLang re-render everything dynamic after a language switch
-  X.app = { rerender: function () { renderLibrary(); renderComps(); updateSelBar(); updateAIUI(); updateSyncUI(); if (currentNote) showResult(currentNote); } };
+  function hasEditingDrafts(){return editingCompId!==null||selectedIds.size>0||Boolean(els.readDlg?.open)||(!currentNoteSaved&&(Boolean(currentNote)||['urlInput','manualText','manualImages','videoInput'].some(k=>Boolean(els[k]?.value.trim()))));}
+  X.app={
+    ready:false,
+    hasEditingDrafts,
+    unsaved:()=>hasEditingDrafts()||syncing||Boolean(syncTimer)||X.sync.hasUnsynced()||X.store.error(),
+    cancelSync(){clearTimeout(syncTimer);syncTimer=null;},
+    scheduleSync,
+    resetDrafts(){currentNote=null;currentNoteSaved=false;editingCompId=null;readingCompId=null;selectedIds.clear();if(els.readDlg?.open)els.readDlg.close();for(const k of ['urlInput','manualText','manualImages','videoInput'])if(els[k])els[k].value='';if(els.result){els.result.innerHTML='';els.result.style.display='none';}},
+    rerender(){if(!els.libList)return;renderLibrary();renderComps();updateSelBar();updateSyncUI();if(currentNote)showResult(currentNote);},
+  };
+  document.addEventListener('input',e=>{if(['urlInput','manualText','manualImages','videoInput'].includes(e.target.id))currentNoteSaved=false;});
+  window.addEventListener('clipbind-storage-error',()=>{if(els.status)setStatus(T('本机副本未能保存。请先导出完整私有备份，再关闭或重试。','This browser copy could not be saved. Export the full private backup before closing, then retry.'),'err');});
+
 
   /* Load the local library into memory first (the first run migrates it from localStorage to IndexedDB), then render.
      If the migration fails the app still starts — the store falls back to reading localStorage rather than going blank. */
@@ -1171,13 +1121,15 @@ window.XHS = window.XHS || {};
     var before = 0;
     try { for (var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i);
       if (/^xhs_/.test(k)) before += (localStorage.getItem(k) || '').length; } } catch (e) {}
-    X.store.init().then(function (r) {
+    X.store.init().then(async function (r) {return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+      await X.settings.initializeSource();
       init();
       if (r && r.migrated) setStatus(T(
         '已把本地收藏库搬到浏览器数据库（腾出约 ' + Math.round(before / 1024) + ' KB）',
         'Moved the local library into IndexedDB (freed ~' + Math.round(before / 1024) + ' KB of localStorage)'), 'ok');
-    }).catch(function (e) {
+    });}).catch(function (e) {
       init();
+      X.settings.pause(true);
       setStatus(T('本地库载入异常：','Local library failed to load: ') + (e && e.message ? e.message : e), 'err');
     });
   });

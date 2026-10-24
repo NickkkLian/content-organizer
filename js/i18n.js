@@ -95,6 +95,7 @@ window.XHS = window.XHS || {};
 
   X.i18n = {
     get lang() { return lang; },
+    setLanguage(value){if(value===lang)return;lang=value;document.documentElement.lang=value;applyStatic();if(X.app)X.app.rerender();},
     T: T, L: L, applyStatic: applyStatic, toggleLang: toggleLang, I18N: I18N
   };
   window.T = T;   // convenience for the render modules

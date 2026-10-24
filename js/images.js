@@ -85,15 +85,15 @@ window.XHS = window.XHS || {};
     });
   }
 
-  async function fetchImageBytes(u){
+  async function fetchImageBytes(u){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var r = await fetch(proxyUrl(u), { mode: 'cors' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     var blob = await r.blob();
     if (!blob.size) throw new Error('empty');
     return blob;
-  }
+  });}
 
-  async function putRepoFile(path, b64){
+  async function putRepoFile(path, b64){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var body = { message: 'xhs-organizer: archive image ' + path, content: b64 };
     var r = await fetch(contentsUrl(path), { method: 'PUT', headers: ghHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
     if (r.status === 422 || r.status === 409) {
@@ -114,11 +114,11 @@ window.XHS = window.XHS || {};
     }
     if (!r.ok) throw new Error('GitHub ' + r.status);
     return path;
-  }
+  });}
 
   /* Archive one note's images into the repo. Returns { repo:[path|null,…], ok, fail };
      skips already-archived and unreachable/expired ones, aligned by index with note.images. */
-  async function archiveNote(note, onProgress){
+  async function archiveNote(note, onProgress){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     if (!ready()) throw new Error(T('未连接云同步（需 GitHub 令牌才能归档图片）', 'Cloud sync not connected (a GitHub token is required to archive images)'));
     var images = (note.images || []).slice(0, MAX_PER_NOTE);
     var repo = (note.imagesRepo || []).slice();
@@ -135,10 +135,10 @@ window.XHS = window.XHS || {};
       } catch (e) { repo[i] = repo[i] || null; fail++; }
     }
     return { repo: repo, ok: ok, fail: fail };
-  }
+  });}
 
   // Archived image bytes (with token) → objectURL (cached)
-  async function repoImageUrl(path){
+  async function repoImageUrl(path){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     if (blobCache[path]) return blobCache[path];
     var r = await fetch(contentsUrl(path), { headers: ghHeaders({ Accept: 'application/vnd.github.raw' }) });
     if (!r.ok) throw new Error('GitHub ' + r.status);
@@ -146,14 +146,14 @@ window.XHS = window.XHS || {};
     var u = URL.createObjectURL(blob);
     blobCache[path] = u;
     return u;
-  }
+  });}
 
   // Archived image as base64 (for Claude vision)
-  async function repoImageB64(path){
+  async function repoImageB64(path){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var r = await fetch(contentsUrl(path), { headers: ghHeaders({ Accept: 'application/vnd.github.raw' }) });
     if (!r.ok) throw new Error('GitHub ' + r.status);
     return blobToB64(await r.blob());
-  }
+  });}
 
   // Asynchronously fill blob URLs into every img[data-repo] in the container (silently skipped without a token; onerror fallback takes over)
   function hydrate(root){
@@ -196,7 +196,7 @@ window.XHS = window.XHS || {};
   }, true);
 
   // Store the AI-selected base64 frames under xhs-images/<key>/; returns the repo paths (imagesRepo of the video note)
-  async function saveFrames(key, b64list, onProgress){
+  async function saveFrames(key, b64list, onProgress){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var paths = [], fails = [];
     for (var i = 0; i < (b64list || []).length; i++) {
       if (onProgress) onProgress(i + 1, b64list.length);
@@ -206,9 +206,10 @@ window.XHS = window.XHS || {};
     }
     if (!paths.length && fails.length) throw new Error(fails[0]); // throw only on total failure, so the caller can show why
     return paths;                                                 // partial failure: the caller shows M/N, the gap is visible
-  }
+  });}
 
   X.images = {
+    clearCache(){for(const url of Object.values(blobCache))URL.revokeObjectURL(url);blobCache={};},
     isExpired: isExpired, httpsize: httpsize, proxyUrl: proxyUrl,
     visionUrl: visionUrl, capB64: capB64, saveFrames: saveFrames,
     archiveNote: archiveNote, hydrate: hydrate, imgFallback: imgFallback,

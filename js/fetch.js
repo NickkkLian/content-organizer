@@ -8,22 +8,22 @@ window.XHS = window.XHS || {};
   var BASE = 'http://127.0.0.1:8766';
   var TKEY = 'xhs_fetch_token';
 
-  function getToken(){ return localStorage.getItem(TKEY) || ''; }
+  function getToken(){ if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('demo')==='1')return '';return localStorage.getItem(TKEY) || ''; }
   function setToken(t){ localStorage.setItem(TKEY, (t || '').trim()); }
 
-  async function health(){
+  async function health(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     try {
       var r = await fetch(BASE + '/health', { cache: 'no-store' });
       if (!r.ok) return false;
       var j = await r.json();
       return Boolean(j && j.ok);
     } catch (e) { return false; }
-  }
+  });}
 
   // SSE fetch: onLog(line) progress callback; resolves {note, frames:[b64...]}, rejects with Error
   function fetchVideo(url, onLog){
     return new Promise(function (resolve, reject) {
-      if (!getToken()) { reject(new Error(T('未设置本地抓取口令（在「连接设置」里填，菜单栏小程序里能看到）', 'Local fetch token not set (enter it under Connections; the toggle app shows it)'))); return; }
+      if (!getToken()) { reject(new Error(T('未设置本地抓取口令（在设置的连接部分里填，菜单栏小程序里能看到）', 'Local fetch token not set (enter it in Settings → Connection; the toggle app shows it)'))); return; }
       var q = BASE + '/fetch?token=' + encodeURIComponent(getToken()) + '&url=' + encodeURIComponent(url);
       var es, done = false;
       try { es = new EventSource(q); }

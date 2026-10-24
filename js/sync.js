@@ -22,21 +22,25 @@ window.XHS = window.XHS || {};
   ];
   var DEFAULTS = { owner: '', repo: 'content-organizer-data', token: '' };   // owner is filled in from the token on first connect
 
-  // ---------- config (preserve the existing pha-config fields, especially repo) ----------
-  function getConfig(){
-    try {
-      var raw = localStorage.getItem(PHA_KEY);
-      return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
-    } catch (e) { return Object.assign({}, DEFAULTS); }
-  }
-  function isConfigured(cfg){ cfg = cfg || getConfig(); return Boolean(cfg.owner && cfg.token); }
-
-  function saveToken(token, owner){
-    var cur = getConfig();
-    var next = Object.assign({}, cur, { token: token });
-    if (owner) next.owner = owner;
-    localStorage.setItem(PHA_KEY, JSON.stringify(next));
-    return next;
+  // The live tuple is held until Settings can safely adopt a new source.
+  var demo=typeof location!=='undefined'&&new URLSearchParams(location.search).get('demo')==='1';
+  var connection=X.connection={current:{},pending:!demo,carry:null};
+  if(!demo)try{
+    if(localStorage.getItem('co_connection')===null){
+      const raw=HubSettingsRuntime.origin()===HubSettingsContract.HUB_ORIGIN?localStorage.getItem('pha-config'):localStorage.getItem('pha-config:content-organizer');
+      const local=Object.assign({},DEFAULTS,HubSettingsContract.object(raw)),stored=JSON.stringify(local);
+      localStorage.setItem('co_connection',stored);if(localStorage.getItem('co_connection')!==stored)throw Error('Connection readback failed');
+    }
+    connection.current=HubSettingsRuntime.resolve('content-organizer',HubSettingsContract.object(localStorage.getItem('co_connection'))).config;
+  }catch{/* Settings reports malformed storage; do not replace it or read remote files. */}
+  function getConfig(){return demo?Object.assign({},DEFAULTS):Object.assign({},DEFAULTS,connection.current);}
+  function isConfigured(cfg){cfg=cfg||getConfig();return !demo&&!connection.pending&&Boolean(cfg.owner&&cfg.repo&&cfg.token);}
+  function saveToken(token,owner){
+    if(demo)return getConfig();
+    if(HubSettingsRuntime.pending||window.settingsAdapter?.unsaved())throw new HubSettingsContract.SettingsError('pending');
+    const next=Object.assign({},HubSettingsContract.object(localStorage.getItem('co_connection')),{token:token});if(owner)next.owner=owner;
+    const raw=JSON.stringify(next);localStorage.setItem('co_connection',raw);if(localStorage.getItem('co_connection')!==raw)throw Error('Connection readback failed');
+    HubSettingsRuntime.write('content-organizer',{connectionMode:'override'});window.settingsAdapter?.adopt(next);return next;
   }
   function dataLabel(){ var c = getConfig(); return c.owner + '/' + c.repo + ' → ' + DATA_PATH; }
 
@@ -64,13 +68,13 @@ window.XHS = window.XHS || {};
   }
 
   // ---------- validate the token (read-only GET /user, touches no repo) ----------
-  async function validate(token){
+  async function validate(token){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var r = await fetch('https://api.github.com/user', { headers: headers(token) });
     if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
     if (!r.ok) throw new Error(T('校验失败 HTTP ','Validation failed HTTP ') + r.status);
     var j = await r.json();
     return j.login;
-  }
+  });}
 
   // ---------- read / write the data file (file defaults to content.json) ----------
   // Files over 1 MiB come back from the contents API with encoding "none" and no content;
@@ -78,8 +82,9 @@ window.XHS = window.XHS || {};
   function blobUrl(cfg, sha){
     return 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/git/blobs/' + sha;
   }
-  async function getFile(cfg, file){
+  async function getFile(cfg, file){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var r = await fetch(contentsUrl(cfg, file), { headers: headers(cfg.token), cache: 'no-store' });
+    HubSettingsRuntime.fileRead(cfg,file||DATA_PATH,r.status);
     if (r.status === 404) return { doc: emptyDoc(), sha: null, missing: true };
     if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
     if (!r.ok) throw new Error(T('读取失败 HTTP ','Read failed HTTP ') + r.status);
@@ -106,8 +111,8 @@ window.XHS = window.XHS || {};
         T('），已停止同步，没有覆盖任何内容',' is not what this app expects); sync stopped and nothing was overwritten'));
     }
     return { doc: normalizeDoc(parsed), sha: j.sha, missing: false };
-  }
-  async function putFile(cfg, doc, sha, message, file){
+  });}
+  async function putFile(cfg, doc, sha, message, file){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var body = { message: message || 'content-organizer sync', content: b64encode(JSON.stringify(doc, null, 2)) };
     if (sha) body.sha = sha;
     var r = await fetch(contentsUrl(cfg, file), {
@@ -115,31 +120,30 @@ window.XHS = window.XHS || {};
     });
     if (!r.ok) throw new Error(T('写入失败 HTTP ','Write failed HTTP ') + r.status + (r.status === 409 ? T('（版本冲突）',' (version conflict)') : ''));
     return r.json();
-  }
+  });}
 
   // ---------- the merge rules live in js/merge.js: DOM-free, and the same file the tests in check.mjs run ----------
   var M = (window.XHS && window.XHS.merge) || (typeof require === 'function' ? require('./merge.js') : null);
   var emptyDoc = M.emptyDoc, normalizeDoc = M.normalizeDoc, shapeProblems = M.shapeProblems, mergeDocs = M.mergeDocs, sig = M.sig, combineLegacy = M.combineLegacy;
 
-  async function bootstrapFromLegacy(cfg){
+  async function bootstrapFromLegacy(cfg){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var docs = [];
     for (var i = 0; i < LEGACY.length; i++) {
       var f = await getFile(cfg, LEGACY[i].file);
       docs.push(f.doc);
     }
     return combineLegacy(docs[0], docs[1]);
-  }
+  });}
 
-  function localDoc(){
-    return {
-      version: 1,
-      notes: X.store.getAll(), deleted: X.store.getDeleted(),
-      compilations: X.store.getComps(), deletedComps: X.store.getCompsDeleted()
-    };
-  }
-
+  var lastSynced=null;
+  function localDoc(){return X.store.document();}
+  function hasUnsynced(){const d=localDoc();return lastSynced?sig(d)!==sig(lastSynced):Boolean(d.notes.length||d.deleted.length||d.compilations.length||d.deletedComps.length);}
+  async function pullSaved(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+    const cfg=getConfig();if(!cfg.owner||!cfg.repo||!cfg.token)throw Error('Not connected');
+    const got=await getFile(cfg);await X.store.replaceSnapshot(got.doc);lastSynced=structuredClone(got.doc);return got.doc;
+  });}
   // ---------- one sync = pull (bootstrap from legacy if missing) + merge + write back (only if changed) ----------
-  async function sync(){
+  async function sync(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var cfg = getConfig();
     if (!isConfigured(cfg)) throw new Error(T('未连接：请先在设置里填入令牌','Not connected: enter a token in settings first'));
 
@@ -147,7 +151,8 @@ window.XHS = window.XHS || {};
     var base = remote.missing ? await bootstrapFromLegacy(cfg) : remote.doc;
     var merged = mergeDocs(base, localDoc());
 
-    if (remote.missing || sig(base) !== sig(merged)) {
+    const nonempty=Boolean(merged.notes.length||merged.deleted.length||merged.compilations.length||merged.deletedComps.length);
+    if ((remote.missing&&nonempty) || (!remote.missing&&sig(base) !== sig(merged))) {
       try {
         await putFile(cfg, merged, remote.sha, remote.missing ? 'content-organizer: init from legacy' : 'content-organizer: sync');
       } catch (e) {
@@ -157,16 +162,13 @@ window.XHS = window.XHS || {};
         await putFile(cfg, merged, fresh.sha, 'content-organizer: sync (retry)');
       }
     }
-    X.store.replaceAll(merged.notes);
-    X.store.setDeleted(merged.deleted);
-    X.store.replaceAllComps(merged.compilations);
-    X.store.setCompsDeleted(merged.deletedComps);
+    await X.store.applyMerged(merged);lastSynced=structuredClone(merged);
     return merged;
-  }
+  });}
 
   X.sync = {
     getConfig: getConfig, isConfigured: isConfigured, saveToken: saveToken,
-    dataLabel: dataLabel, validate: validate, sync: sync,
+    dataLabel: dataLabel, validate: validate, sync: sync,localDoc,hasUnsynced,pullSaved,resetBaseline:()=>{lastSynced=null;},
     _merge: mergeDocs, _combineLegacy: combineLegacy, _b64: { enc: b64encode, dec: b64decode }
   };
 })(window.XHS);

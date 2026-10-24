@@ -26,6 +26,7 @@ window.XHS = window.XHS || {};
   }
 
   function getConfig() {
+    if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('demo')==='1')return {apiKey:'',model:DEFAULT_MODEL};
     try {
       var c = JSON.parse(localStorage.getItem(KEY) || '{}');
       return { apiKey: c.apiKey || '', model: allowedModel(c.model) };
@@ -33,7 +34,8 @@ window.XHS = window.XHS || {};
   }
   function saveConfig(apiKey, model) {
     var cur = getConfig();
-    var next = { apiKey: apiKey != null ? apiKey : cur.apiKey, model: allowedModel(model || cur.model) };
+    var raw=JSON.parse(localStorage.getItem(KEY)||'{}');if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Invalid AI settings');
+    var next = Object.assign({},raw,{ apiKey: apiKey != null ? apiKey : cur.apiKey, model: allowedModel(model || cur.model) });
     localStorage.setItem(KEY, JSON.stringify(next));
     return next;
   }
@@ -100,7 +102,7 @@ window.XHS = window.XHS || {};
   }
 
   // posts: [{title, body, tags, url}]; existing: an existing compilation object (when merging into it) or null
-  async function consolidate(posts, existing) {
+  async function consolidate(posts, existing) {return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var cfg = getConfig();
     if (!cfg.apiKey) throw new Error(T('未设置 AI 令牌','AI token not set'));
     if ((!posts || !posts.length) && !existing) throw new Error(T('没有可整理的内容','Nothing to consolidate'));
@@ -166,11 +168,11 @@ window.XHS = window.XHS || {};
     catch (e) { throw new Error(T('解析返回的 JSON 失败','Failed to parse returned JSON')); }
     if (!data || !Array.isArray(data.sections)) throw new Error(T('返回结构不完整','Returned structure incomplete'));
     return data;
-  }
+  });}
 
   // Frame judging: candidate frames go to Claude vision; only the informative ones survive.
   // frames = [b64…]; returns the indices to keep (undecidable / none useful → []).
-  async function judgeFrames(frames) {
+  async function judgeFrames(frames) {return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var cfg = getConfig();
     if (!cfg.apiKey || !frames || !frames.length) return [];
     var content = [{ type: 'text', text:
@@ -204,7 +206,7 @@ window.XHS = window.XHS || {};
       var d = JSON.parse(tb.text);
       return Array.isArray(d.keep) ? d.keep.filter(function (i) { return i >= 0 && i < frames.length; }) : [];
     } catch (e) { return []; }
-  }
+  });}
 
   X.ai = {
     getConfig: getConfig, saveConfig: saveConfig, isReady: isReady,
