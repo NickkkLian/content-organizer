@@ -39,12 +39,22 @@ Open **http://localhost:8000/?demo=1**. The app is static, with no build step. N
 - **Keep it** — images on Xiaohongshu's CDN carry a signed expiry; the app archives them into your
   private repo so saved notes don't rot, and offers a one-click repair for notes whose links already
   died.
+- **Take it with you** — open a saved compilation with **Read**, then **Export MD** to download its
+  title, summary, sections, generation metadata and complete numbered source list. **Copy MD** uses the
+  same output. Repeated sources keep one number; included sources with no section citation are marked
+  **uncited**. Export uses the saved document, needs no key and makes no AI or sync request. The document's
+  language is preserved. Existing library JSON/Markdown downloads still export notes.
+
+The compilation export is a text artifact: images are not embedded. Markdown and HTML in the saved text
+stay literal, as in the reading view. Only HTTP(S) sources become links; other source addresses remain
+text. Connection settings are never included. As with copying any document, review its text and source
+URLs before sharing it.
 
 ## How it's built
 
 | Concern | Approach |
 |---|---|
-| Front end | Vanilla JS modules, one HTML file, no bundler. Loads in the order `i18n → samples → classify → parse → merge → refs → store → sync → images → fetch → ai → app` |
+| Front end | Vanilla JS modules, one HTML file, no bundler. Loads in the order `i18n → samples → classify → parse → merge → refs → export → store → sync → images → fetch → ai → app` |
 | Rules under test | The two things that would fail silently are pure functions in files of their own, DOM-free, loaded by the browser with `<script>` and by node with `require` — the file the browser runs is the file the tests run. `js/merge.js` is what happens when two devices have both written; `js/refs.js` is the numbered source list the reading view prints. `node check.mjs` runs 40 cases; `node check.mjs --break` breaks each rule in a copy and requires **the case written for it** to be the one that fails |
 | Stylesheet under test | `node tools/check-css.mjs`: every class the app puts on an element has a rule, every rule is for a class it renders. Written after a restyle silently dropped the rules for twenty-two classes — error messages rendered in the neutral information style and nothing threw |
 | Content-Security-Policy | A `<meta>` right after `<meta charset>`: scripts only from this site's own files and from the page's two inline scripts, pinned by sha256; no `'unsafe-inline'`, no `'unsafe-eval'`. The keys this app keeps in the browser share an origin with the author's other GitHub Pages sites, and the library shows text saved from other sites, so the browser itself refuses a script from another host, text run as code and inline event handlers. There is no build step: `node check-csp.mjs --write` computes the hashes and `node check-csp.mjs` (in CI) fails when the policy is missing, loosened or out of step with the page |
@@ -65,6 +75,7 @@ js/classify.js        keyword categoriser (Chinese keywords — the content is C
 js/parse.js           Xiaohongshu fetch chain: Jina HTML → Jina markdown → AllOrigins → manual
 js/merge.js           the merge rules: union by id, tombstones win, latest savedAt wins (DOM-free, tested)
 js/refs.js            one numbered source list per compilation, and the numbers each section cites (DOM-free, tested)
+js/export.js          saved compilation Markdown; reuses refs, with no connection or AI dependencies
 js/store.js           IndexedDB store with synchronous API and localStorage fallback
 js/sync.js            private-repo sync, tombstone merge, legacy bootstrap
 js/images.js          archiving, expiry detection, proxy fallbacks, vision sizing
@@ -73,6 +84,7 @@ js/ai.js              consolidation + frame judging (structured outputs)
 js/app.js             UI, sample data, event wiring
 local/                the optional video service and its double-click toggle app (see local/README.md)
 check.mjs             40 cases over js/merge.js and js/refs.js; --break has to make the right one fail
+check-export.mjs      order, numbering, complete sources, language, escaping, settings exclusion, empty and large exports
 tools/check-css.mjs   every rendered class has a rule, every rule is rendered; --break deletes rules to show it goes red
 check-csp.mjs         the page's Content-Security-Policy: --write puts it in, the default run checks it, --self-test breaks it
 make-demo-compilation.mjs   runs the AI step once with your key and writes demo/compilation.json
@@ -131,6 +143,7 @@ Those four decisions are also the four breaks `node check.mjs --break` makes in 
 python3 -m http.server 8765        # then open http://localhost:8765/?demo=1
 node check.mjs                     # 40 cases over the merge rules and the source list
 node check.mjs --break             # breaks each rule; the case written for it has to be the one that fails
+node check-export.mjs              # portable compilation Markdown and source-list parity
 node tools/check-css.mjs           # every rendered class has a rule, and back
 node tools/check-css.mjs --break   # deletes rules to show the check can go red
 node check-csp.mjs                 # the Content-Security-Policy is script-src 'self' + the inline scripts' hashes

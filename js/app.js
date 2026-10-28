@@ -472,19 +472,7 @@ window.XHS = window.XHS || {};
 
   // ---------- Compilation rendering ----------
   function compToMarkdown(c){
-    var md = '# ' + (c.title || T('未命名合集','Untitled compilation')) + '\n\n';
-    if (c.topic) md += T('> 主题：','> Topic: ') + c.topic + '\n\n';
-    if (c.summary) md += c.summary + '\n\n';
-    (c.sections || []).forEach(function (s) {
-      md += '## ' + s.heading + '\n\n' + s.content + '\n';
-      if (s.sources && s.sources.length) {
-        md += T('\n来源：','\nSources: ') + s.sources.map(function (x) {
-          return x.url ? ('[' + (x.title || T('链接','link')) + '](' + x.url + ')') : (x.title || '');
-        }).join(' · ') + '\n';
-      }
-      md += '\n';
-    });
-    return md;
+    return X.export.markdown(c, X.i18n.lang);
   }
   function compCardHtml(c){
     var nSrc = X.refs.bind(c).sources.length;
@@ -596,6 +584,7 @@ window.XHS = window.XHS || {};
         '<span class="read__meta">' + model + inLang + when +
           '<span>' + b.sources.length + T(' 篇来源', b.sources.length === 1 ? ' source' : ' sources') + '</span></span>' +
         '<button class="btn btn--ghost" data-read="copy">' + T('复制 MD','Copy MD') + '</button>' +
+        '<button class="btn btn--ghost" data-read="export">' + T('导出 MD','Export MD') + '</button>' +
       '</div>' +
       '<div class="read__grid">' +
         (toc ? '<nav class="read__toc" aria-label="' + T('板块','Sections') + '">' +
@@ -906,6 +895,7 @@ window.XHS = window.XHS || {};
       var act = el.getAttribute('data-read');
       if (act === 'close') { closeRead(); return; }
       if (act === 'copy') { var c = compById(readingCompId); if (c) copyText(compToMarkdown(c)); return; }
+      if (act === 'export') { var exported = compById(readingCompId); if (exported) download(X.export.filename(exported), compToMarkdown(exported), 'text/markdown;charset=utf-8'); return; }
       e.preventDefault();
       readJump(el, act === 'jump' ? 'read-sec-' + el.getAttribute('data-i') : 'read-src-' + el.getAttribute('data-n'));
     });

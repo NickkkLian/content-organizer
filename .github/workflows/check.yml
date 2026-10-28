@@ -15,6 +15,7 @@ jobs:
           node-version: "22"
       # the merge rules the two devices depend on and the reference list the reading view prints, from the files the browser loads
       - run: node check.mjs
+      - run: node check-export.mjs
 
   break:
     runs-on: ubuntu-latest
