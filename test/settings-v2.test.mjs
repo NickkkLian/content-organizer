@@ -24,3 +24,16 @@ test('preferences and connections written by the supplied runtime survive migrat
  for(const [k,v]of before)assert.equal(store.getItem(k),v,'retained '+k);
  ctx.HubSettingsRuntime.write(app,{theme:'light'});assert.equal(ctx.HubSettingsRuntime.read(app).future.keep,true);
 });
+
+test('owned controls recover after busy renders and stay stable through 50 language refreshes',()=>{
+ let language='en';
+ function node(tag){const n={tag,children:[],style:{},disabled:false,textContent:'',setAttribute(){},addEventListener(){},after(){},append(...items){for(const child of items){const i=this.children.indexOf(child);if(i>=0)this.children.splice(i,1);child.parentElement=this;this.children.push(child)}},replaceChildren(...items){this.children=[];this.append(...items)},querySelector(selector){return this.querySelectorAll(selector)[0]||null},querySelectorAll(selector){const all=this.children.flatMap(c=>[c,...c.querySelectorAll('*')]);return all.filter(c=>selector==='*'||selector==='button,select'&&['button','select'].includes(c.tag)||selector===c.tag||selector==='#'+c.id)}};Object.defineProperty(n,'previousElementSibling',{get(){return this.parentElement?.children[this.parentElement.children.indexOf(this)-1]}});return n;}
+ const header=node('header'),gear=node('button'),store={getItem:()=>null},ctx={document:{createElement:node,getElementById:()=>gear,querySelector:()=>header,documentElement:{}},localStorage:store,location:{search:''},URLSearchParams,Appearance:{},HubSettingsContract:{preferenceKey:k=>k,SettingsError:Error,hosted:false},HubSettingsRuntime:{read:()=>({}),pending:0},SuiteBackup:{},SuiteFieldGroup:()=>({mount(){},refresh(){},dirty:()=>false,discard(){}}),XHS:{i18n:{T:(zh,en)=>language==='zh'?zh:en}}};
+ ctx.window=ctx;vm.createContext(ctx);vm.runInContext(read('adapter-helpers.js'),ctx);
+ const source=fs.readFileSync(new URL('../assets/settings-adapter.js',import.meta.url),'utf8');vm.runInContext(source,ctx);
+
+ const root=node('div'),render=()=>ctx.settingsAdapter.appControls(root,{}),samples={};
+ render();
+ for(let i=0;i<50;i++){language=i%2?'zh':'en';for(const element of root.querySelectorAll('button,select'))element.disabled=true;render();const controls=root.querySelectorAll('button,select');assert.ok(controls.length>=2);assert.ok(controls.every(e=>!e.disabled),'owned controls stay enabled after the busy flag clears');const ids=root.querySelectorAll('*').map(e=>e.id).filter(Boolean);assert.equal(ids.length,new Set(ids).size);const state=JSON.stringify(root.querySelectorAll('*').map(e=>({tag:e.tag,id:e.id,text:e.textContent})));if(samples[language])assert.equal(state,samples[language]);else samples[language]=state;}
+ assert.notEqual(samples.en,samples.zh);
+});
