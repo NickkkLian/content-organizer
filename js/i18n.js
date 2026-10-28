@@ -7,7 +7,7 @@ window.XHS = window.XHS || {};
   'use strict';
 
   var lang = (function () {
-    try { return localStorage.getItem('pha-lang') === 'zh' ? 'zh' : 'en'; }
+    try { return localStorage.getItem(HubSettingsContract.preferenceKey("pha-lang")) === 'zh' ? 'zh' : 'en'; }
     catch (e) { return 'en'; }
   })();
 
@@ -88,7 +88,7 @@ window.XHS = window.XHS || {};
 
   function toggleLang() {
     lang = lang === 'en' ? 'zh' : 'en';
-    try { localStorage.setItem('pha-lang', lang); } catch (e) {}
+    try { localStorage.setItem(HubSettingsContract.preferenceKey("pha-lang"), lang); } catch (e) {}
     applyStatic();
     if (X.app && X.app.rerender) X.app.rerender();
   }

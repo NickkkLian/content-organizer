@@ -21,7 +21,7 @@
    No dependencies. Styles use design tokens only. */
 (function (root) {
   'use strict';
-  var KEY_THEME = 'nl-theme', KEY_SCHEME = 'nl-scheme', KEY_SHORTCUTS = 'nl-shortcuts';
+  var KEY_THEME = HubSettingsContract.preferenceKey("nl-theme"), KEY_SCHEME = HubSettingsContract.preferenceKey("nl-scheme"), KEY_SHORTCUTS = HubSettingsContract.preferenceKey("nl-shortcuts");
   var THEMES = ['plaster', 'paper', 'ink'];
   // palette names are strings like the others (v4: Water lilies / Morning light / Dusk; the codes stay plaster|paper|ink)
   var SCHEMES = ['system', 'light', 'dark'];
