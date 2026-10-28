@@ -6,6 +6,7 @@
   "dead": {
     "map": "The CSS-in-JS heuristic reads A.palette.values.map inside the shared panel's palette template as CSS. This is a JavaScript array method, not a DOM class.",
     "palette": "The CSS-in-JS heuristic reads A.palette in the shared panel's select template as a selector. The actual palette control is #suite-palette.",
-    "values": "The CSS-in-JS heuristic reads A.palette.values in the shared panel's template as a selector. This is an array property, not a DOM class."
+    "values": "The CSS-in-JS heuristic reads A.palette.values in the shared panel's template as a selector. This is an array property, not a DOM class.",
+    "Reset": "The CSS-in-JS heuristic joins the shared panel's two reset-confirmation sentences ('...stay intact.' and 'Reset this app's theme...') and reads '.Reset' as a selector. It is prose in the confirmation text, not a DOM class."
   }
 }
