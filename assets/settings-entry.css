@@ -1,5 +1,5 @@
 /* Header ownership only; panel content and app entries are unchanged. */
-.topbar{flex-wrap:nowrap!important;gap:8px!important}.topbar .brand{flex:1!important;min-width:0!important;padding-right:0!important;overflow:hidden;white-space:nowrap}.topbar .brand>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.topbar .brand>span{display:none}.topbar>.pill{flex:none;max-width:none;white-space:nowrap}.topbar .suite-gear{position:relative!important;inset:auto!important}@media(max-width:639px){.topbar>.pill{max-width:68px}.topbar .brand>b{font-size:18px}}
+.topbar{flex-wrap:nowrap!important;gap:8px!important}.topbar .brand{flex:1!important;min-width:0!important;padding-right:0!important;overflow:hidden;white-space:nowrap}.topbar .brand>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.topbar .brand>span{display:none}.topbar>.pill{flex:none;max-width:none;white-space:nowrap}.topbar .suite-gear{position:relative!important;inset:auto!important}@media(max-width:639px){.topbar>.pill{max-width:none}.topbar .brand>b{font-size:18px}}
 
 /* Whole phone name with the three global actions at the right edge. */
 @media(max-width:639px){.topbar{padding-inline:12px!important}.topbar>.pill{display:none}.topbar .brand{gap:6px!important}.topbar .brand>b{font-size:18px;overflow:visible;text-overflow:clip}.topbar .app-logo{width:24px;height:24px}}
