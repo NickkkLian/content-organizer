@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PAGE = 'index.html';
 // every file whose text ends up in the page: the page itself and the scripts it loads from this repository
-const scriptFiles = (page) => [...page.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]).filter((p) => existsSync(join(ROOT, p)));
+const scriptFiles = (page) => [...page.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1].split(/[?#]/)[0]).filter((p) => existsSync(join(ROOT, p)));
 
 export const CSP_META = /<meta\s+http-equiv\s*=\s*["']?Content-Security-Policy["']?\s+content\s*=\s*"([^"]*)"\s*\/?>\n?/gi;
 const INLINE = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;

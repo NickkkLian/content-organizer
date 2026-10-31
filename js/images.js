@@ -93,7 +93,8 @@ window.XHS = window.XHS || {};
     return blob;
   });}
 
-  async function putRepoFile(path, b64){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+  async function putRepoFile(path,b64){return SaveStatus.run(path,()=>putRepoFile(path,b64),()=>putRepoFileWrite(path,b64));}
+  async function putRepoFileWrite(path, b64){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var body = { message: 'xhs-organizer: archive image ' + path, content: b64 };
     var r = await fetch(contentsUrl(path), { method: 'PUT', headers: ghHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
     if (r.status === 422 || r.status === 409) {

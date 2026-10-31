@@ -112,7 +112,8 @@ window.XHS = window.XHS || {};
     }
     return { doc: normalizeDoc(parsed), sha: j.sha, missing: false };
   });}
-  async function putFile(cfg, doc, sha, message, file){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+  async function putFile(cfg,doc,sha,message,file){return SaveStatus.run(file||DATA_PATH,sync,()=>putFileWrite(cfg,doc,sha,message,file));}
+  async function putFileWrite(cfg, doc, sha, message, file){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var body = { message: message || 'content-organizer sync', content: b64encode(JSON.stringify(doc, null, 2)) };
     if (sha) body.sha = sha;
     var r = await fetch(contentsUrl(cfg, file), {
@@ -138,12 +139,19 @@ window.XHS = window.XHS || {};
   var lastSynced=null;
   function localDoc(){return X.store.document();}
   function hasUnsynced(){const d=localDoc();return lastSynced?sig(d)!==sig(lastSynced):Boolean(d.notes.length||d.deleted.length||d.compilations.length||d.deletedComps.length);}
-  async function pullSaved(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+  async function pullSaved(discard=false){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     const cfg=getConfig();if(!cfg.owner||!cfg.repo||!cfg.token)throw Error('Not connected');
-    const got=await getFile(cfg);await X.store.replaceSnapshot(got.doc);lastSynced=structuredClone(got.doc);return got.doc;
+    const got=await getFile(cfg);await X.store.replaceSnapshot(got.doc);lastSynced=structuredClone(got.doc);if(discard){queuedSync=null;SaveStatus.reset();}return got.doc;
   });}
   // ---------- one sync = pull (bootstrap from legacy if missing) + merge + write back (only if changed) ----------
-  async function sync(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+  let queuedSync=null;
+  function queueSave(){queuedSync=SaveStatus.pending(DATA_PATH,sync);}
+  async function sync(){
+    const job=queuedSync;queuedSync=null;const token=job?SaveStatus.start(DATA_PATH,sync,job):null;
+    try{const doc=await syncWrite();if(token)SaveStatus.store.succeed(token,null);return doc;}
+    catch(error){if(token)SaveStatus.store.fail(token,error);throw error;}
+  }
+  async function syncWrite(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var cfg = getConfig();
     if (!isConfigured(cfg)) throw new Error(T('未连接：请先在设置里填入令牌','Not connected: enter a token in settings first'));
 
@@ -168,7 +176,7 @@ window.XHS = window.XHS || {};
 
   X.sync = {
     getConfig: getConfig, isConfigured: isConfigured, saveToken: saveToken,
-    dataLabel: dataLabel, validate: validate, sync: sync,localDoc,hasUnsynced,pullSaved,resetBaseline:()=>{lastSynced=null;},
+    dataLabel: dataLabel, validate: validate, sync: sync,queueSave,localDoc,hasUnsynced,pullSaved,resetBaseline:()=>{lastSynced=null;queuedSync=null;},
     _merge: mergeDocs, _combineLegacy: combineLegacy, _b64: { enc: b64encode, dec: b64decode }
   };
 })(window.XHS);

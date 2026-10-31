@@ -1,0 +1,3 @@
+[data-save-status]>button[hidden]{display:none!important}[data-save-status]{font-size:12px;line-height:1.4;min-width:0;max-width:100%}[data-save-status]>button.suite-app-entry{position:static!important;inset:auto!important;z-index:auto;width:auto!important;min-width:44px!important;height:auto!important;min-height:44px!important;padding:4px 8px!important}.suite-source-note{top:var(--media-header-bottom,64px)}.topbar{flex-wrap:wrap!important}.topbar>[data-save-status]{margin-right:0}.topbar:has([data-save-status][data-save-state="error"])>[data-save-status]{flex-basis:100%;order:100}@media(max-width:767px){.topbar>[data-save-status]{order:100;flex-basis:100%}}
+
+@media(max-width:767px){.topbar{padding-block:4px}}

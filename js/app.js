@@ -740,12 +740,13 @@ window.XHS = window.XHS || {};
     syncing = true;
     setSyncStatus('syncing', T('↻ 同步中…','↻ Syncing…'));
     try {
-      await X.sync.sync();syncCompleted=true;
+      await X.sync.sync();syncCompleted=true;FirstRead.ready();
       renderLibrary();
       renderComps();
       var t = new Date().toLocaleTimeString(X.i18n.lang === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' });
       setSyncStatus('ok', T('☁ 已同步','☁ Synced'), T('已同步于 ','Synced at ') + t + ' · ' + X.sync.dataLabel());
     } catch (e) {
+      FirstRead.fail(doSync,T);
       setSyncStatus('err', T('⚠ 同步失败','⚠ Sync failed'), e.message);
     } finally {
       syncing = false;
@@ -754,6 +755,8 @@ window.XHS = window.XHS || {};
   });}
 
   function scheduleSync(){
+    X.sync.queueSave();
+    X.store.flush().then(()=>SaveStatus.store.retained(SaveStatus.key("content.json"),true),()=>SaveStatus.store.retained(SaveStatus.key("content.json"),false));
     if (!X.sync || !X.sync.isConfigured()) return;
     clearTimeout(syncTimer);
     syncTimer = setTimeout(()=>{syncTimer=null;doSync();}, 800);   // debounce: a burst of edits triggers one sync
