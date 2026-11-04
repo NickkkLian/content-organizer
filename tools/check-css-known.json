@@ -2,8 +2,6 @@
   "unstyled": {
     "open": "The pinned shared panel only checks Mind Archive's legacy overlay.open for its merge-dialog bridge; Clipbind does not create this class.",
     "overlay": "The pinned shared panel only detects Mind Archive's reusable merge overlay. Clipbind uses its own native dialogs and never creates this class.",
-    "suite-app-entry": "This unused optional app-helper class is shipped in the app-scoped runtime. Clipbind mounts its own nl-settings-button and never creates it.",
-    "suite-source-note": "This unused optional app-helper class is shipped in the app-scoped runtime. Clipbind uses settings-connection-note instead.",
     "suite-preference": "The two actual header buttons are styled by [data-settings-slot]>button in entry.css, including their 44 px targets, focus and hover states."
   },
   "dead": {
