@@ -20,12 +20,12 @@ body{margin:0;background:var(--bg);color:var(--text);font:var(--weight-regular) 
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:var(--grain);opacity:var(--grain-opacity)}
 ::selection{background:var(--selection-bg)}
 .topbar ::selection,.foot ::selection{background:var(--on-band-2);color:var(--band)}
-:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:2px;border-radius:var(--radius-xs)}
+:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:calc(2 * var(--suite-px, 1px));border-radius:var(--radius-xs)}
 .topbar :focus-visible,.foot :focus-visible,.skip:focus-visible{outline-color:var(--on-band)}
 button{font:inherit;color:inherit}
 a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness:from-font}
 code,kbd{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
-code{font-size:.92em;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:0 .3em}
+code{font-size:max(.92em,.75rem);background:var(--surface-2);border:calc(1 * var(--suite-px, 1px)) solid var(--border);border-radius:var(--radius-xs);padding:0 .3em}
 img,svg{max-width:100%;display:block}
 p{margin:0}
 h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-weight);font-variation-settings:"opsz" var(--opsz-title);
@@ -34,22 +34,22 @@ h1{font-size:var(--text-2xl)}
 h2{font-size:var(--text-xl)}
 h3{font-size:var(--text-lg)}
 .muted,.hint{color:var(--text-2);font-size:var(--text-xs);line-height:var(--leading-relaxed);max-width:var(--measure)}
-.skip{position:absolute;left:var(--space-2);top:-48px;z-index:var(--z-toast);background:var(--surface);color:var(--text);
-  padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm)}
+.skip{position:absolute;left:var(--space-2);top:calc(-48 * var(--suite-px, 1px));z-index:var(--z-toast);background:var(--surface);color:var(--text);
+  padding:var(--space-2) var(--space-3);border:calc(1 * var(--suite-px, 1px)) solid var(--border-input);border-radius:var(--radius-sm)}
 .skip:focus{top:var(--space-2)}
 
 /* ===== top bar: the band ===== */
 .topbar{position:sticky;top:0;z-index:var(--z-sticky);min-height:var(--topbar-h);display:flex;align-items:center;gap:var(--space-3);
-  padding:0 var(--gutter);background:var(--band);color:var(--on-band);border-bottom:1px solid var(--band-line)}
+  padding:0 var(--gutter);background:var(--band);color:var(--on-band);border-bottom:calc(1 * var(--suite-px, 1px)) solid var(--band-line)}
 .brand{display:flex;align-items:center;gap:var(--space-2);color:inherit;text-decoration:none;min-width:0;flex:0 1 auto}
 .brand svg{flex:none}
 .brand b{font-family:var(--font-display);font-weight:var(--display-weight);font-variation-settings:"opsz" var(--opsz-title);
   font-size:var(--text-xl);letter-spacing:-0.014em;white-space:nowrap;flex:none}
 .brand span{color:var(--on-band-2);font-size:var(--text-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.topbar .pill{display:inline-flex;align-items:center;gap:var(--space-1);height:22px;padding:0 var(--space-2);border-radius:var(--radius-full);
-  white-space:nowrap;color:var(--on-band-2);font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);border:1px solid var(--band-line);
+.topbar .pill{display:inline-flex;align-items:center;gap:var(--space-1);height:calc(22 * var(--suite-px, 1px));padding:0 var(--space-2);border-radius:var(--radius-full);
+  white-space:nowrap;color:var(--on-band-2);font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);border:calc(1 * var(--suite-px, 1px)) solid var(--band-line);
   margin-inline-end:auto;flex:none}
-.topbar .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--on-band-warning);flex:none}
+.topbar .pill::before{content:"";width:calc(6 * var(--suite-px, 1px));height:calc(6 * var(--suite-px, 1px));border-radius:50%;background:var(--on-band-warning);flex:none}
 .topbar .btn{color:var(--on-band);border-color:transparent;background:transparent}
 
 /* ===== page ===== */
@@ -58,13 +58,13 @@ main{position:relative;z-index:1;flex:1 0 auto;width:100%;max-width:var(--conten
 .wrap{display:grid;gap:var(--space-6)}
 
 /* ===== cards ===== */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-1);padding:var(--space-5)}
+.card{background:var(--surface);border:calc(1 * var(--suite-px, 1px)) solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-1);padding:var(--space-5)}
 .card--narrow{max-width:46rem}
 .card h2{margin-bottom:var(--space-3);display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-2)}
 
 /* ===== tabs: which way a note comes in ===== */
-.tabs{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4);border-bottom:1px solid var(--hairline)}
-.tab{background:none;border:0;border-bottom:2px solid transparent;padding:var(--space-2) var(--space-3);color:var(--text-2);
+.tabs{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4);border-bottom:calc(1 * var(--suite-px, 1px)) solid var(--hairline)}
+.tab{background:none;border:0;border-bottom:calc(2 * var(--suite-px, 1px)) solid transparent;padding:var(--space-2) var(--space-3);color:var(--text-2);
   font-size:var(--text-sm);cursor:pointer;min-height:var(--touch-min)}
 .tab--on{color:var(--text);border-bottom-color:var(--point);font-weight:var(--weight-medium)}
 
@@ -73,12 +73,12 @@ main{position:relative;z-index:1;flex:1 0 auto;width:100%;max-width:var(--conten
 .row > input,.row > textarea,.row > select{flex:1 1 16rem;min-width:0}
 input[type=url],input[type=text],input[type=search],input[type=password],textarea,select{
   width:100%;min-height:var(--touch-min);padding:var(--space-2) var(--space-3);font:inherit;color:var(--text);
-  background:var(--surface);border:1px solid var(--border-input);border-radius:var(--radius-sm)}
+  background:var(--surface);border:calc(1 * var(--suite-px, 1px)) solid var(--border-input);border-radius:var(--radius-sm)}
 textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 
 /* ===== buttons ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:var(--control-h);
-  padding:var(--space-2) var(--space-4);border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+  padding:var(--space-2) var(--space-4);border:calc(1 * var(--suite-px, 1px)) solid var(--border-strong);border-radius:var(--radius-sm);
   background:var(--surface);color:var(--text);font-size:var(--text-sm);font-weight:var(--weight-medium);cursor:pointer;text-decoration:none;
   transition:background var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
 .btn:active{transform:scale(var(--press-scale))}
@@ -100,20 +100,20 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 @media (pointer:coarse){.btn,.chip,.tab{min-height:var(--touch-min)}}
 
 /* ===== chips: filters and small toggles ===== */
-.chips__sep{width:1px;align-self:center;height:16px;background:var(--border);margin:0 var(--space-1)}
+.chips__sep{width:calc(1 * var(--suite-px, 1px));align-self:center;height:calc(16 * var(--suite-px, 1px));background:var(--border);margin:0 var(--space-1)}
 .chips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-3) 0}
-.chip{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border:1px solid var(--border);
+.chip{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border:calc(1 * var(--suite-px, 1px)) solid var(--border);
   border-radius:var(--radius-full);background:var(--surface);color:var(--text-2);font-size:var(--text-xs);cursor:pointer;min-height:var(--control-h)}
 .chip--on{background:var(--accent-tint);color:var(--accent-tint-text);border-color:var(--accent)}
 .chips--plat .chip{font-variant-numeric:tabular-nums}
 
 /* ===== badges: what a note is ===== */
-.badge{display:inline-flex;align-items:center;gap:var(--space-1);padding:2px var(--space-2);border-radius:var(--radius-full);
-  font-size:var(--text-2xs);border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:var(--space-1);padding:calc(2 * var(--suite-px, 1px)) var(--space-2);border-radius:var(--radius-full);
+  font-size:var(--text-2xs);border:calc(1 * var(--suite-px, 1px)) solid var(--border);color:var(--text-2);white-space:nowrap}
 .badge--soft{background:var(--neutral-tint);color:var(--neutral-tint-text)}
 /* A compilation's topic is a sentence the model wrote, not a short tag, so its pill has to be allowed to run
-   out of room. Measured on the shipped demo: a 134-character topic made a 941px pill that pushed the page
-   19px past a 1280 viewport. min-width on the inner span because a flex item will not shrink below its text. */
+   out of room. Measured on the shipped demo: a 134-character topic made a calc(941 * var(--suite-px, 1px)) pill that pushed the page
+   calc(19 * var(--suite-px, 1px)) past a 1280 viewport. min-width on the inner span because a flex item will not shrink below its text. */
 .badge--clip{max-width:100%}
 .badge--clip>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .badge--plat{background:var(--accent-tint);color:var(--accent-tint-text);border-color:var(--accent)}
@@ -122,7 +122,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 
 /* ===== the library: a grid of cards, folded by default =====
    4 per row → 2 on narrow windows → 1 on phones. minmax(0,1fr), never 1fr: 1fr is minmax(auto,1fr), and auto's floor
-   is the content's min-content width, so with real cards loaded the column grew to 668px inside a 375px viewport and
+   is the content's min-content width, so with real cards loaded the column grew to calc(668 * var(--suite-px, 1px)) inside a calc(375 * var(--suite-px, 1px)) viewport and
    the page scrolled sideways. An empty library cannot reveal that — it has no content to set a minimum. Kept from the
    version before this restyle, along with the reason. */
 .lib__head{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:baseline;justify-content:space-between}
@@ -139,7 +139,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .lib__list > .note.is-fold .note__actions,.lib__list > .comp.is-fold .note__actions{margin-top:auto;padding-top:var(--space-2)}
 
 .note{padding:var(--space-4)}
-.note.is-sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.note.is-sel{border-color:var(--accent);box-shadow:0 0 0 calc(2 * var(--suite-px, 1px)) var(--accent-tint)}
 .note__sel{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);font-size:var(--text-2xs);color:var(--text-3);cursor:pointer}
 .note__sel input{width:auto}
 .note__head{display:flex;flex-wrap:wrap;gap:var(--space-1);align-items:center;margin-bottom:var(--space-2)}
@@ -152,13 +152,13 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .note__title,.comp__title{cursor:pointer;font-size:var(--text-md);margin:var(--space-1) 0;overflow-wrap:anywhere}
 .note__author{color:var(--text-3);font-size:var(--text-xs);margin-bottom:var(--space-1)}
 .note__peek{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-1) 0;cursor:pointer}
-.note__body{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hairline);
+.note__body{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);border:calc(1 * var(--suite-px, 1px)) solid var(--hairline);
   border-radius:var(--radius-sm);padding:var(--space-3);font-size:var(--text-sm);line-height:var(--leading-relaxed);margin:var(--space-2) 0}
 .note__link{display:inline-block;font-size:var(--text-xs);margin:var(--space-1) 0}
 .note__actions{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-top:var(--space-3)}
 /* icon buttons carry their own padding, so the row needs less gap than words did; the primary action (Read,
-   Restore) keeps a little more room after it. Measured: at 8px the compilation card's six controls needed 265px
-   of a 259px row at 1280 and the delete button wrapped onto its own line. */
+   Restore) keeps a little more room after it. Measured: at calc(8 * var(--suite-px, 1px)) the compilation card's six controls needed calc(265 * var(--suite-px, 1px))
+   of a calc(259 * var(--suite-px, 1px)) row at 1280 and the delete button wrapped onto its own line. */
 .note__actions .btn--primary{margin-right:var(--space-1)}
 .note__ts{margin:var(--space-2) 0}
 .note__ts > summary{cursor:pointer;color:var(--text-2);font-size:var(--text-xs);list-style:none;user-select:none}
@@ -167,33 +167,33 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .note__ts[open] > summary::before{content:"▾ "}
 .note__ts-body{margin-top:var(--space-2);max-height:15rem;overflow:auto}
 .selbox{width:1.05em;height:1.05em;flex:none}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:var(--space-2);margin:var(--space-3) 0}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(110 * var(--suite-px, 1px)),1fr));gap:var(--space-2);margin:var(--space-3) 0}
 .gallery img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--radius-sm);background:var(--surface-2)}
 /* an image whose original expired before it was archived into the private repo */
-.img-dead{display:flex;align-items:center;justify-content:center;min-height:90px;padding:var(--space-2);text-align:center;
-  border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-3);font-size:var(--text-2xs)}
+.img-dead{display:flex;align-items:center;justify-content:center;min-height:calc(90 * var(--suite-px, 1px));padding:var(--space-2);text-align:center;
+  border:calc(1 * var(--suite-px, 1px)) dashed var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-3);font-size:var(--text-2xs)}
 .tags{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-top:var(--space-2)}
-.tag{font-size:var(--text-2xs);color:var(--text-3);background:var(--surface-2);border:1px solid var(--hairline);
-  border-radius:var(--radius-full);padding:1px var(--space-2)}
+.tag{font-size:var(--text-2xs);color:var(--text-3);background:var(--surface-2);border:calc(1 * var(--suite-px, 1px)) solid var(--hairline);
+  border-radius:var(--radius-full);padding:calc(1 * var(--suite-px, 1px)) var(--space-2)}
 
 /* ===== the selection bar: what happens to the ticked notes ===== */
 .selbar{position:sticky;bottom:var(--space-3);z-index:var(--z-sticky);display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;
-  margin-top:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--surface-raised);border:1px solid var(--border-strong);
+  margin-top:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--surface-raised);border:calc(1 * var(--suite-px, 1px)) solid var(--border-strong);
   border-radius:var(--radius-md);box-shadow:var(--shadow-2)}
 .selbar__sel{flex:0 1 18rem}
 .selbar__imgs{cursor:pointer}
 
 /* ===== compilations: what the AI step produced ===== */
-.comp{padding:var(--space-4);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.comp{padding:var(--space-4);background:var(--surface);border:calc(1 * var(--suite-px, 1px)) solid var(--border);border-radius:var(--radius-md)}
 .comp__meta{color:var(--text-3);font-size:var(--text-2xs);font-family:var(--font-mono);margin-top:var(--space-1)}
-.comp__sec{margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--hairline)}
+.comp__sec{margin-top:var(--space-3);padding-top:var(--space-3);border-top:calc(1 * var(--suite-px, 1px)) solid var(--hairline)}
 .comp__sec h4{margin:0 0 var(--space-2);font-family:var(--font-display);font-size:var(--text-md)}
 .comp__summary{margin-top:var(--space-2);padding:var(--space-3);max-width:var(--measure);background:var(--surface-2);
-  border-left:3px solid var(--point);border-radius:var(--radius-sm);color:var(--text-2);font-size:var(--text-sm);line-height:var(--leading-relaxed)}
+  border-left:calc(3 * var(--suite-px, 1px)) solid var(--point);border-radius:var(--radius-sm);color:var(--text-2);font-size:var(--text-sm);line-height:var(--leading-relaxed)}
 .comp__sec .body{white-space:pre-wrap;overflow-wrap:anywhere;max-width:var(--measure);color:var(--text-2);
   font-size:var(--text-sm);line-height:var(--leading-relaxed)}
 .comp__src{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2)}
-.comp__src a{padding:1px var(--space-2);border:1px solid var(--hairline);border-radius:var(--radius-sm);
+.comp__src a{padding:calc(1 * var(--suite-px, 1px)) var(--space-2);border:calc(1 * var(--suite-px, 1px)) solid var(--hairline);border-radius:var(--radius-sm);
   background:var(--surface-2);color:var(--text-2);font-size:var(--text-2xs);text-decoration:none}
 .comp__src a:hover{text-decoration:underline}
 /* editing a compilation by hand: the fields take the card's whole width */
@@ -207,14 +207,14 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
    A modal dialog over the library, scrolling in its own box: the bar and the two side columns are sticky against
    that box, not against the page. --read-bar-h is the bar's own height: js/app.js measures it when the view opens
    and sets it on the dialog, because the bar wraps to two rows on a phone and to three when the model's name is
-   long. The values here are for the frame before that runs — 4rem is the measured 63px at 1280, 7rem the measured
-   112px at 375, and neither is load-bearing. Every sticky offset and scroll-margin is derived from it.
+   long. The values here are for the frame before that runs — 4rem is the measured calc(63 * var(--suite-px, 1px)) at 1280, 7rem the measured
+   calc(112 * var(--suite-px, 1px)) at 375, and neither is load-bearing. Every sticky offset and scroll-margin is derived from it.
    The numbers beside the sections point into the source list; js/refs.js decides what they are, and they are in the
    markup rather than list counters: a li laid out as a grid is no longer display:list-item, so counter(list-item)
    stops incrementing and every row renders 0. */
 .read{--read-bar-h:4rem;
   width:min(100% - 2 * var(--gutter),76rem);max-width:none;height:min(100% - 2 * var(--space-6),58rem);max-height:none;
-  padding:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);color:var(--text);
+  padding:0;border:calc(1 * var(--suite-px, 1px)) solid var(--border);border-radius:var(--radius-lg);background:var(--surface);color:var(--text);
   box-shadow:var(--shadow-2);overflow:auto;overscroll-behavior:contain}
 /* The backdrop is --overlay, and what that token is was decided upstream. The first screenshot of this view came
    back with a navy bar and a grey ground — #16253e and #8e8199, which are this product's #053333 and #f7e9e8 seen
@@ -226,13 +226,13 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
    repaint. ::backdrop only inherits the page's custom properties in newer browsers, hence the literal in var(). */
 .read::backdrop{background:var(--overlay,rgb(23 16 30 / 0.55))}
 .read__bar{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between;
-  padding:var(--space-3) var(--space-4);background:var(--band);color:var(--on-band);border-bottom:1px solid var(--band-line)}
+  padding:var(--space-3) var(--space-4);background:var(--band);color:var(--on-band);border-bottom:calc(1 * var(--suite-px, 1px)) solid var(--band-line)}
 .read__bar .btn{color:var(--on-band);border-color:transparent;background:transparent}
 .read__bar :focus-visible{outline-color:var(--on-band)}
 .read__bar ::selection{background:var(--on-band-2);color:var(--band)}
 .read__meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);color:var(--on-band-2);
   font:var(--weight-regular) var(--text-2xs)/1.4 var(--font-mono);font-variant-numeric:tabular-nums}
-.read__badge{border:1px solid var(--band-line);border-radius:var(--radius-full);padding:1px var(--space-2)}
+.read__badge{border:calc(1 * var(--suite-px, 1px)) solid var(--band-line);border-radius:var(--radius-full);padding:calc(1 * var(--suite-px, 1px)) var(--space-2)}
 .read__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-6);padding:var(--space-6) var(--space-5) var(--space-12)}
 @media (min-width:900px){
   /* the middle column is the measure, so the piece is centred in the dialog rather than stretched across it */
@@ -250,12 +250,12 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .read__toc a{color:var(--text-2);text-decoration:none}
 .read__toc a:hover{text-decoration:underline}
 .read__toc a[aria-current]{color:var(--text);font-weight:var(--weight-medium)}
-.read__toc li a[aria-current]::after{content:"";display:inline-block;width:5px;height:5px;margin-left:var(--space-2);
+.read__toc li a[aria-current]::after{content:"";display:inline-block;width:calc(5 * var(--suite-px, 1px));height:calc(5 * var(--suite-px, 1px));margin-left:var(--space-2);
   border-radius:50%;background:var(--point);vertical-align:middle}
 .read__toc li:first-child .read__n{color:var(--point-text)}
 .read__sources li.is-uncited{color:var(--text-3)}
 .read__tag{grid-column:2;justify-self:start;margin-top:var(--space-1);padding:0 var(--space-2);
-  border:1px solid var(--hairline);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:var(--text-2xs)}
+  border:calc(1 * var(--suite-px, 1px)) solid var(--hairline);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:var(--text-2xs)}
 .read__body{min-width:0;max-width:var(--measure)}
 .read__body h1{font-size:var(--text-3xl);font-variation-settings:"opsz" var(--opsz-display);letter-spacing:var(--tracking-display)}
 .read__lede{margin-top:var(--space-4);color:var(--text-2);font-size:var(--text-lg);line-height:var(--leading-lede)}
@@ -268,7 +268,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .read__body .gallery{margin-top:var(--space-8)}
 /* on a phone the dialog is the whole screen and the contents become a strip above the piece */
 @media (max-width:899px){
-  /* the bar's three items no longer fit on one line and it wraps; this is the two-row case, measured at 375px */
+  /* the bar's three items no longer fit on one line and it wraps; this is the two-row case, measured at calc(375 * var(--suite-px, 1px)) */
   .read{--read-bar-h:7rem;width:100%;height:100%;border:0;border-radius:0}
   .read__toc ol{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;overscroll-behavior-x:contain;
     gap:var(--space-4);padding-bottom:var(--space-2)}
@@ -276,7 +276,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 }
 
 /* ===== states ===== */
-.status{margin-top:var(--space-3);padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-left:3px solid var(--info);
+.status{margin-top:var(--space-3);padding:var(--space-3) var(--space-4);border:calc(1 * var(--suite-px, 1px)) solid var(--border);border-left:calc(3 * var(--suite-px, 1px)) solid var(--info);
   background:var(--info-tint);color:var(--info-tint-text);border-radius:var(--radius-sm);font-size:var(--text-sm);max-width:var(--measure)}
 .status--err{border-left-color:var(--danger);background:var(--danger-tint);color:var(--danger-tint-text)}
 .status--ok{border-left-color:var(--success);background:var(--success-tint);color:var(--success-tint-text)}
@@ -284,7 +284,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .empty{padding:var(--space-8) var(--space-4);text-align:center;color:var(--text-2)}
 .empty b{display:block;font-family:var(--font-display);font-size:var(--text-lg);color:var(--text);margin-bottom:var(--space-2)}
 .sync-pill{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);
-  border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:var(--text-xs);cursor:pointer;min-height:var(--control-h)}
+  border:calc(1 * var(--suite-px, 1px)) solid var(--border);background:var(--surface);color:var(--text-2);font-size:var(--text-xs);cursor:pointer;min-height:var(--control-h)}
 .sync-pill.is-ok{border-color:var(--success);background:var(--success-tint);color:var(--success-tint-text)}
 .sync-pill.is-syncing{border-color:var(--warning);background:var(--warning-tint);color:var(--warning-tint-text)}
 .sync-pill.is-err{border-color:var(--danger);background:var(--danger-tint);color:var(--danger-tint-text)}
@@ -294,7 +294,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .dot--off{color:var(--text-3)}
 
 /* ===== footer: the band again ===== */
-.foot{position:relative;z-index:1;flex:none;background:var(--band);color:var(--on-band-2);border-top:1px solid var(--band-line);
+.foot{position:relative;z-index:1;flex:none;background:var(--band);color:var(--on-band-2);border-top:calc(1 * var(--suite-px, 1px)) solid var(--band-line);
   padding:var(--space-8) var(--gutter);font-size:var(--text-sm)}
 .foot .inner{max-width:var(--content-max);margin:0 auto;display:grid;gap:var(--space-5)}
 @media (min-width:768px){.foot .inner{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -309,7 +309,7 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 .foot a{text-decoration-color:var(--band-line)}
 
 /* Grids collapse to one column on a phone; the note row keeps its tick box beside the text.
-   minmax(0,1fr) rather than 1fr: a long unbroken title in a grid child otherwise pushes the page sideways (375px). */
+   minmax(0,1fr) rather than 1fr: a long unbroken title in a grid child otherwise pushes the page sideways (calc(375 * var(--suite-px, 1px))). */
 @media (max-width:767px){
   .topbar .brand span{display:none}
   .topbar .pill .long{display:none}
@@ -322,20 +322,24 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 @media (max-width:419px){.topbar{gap:var(--space-2);padding:0 var(--space-3)}}
 
 /* The name of an icon-only card action (see initTips in js/app.js): one fixed layer on the band's colour pair,
-   placed by script. No arrow, no delay on the way out; motion is a 2px lift that reduced motion turns off. */
-.tip{position:fixed;left:0;top:0;z-index:var(--z-toast);pointer-events:none;white-space:nowrap;max-width:calc(100vw - 16px);
-  padding:4px 8px;border-radius:var(--radius-sm);background:var(--band);color:var(--on-band);box-shadow:var(--shadow-1);
-  font:var(--weight-medium) var(--text-xs)/1.35 var(--font-sans);opacity:0;visibility:hidden;transform:translateY(2px);
+   placed by script. No arrow, no delay on the way out; motion is a calc(2 * var(--suite-px, 1px)) lift that reduced motion turns off. */
+.tip{position:fixed;left:0;top:0;z-index:var(--z-toast);pointer-events:none;white-space:nowrap;max-width:calc(100vw - calc(16 * var(--suite-px, 1px)));
+  padding:calc(4 * var(--suite-px, 1px)) calc(8 * var(--suite-px, 1px));border-radius:var(--radius-sm);background:var(--band);color:var(--on-band);box-shadow:var(--shadow-1);
+  font:var(--weight-medium) var(--text-xs)/1.35 var(--font-sans);opacity:0;visibility:hidden;transform:translateY(calc(2 * var(--suite-px, 1px)));
   transition:opacity .12s ease,transform .12s ease,visibility 0s linear .12s}
 .tip.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .12s ease,transform .12s ease}
 @media (prefers-reduced-motion:reduce){.tip,.tip.is-on{transition:none;transform:none}}
 .btn-icon svg{flex:none}
 .btn-icon{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 @media (pointer:coarse){.btn-icon{width:var(--touch-min);min-width:var(--touch-min)}}
-/* On a touch screen the icons are 44px, and they no longer fit beside Read (and Restore) in one row: measured at 375 the
+/* On a touch screen the icons are calc(44 * var(--suite-px, 1px)), and they no longer fit beside Read (and Restore) in one row: measured at 375 the
    compilation card put Read and four icons on the first line and Delete alone on the second. So a row that has a text
    action gives the text action(s) the first line and the icons the next one; the empty ::before is the line break. */
 @media (pointer:coarse){
   .note__actions:has(.btn--primary)::before{content:'';flex-basis:100%;order:-1}
   .note__actions .btn--primary{order:-2;flex:1 1 auto;margin-right:0}
 }
+
+html[data-suite-scale="fluid"]{font-size:var(--suite-screen-unit)}
+@media(min-width:1230px){html[data-suite-scale="fluid"] .suite-panel input[type=checkbox]{width:calc(24 * var(--suite-px, 1px));min-height:calc(24 * var(--suite-px, 1px))}}
+@media(min-width:1231px){body{max-width:calc(1215 * var(--suite-px, 1px));margin-inline:auto}.lib__tools{flex-wrap:nowrap}.lib__tools input[type=search]{flex:0 0 12rem}}
