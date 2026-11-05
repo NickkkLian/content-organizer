@@ -342,4 +342,4 @@ textarea{min-height:6rem;line-height:var(--leading-relaxed);resize:vertical}
 
 html[data-suite-scale="fluid"]{font-size:var(--suite-screen-unit)}
 @media(min-width:1230px){html[data-suite-scale="fluid"] .suite-panel input[type=checkbox]{width:calc(24 * var(--suite-px, 1px));min-height:calc(24 * var(--suite-px, 1px))}}
-@media(min-width:1231px){body{max-width:calc(1215 * var(--suite-px, 1px));margin-inline:auto}.lib__tools{flex-wrap:nowrap}.lib__tools input[type=search]{flex:0 0 12rem}}
+@media(min-width:1231px){body{max-width:calc(1215 * var(--suite-px, 1px));margin-inline:auto}.lib__tools{flex-wrap:nowrap}.lib__tools input[type=search]{flex:0 0 12rem}.note__sel input{width:calc(13 * var(--suite-px, 1px));height:calc(14 * var(--suite-px, 1px));margin:calc(3 * var(--suite-px, 1px)) calc(3 * var(--suite-px, 1px)) calc(3 * var(--suite-px, 1px)) calc(4 * var(--suite-px, 1px))}.note__head .badge{padding-inline:calc(var(--space-2) + var(--suite-px, 1px) - 1px)}}
