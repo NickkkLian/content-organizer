@@ -1,0 +1,154 @@
+{
+  "method": "Authored by the AI coding agent in this build, following the exact application binding prompt. No API call was made. Fictional inputs and original SVG diagrams only.",
+  "language": "en",
+  "authoredAt": "2026-11-06T03:21:22.917Z",
+  "system": "You are a content editor. Task: take the saved items the user provides (Xiaohongshu posts/videos, Bilibili videos; sometimes an existing compilation as well), organise, summarise and de-duplicate them, and merge them into one clearly structured long-form piece (a \"compilation\").\nRequirements:\n1. Identify the shared theme and several sub-topics; one section per sub-topic.\n2. **De-duplicate and merge**: keep each piece of information once; fold similar views/methods into one fuller statement; merge repetition across sources and across sections so the reader never sees the same thing twice.\n3. **Remove noise, but do not delete substance**: drop off-topic chatter, engagement bait (follow/like/subscribe/\"see comments\"), pure emotional filler, and the repetition and garbling typical of speech transcripts; always keep the concrete, valuable facts — shop names, addresses, prices, steps, figures, opinions, conclusions, lessons, links.\n4. **Present the content directly, not as reported speech**: never write \"the author says / the creator mentions / they recommend\"; state the facts, views and methods themselves.\n5. Distil and rewrite in your own words; never copy sentences verbatim. Write all output in English.\n6. Video content is mostly speech-to-text — no punctuation, colloquial, with homophone errors; infer the intended meaning from context before distilling.\n7. If images are attached, read the text and key information inside them (menus, price lists, slides, figures) and fold it into the body.\n8. **Keep only necessary images**: images are labelled [image N-M] (N = item number, M = image number within that item). Put the ones that text cannot replace — menus, price lists, slides, charts, data screenshots, step-by-step photos, UI screenshots with key information — into keep_images; never keep decorative, scenery, portrait or duplicate images. If the body already states the information clearly, do not keep the image. Return an empty array [] if nothing is worth keeping.\n9. source_indices uses 1-based numbers and lists which input items [N] a section mainly draws on (an empty array is fine for new content with no single source).\n10. The title should be concise and informative; the summary sums up the whole piece in one or two sentences.",
+  "userText": "Here are 8 saved items (Xiaohongshu posts/videos, Bilibili videos):\n\n[1] Xiaohongshu post | Title: Saturday brunch, start on Lantern Street\nTags: #Vancouver #Brunch\nBody / description: All Vancouver venues in this demo are fictional. Oat Window, 18 Lantern Street, opens Saturday 8am–3pm. Buckwheat pancakes cost C$18 and coffee C$5 before tax and tip. Usually walk in before 9:30am. After 10:30am, expect 25 minutes. Window tables seat two. Book for four. Gluten-free batter shares the griddle, so ask staff about allergies.\nLink: https://example.com/clipbind/food-1\n\n[2] Xiaohongshu post | Title: Brunch with a vegetarian friend\nTags: #Vancouver #Brunch #Vegetarian\nBody / description: Fictional Moss Table at 42 Cedar Street opens weekends 9am–4pm. Tofu scramble is C$19, roast tomatoes C$6 and oat latte C$6. Ask to replace butter with olive oil when ordering. Mushroom soup uses chicken stock. A leaf icon only signals vegetables. Budget C$62 for two with a tax and tip allowance. Use the side entrance for step-free access.\nLink: https://example.com/clipbind/food-2\n\n[3] Xiaohongshu post | Title: A café where you can stay a while\nTags: #Vancouver #Coffee #Brunch\nBody / description: Fictional Echo Coffee at 7 Harbour Lane opens 8am–5pm, closed Tuesday. Pour-over is C$6, egg toast C$14 and a second filter coffee C$3. No laptops from 11am–2pm on weekends. The communal table allows them at other times, with two power points. Quiet window tables seat two. The room carries sound, so take calls outside.\nLink: https://example.com/clipbind/food-3\n\n[4] Xiaohongshu post | Title: A rainy-day brunch with reservations\nTags: #Vancouver #Brunch #Rain\nBody / description: Fictional Red Brick Breakfast at 31 Maple Lane opens weekends 8:30am–2:30pm. Eggs and potatoes cost C$21 and hot tea C$4. Book a 9am or 1pm table the day before. Tables are held ten minutes. The waiting area has no roof, so reserve on rainy days. Leave umbrellas in the entrance bucket and keep dripping coats away from adjacent chairs.\nLink: https://example.com/clipbind/food-4\n\n[5] Xiaohongshu post | Title: Two pancake places, is the difference worth it\nTags: #Vancouver #Brunch #Pancakes\nBody / description: Fictional comparison. Oat Window’s C$18 buckwheat plate has two pancakes, fruit is C$4 extra. Birch Pancake House at 9 Sea Breeze Road serves three thick pancakes with apple sauce for C$22. Coffee is C$5. It opens weekends 8am–2pm, accepts debit only and is easiest before 10am. Choose Oat Window for savoury food. Split a Birch plate for a lighter meal, with two drinks required for sharing.\nLink: https://example.com/clipbind/food-5\n\n[6] Xiaohongshu post | Title: An after-brunch riverside walk\nTags: #Vancouver #Brunch #Walking\nBody / description: Fictional walking route. Walk six minutes south from Oat Window to Lantern Canal, then 1.6km along the water to White Stone Bridge, around 30 minutes. Public toilets are at the finish. Echo Coffee is seven minutes farther. In rain, take the parallel paved route, 200m longer, as the boardwalk is slippery. No car is needed. The return bus stop is at the Cedar Street junction.\nLink: https://example.com/clipbind/food-6\n\n[7] Xiaohongshu post | Title: Weekend brunch, beyond the menu price\nTags: #Vancouver #Brunch #Budget\nBody / description: These are fictional planning allowances, not local tax rates. Two pancakes and two coffees at Oat Window total C$46 on the menu. Set aside C$12 for tax and tip, C$58 total. Two tofu scrambles and oat lattes at Moss Table total C$50 plus a C$12 allowance, C$62. Two egg plates and teas at Red Brick total C$50 plus C$13, C$63. Ask about bill details before paying. Parking is excluded.\nLink: https://example.com/clipbind/food-7\n\n[8] Xiaohongshu post | Title: Weekend hours in one place\nTags: #Vancouver #Brunch\nBody / description: Fictional hours. Oat Window opens Saturday 8am–3pm and closes Sunday. Moss Table opens both weekend days 9am–4pm. Echo Coffee opens weekends 8am–5pm and closes Tuesday. Red Brick Breakfast opens 8:30am–2:30pm. Birch Pancake House opens 8am–2pm. Choose Birch early on Sunday or Moss Table later. These invented hours demonstrate the product. Check current hours for real outings.\nLink: https://example.com/clipbind/food-8",
+  "images": [
+    {
+      "label": "[image 1-1]",
+      "file": "assets/demo-covers/food-1.svg"
+    },
+    {
+      "label": "[image 2-1]",
+      "file": "assets/demo-covers/food-2.svg"
+    },
+    {
+      "label": "[image 3-1]",
+      "file": "assets/demo-covers/food-3.svg"
+    },
+    {
+      "label": "[image 4-1]",
+      "file": "assets/demo-covers/food-4.svg"
+    },
+    {
+      "label": "[image 5-1]",
+      "file": "assets/demo-covers/food-5.svg"
+    },
+    {
+      "label": "[image 6-1]",
+      "file": "assets/demo-covers/food-6.svg"
+    },
+    {
+      "label": "[image 7-1]",
+      "file": "assets/demo-covers/food-7.svg"
+    },
+    {
+      "label": "[image 8-1]",
+      "file": "assets/demo-covers/food-8.svg"
+    }
+  ],
+  "schema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "topic": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "sections": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "heading": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "source_indices": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "required": [
+            "heading",
+            "content",
+            "source_indices"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "keep_images": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "title",
+      "topic",
+      "summary",
+      "sections",
+      "keep_images"
+    ],
+    "additionalProperties": false
+  },
+  "inputIds": [
+    "demo-food-1",
+    "demo-food-2",
+    "demo-food-3",
+    "demo-food-4",
+    "demo-food-5",
+    "demo-food-6",
+    "demo-food-7",
+    "demo-food-8"
+  ],
+  "rawOutput": {
+    "title": "A Vancouver brunch weekend",
+    "topic": "Vancouver food",
+    "summary": "Eight notes become an unhurried weekend, with seating times, menus, a budget for two and a walk after eating. Every venue is fictional.",
+    "sections": [
+      {
+        "heading": "Choose a time, then a table",
+        "content": "On Saturday, start early at Oat Window, 18 Lantern Street, 8am–3pm. Arrive before 9:30am for easier seating or expect roughly 25 minutes after 10:30. Window tables seat two. Book for four. It closes Sunday, when Birch Pancake House, 9 Sea Breeze Road, opens 8am–2pm. Arrive before 10am and bring a debit card. Moss Table, 42 Cedar Street, is a later option, 9am–4pm both days. In rain, reserve Red Brick Breakfast, 31 Maple Lane, open 8:30am–2:30pm. Book a 9am or 1pm slot the day before. Tables are held ten minutes and the waiting area has no roof.",
+        "source_indices": [
+          1,
+          8,
+          5,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "Menus and dietary needs",
+        "content": "Oat Window serves two buckwheat pancakes for C$18, fruit for C$4 extra and coffee for C$5. Choose it for savoury food. Gluten-free batter shares the griddle, so ask about allergies. Birch serves three thick pancakes with apple sauce for C$22 and coffee for C$5. Sharing requires two drinks. Moss Table’s tofu scramble is C$19, tomatoes C$6 and oat latte C$6. Ask when ordering to replace butter with olive oil. Its mushroom soup uses chicken stock. The leaf symbol does not promise vegetarian food. Use the side door for step-free access. Red Brick’s egg plate costs C$21 and tea C$4. Leave umbrellas in the entrance bucket.",
+        "source_indices": [
+          1,
+          5,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "A budget for two",
+        "content": "At Oat Window, two pancake plates and coffees total C$46 before a C$12 tax and tip allowance, about C$58. Two scrambles and oat lattes at Moss Table total C$50 plus C$12, about C$62. Two egg plates and teas at Red Brick total C$50 plus C$13, about C$63. These fictional planning allowances are not tax rates. Parking is extra. Ask about bill details before payment.",
+        "source_indices": [
+          7,
+          1,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "Walk after eating, then have coffee",
+        "content": "Walk six minutes south from Oat Window to Lantern Canal, then follow the water for 1.6km to White Stone Bridge, around half an hour with public toilets at the finish. In rain, use the parallel paved route, 200m longer, to avoid the wet boardwalk. The return bus is at Cedar Street junction. Continue seven minutes to Echo Coffee, 7 Harbour Lane, 8am–5pm, closed Tuesday. Pour-over is C$6, egg toast C$14 and a second filter coffee C$3. Laptops are excluded from 11am–2pm on weekends. Use the communal table at other times, with two power points. Window tables seat two. Take calls outside. Venues, addresses, hours and prices are fictional. Check current hours before a real visit.",
+        "source_indices": [
+          6,
+          3,
+          8
+        ]
+      }
+    ],
+    "keep_images": []
+  },
+  "outputSHA256": "5addd9f42526d5f9c6caa5a844e73c469d8101dcec851fc60dd1192ebe6a2a21"
+}

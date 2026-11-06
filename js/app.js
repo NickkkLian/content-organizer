@@ -1,187 +1,651 @@
-/* UI logic: fetch → show → classify → save / export / cloud sync */
+/* Cover-led library, immediate capture and source-linked guide reader. */
 window.XHS = window.XHS || {};
 (function (X) {
   'use strict';
-  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
-  var T = X.i18n.T;   // bilingual T(zh, en)
-
+  var T = X.i18n.T;
   var els = {};
-  var currentNoteSaved=false;
-  var currentNote = null;   // the note just organised, not yet saved
-  var activeFilter = 'all';
-  var activePlatform = 'all';    // platform filter: all / xhs / bili
-  var activeType = 'all';        // type filter: all / post / video
-  var selectedIds = new Set();   // notes ticked for "AI consolidate"
-  var viewArchived = false;      // archive view: consolidated source notes land here automatically
-  var viewCompArchived = false;  // compilation archive view (separate from the note archive)
-  var editingCompId = null;      // compilation currently being edited by hand
-  var readingCompId = null;      // compilation open in the reading view
-  var readOpener = null;         // the button that opened it, to give the keyboard back to on close
-
-  /* Runtime class names are spelled out in full rather than assembled from a prefix and a variable — a name built as
-     'status--' + type is invisible to check-css.mjs, and the rules for all three states were once lost that way. */
+  var demo = new URLSearchParams(location.search).get('demo') === '1';
+  var activePlace = 'saved', activeFilter = 'all', activeTag = '', activePlatform = 'all', activeType = 'all';
+  var selectedIds = new Set(), focusedId = null, visibleNotes = [], lastSelectedId = null;
+  var readingCompId = null, editingCompId = null, readOpener = null, peekOpener = null;
+  var editingRevision = null;
+  var binding = false, pendingCaptures = new Set(), toastActions = [], lastUndo = null;
+  var bindStartedAt = 0, bindStep = '';
+  var noteDrafts = new Map();
+  var demoLanguage = '', railCollapsed = false, paneCollapsed = false;
+  var renderedLanguage = null;
   var STATUS_CLASS = { ok: 'status status--ok', err: 'status status--err', loading: 'status status--loading' };
   var SYNC_CLASS = { ok: 'sync-pill is-ok', err: 'sync-pill is-err', syncing: 'sync-pill is-syncing' };
-  var DOT_CLASS = { on: 'dot dot--on', off: 'dot dot--off' };
-
-  function setStatus(msg, type){
-    els.status.textContent = msg || '';
-    els.status.className = STATUS_CLASS[type] || 'status';
-    els.status.style.display = msg ? 'block' : 'none';
-  }
-
-  /* The local date of a saved timestamp. Saved timestamps are UTC (toISOString), so their first ten characters are the
-     UTC date, which west of UTC is already tomorrow in the evening. A value that is not a full ISO timestamp is shown
-     as it is. */
-  function localDay(v){
-    var s = String(v || ''), d = /^\d{4}-\d{2}-\d{2}T\d/.test(s) ? new Date(s) : null;
-    if (!d || isNaN(d)) return s.slice(0, 10);
-    var p = function (x) { return String(x).padStart(2, '0'); };
-    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-  }
-  function esc(s){
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
-    });
-  }
-
-  function catOf(note){
+  var ICON_PATH = {
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+    open: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    archive: '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/>',
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>',
+    reorg: '<path d="M20 11a8 8 0 0 0-14-5L4 8m0-4v4h4M4 13a8 8 0 0 0 14 5l2-2m0 4v-4h-4"/>',
+    fix: '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-3-3z"/>',
+    del: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>',
+    close: '<path d="m6 6 12 12M18 6 6 18"/>',
+    back: '<path d="m10 5-7 7 7 7M3 12h18"/>',
+    saved: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+    guide: '<path d="M4 4h14a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2zm3 0v16M4 16h16"/>',
+    more: '<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>',
+    post: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    video: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>',
+    book: '<path d="M4 3h14l3 3v15H4zM8 3v18M6 6h4M6 10h4M6 14h4M6 18h4"/>'
+  };
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function svg(name) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON_PATH[name] + '</svg>'; }
+  function iconBtn(attrs, zh, en, name, danger) { var label = T(zh, en); return '<button class="btn btn-icon' + (danger ? ' btn--danger' : '') + '" ' + attrs + ' aria-label="' + esc(label) + '" title="' + esc(label) + '" data-tip="' + esc(label) + '">' + svg(name) + '</button>'; }
+  function localDay(value) { var date = new Date(value); return isNaN(date) ? '' : date.toLocaleDateString(X.i18n.lang === 'zh' ? 'zh-CN' : 'en-CA', { month: 'short', day: 'numeric' }); }
+  function catOf(note) {
     if (note.category) return { name: note.category, emoji: note.categoryEmoji || (note.platform === 'bili' ? '📺' : '🗂️') };
-    if (note.platform === 'bili') return { name: note.tname || 'B站', emoji: '📺' };
+    if (note.platform === 'bili') return { name: note.tname || T('视频', 'Video'), emoji: '📺' };
     return X.classify(note).primary;
   }
-  function isVideo(note){
-    return Boolean(note.platform === 'bili' || note.isVideo || note.source === 'xhs-video');
+  function isVideo(note) { return Boolean(note.platform === 'bili' || note.isVideo || note.source === 'xhs-video'); }
+  function fmtDur(seconds) { seconds = parseInt(seconds, 10) || 0; return seconds ? Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0') : ''; }
+  function reduceMotion() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function animate(el, from, to, duration) { if (el && !reduceMotion()) el.animate([from, to], { duration: duration || 220, easing: 'cubic-bezier(.23,1,.32,1)' }); }
+  function noteById(id) { return X.store.getAll().find(function (n) { return n.id === id; }); }
+  function compById(id) { return X.store.getComps().find(function (c) { return c.id === id; }); }
+  function coverUrl(note) { return note.demoCover || note.cover || (note.images || []).find(Boolean) || ''; }
+  function safeImage(url) { return /^assets\/demo-covers\/[a-z0-9-]+\.svg$/.test(url) || X.refs.isWebUrl(url) || /^blob:/.test(url); }
+  function coverHtml(note) {
+    var url = coverUrl(note), repo = (note.imagesRepo || []).find(Boolean);
+    return '<span class="cover">' + (repo && !note.demoKey ? '<img data-repo="' + esc(repo) + '" alt="' + esc(note.title) + '" width="56" height="56">' : safeImage(url) ? '<img src="' + esc(url) + '" alt="' + esc(note.title) + '" width="56" height="56" loading="lazy" referrerpolicy="no-referrer">' : svg(isVideo(note) ? 'video' : 'post')) + (isVideo(note) ? '<span class="play-mark">' + svg('video') + '</span>' : '') + '</span>';
   }
-  function fmtDur(sec){
-    sec = parseInt(sec, 10) || 0; if (!sec) return '';
-    var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s;
+  function renderImages(note) {
+    var images = note.images || [], repo = note.imagesRepo || [], html = [];
+    for (var i = 0; i < Math.max(images.length, repo.length); i++) {
+      var url = images[i] || '', alt = esc((note.title || T('笔记', 'Note')) + ' ' + (i + 1));
+      if (repo[i]) html.push('<a target="_blank" rel="noreferrer"><img data-repo="' + esc(repo[i]) + '" alt="' + alt + '" loading="lazy"></a>');
+      else if (safeImage(url)) html.push('<a href="' + esc(url) + '" target="_blank" rel="noreferrer"><img src="' + esc(url) + '" alt="' + alt + '" loading="lazy" referrerpolicy="no-referrer"' + (X.refs.isWebUrl(url) ? ' data-fb="' + esc(X.images.proxyUrl(url)) + '"' : '') + '></a>');
+    }
+    return html.length ? '<div class="gallery">' + html.join('') + '</div>' : '';
   }
-  function platBadge(note){
-    return note.platform === 'bili'
-      ? '<span class="badge badge--plat badge--bili">' + T('B站','Bilibili') + '</span>'
-      : '<span class="badge badge--plat badge--xhs">' + T('小红书','XHS') + '</span>';
+  function renderTranscript(note, open) {
+    if (!note.transcript) return '';
+    return '<details class="note__ts"' + (open ? ' open' : '') + '><summary>' + T('语音转写', 'Transcript') + ' · ' + note.transcript.length.toLocaleString() + T(' 字', ' characters') + '</summary><button class="btn" data-act="copy-transcript" data-id="' + esc(note.id) + '">' + T('复制转写', 'Copy transcript') + '</button><div class="note__body note__ts-body">' + esc(note.transcript) + '</div></details>';
   }
-  function typeBadge(note){
-    if (!isVideo(note)) return '<span class="badge badge--soft">' + T('图文','Post') + '</span>';
-    var d = note.durationText || fmtDur(note.duration);
-    return '<span class="badge badge--soft">' + T('视频','Video') + (d ? ' ' + esc(d) : '') + '</span>';
+  function setStatus(message, type, actions) {
+    if (binding && type === 'loading') { bindStep = message; paintBindProgress(); return; }
+    var dialogs = Array.from(document.querySelectorAll('dialog[open]'));
+    (dialogs[dialogs.length - 1] || document.body).append(els.status);
+    els.status.hidden = !message;
+    els.status.className = STATUS_CLASS[type] || 'status';
+    toastActions = actions || [];
+    els.status.innerHTML = '<span>' + esc(message) + '</span>' + toastActions.map(function (action, i) { return '<button class="btn" data-toast="' + i + '">' + esc(action.label) + '</button>'; }).join('') + (message ? iconBtn('data-dismiss-toast', '关闭提示', 'Dismiss message', 'close') : '');
+    if (message) animate(els.status, { opacity: 0 }, { opacity: 1 }, 150);
   }
-  /* Card actions are icons; each one's name shows as a tooltip on hover, on keyboard focus and on a long press, and is
-     the button's accessible name. The primary action on a card (Read, or Restore in the archive) keeps its word.
-     Drawn like the family's gear: 24-unit grid, 2px stroke in the text colour, round caps and joins. */
-  var ICON_PATH = {
-    copy:    '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
-    open:    '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
-    archive: '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/>',
-    edit:    '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
-    reorg:   '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/>',
-    fix:     '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-3-3z"/>',
-    del:     '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/><path d="M9 7V4h6v3"/>'
-  };
-  function iconBtn(attrs, zh, en, icon, danger){
-    var name = T(zh, en);
-    return '<button class="btn ' + (danger ? 'btn--danger' : 'btn--ghost') + ' btn-icon" ' + attrs + ' aria-label="' + esc(name) + '" data-tip="' + esc(name) + '">' +
-      '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
-      ICON_PATH[icon] + '</svg></button>';
+  function rememberUndo(action) { lastUndo = action; return { label: T('撤销', 'Undo'), run: action }; }
+  function topicPicker(id, container) {
+    var note = noteById(id); if (!note) return;
+    var topics = Array.from(new Set(X.store.getAll().map(function (n) { return catOf(n).name; }).concat(['旅行', '美食', '数码', '家居', '其他'])));
+    container.querySelector('.topic-picker')?.remove();
+    var picker = document.createElement('div'); picker.className = 'topic-picker';
+    picker.innerHTML = topics.map(function (topic) { return '<button class="btn" data-topic-choice="' + esc(topic) + '" data-id="' + esc(id) + '">' + esc(X.catLabel(topic)) + '</button>'; }).join('');
+    container.append(picker); picker.querySelector('button')?.focus();
   }
-  function renderTranscript(note){
-    var t = note.transcript || ''; if (!t) return '';
-    return '<details class="note__ts"><summary>' + T('语音转写','Transcript') + ' · ' + t.length + T(' 字',' chars') +
-      '</summary><pre class="note__body note__ts-body">' + esc(t) + '</pre></details>';
+  function displayText(text, query) {
+    if (!query) return esc(text);
+    var start = text.toLowerCase().indexOf(query.toLowerCase());
+    return start < 0 ? esc(text) : esc(text.slice(0, start)) + '<mark>' + esc(text.slice(start, start + query.length)) + '</mark>' + esc(text.slice(start + query.length));
   }
-
-  function renderImages(note){
-    var images = (note && note.images) || [];
-    var repo = (note && note.imagesRepo) || [];
-    var n = Math.max(images.length, repo.length);
-    if (!n) return '';
-    var items = [];
-    for (var i = 0; i < n; i++) {
-      var rp = repo[i];
-      var u = images[i] ? X.images.httpsize(images[i]) : '';
-      if (rp) {
-        // archived: prefer the repo copy (hydrate fills the blob URL asynchronously), original link as fallback
-        items.push('<a target="_blank" rel="noreferrer"><img data-repo="' + esc(rp) + '"' +
-          (u ? ' data-orig="' + esc(u) + '"' : '') + ' loading="lazy" alt=""></a>');
-      } else if (u && !X.refs.isWebUrl(u)) {
-        items.push('<span>' + esc(u) + '</span>');   // not a web address: shown as text, never as a link or image
-      } else if (u) {
-        // not archived: direct (no-referrer) → on failure the weserv proxy → then an "expired" placeholder
-        items.push('<a href="' + esc(u) + '" target="_blank" rel="noreferrer">' +
-          '<img src="' + esc(u) + '" loading="lazy" referrerpolicy="no-referrer" alt="" data-fb="' +
-          esc(X.images.proxyUrl(u)) + '"></a>');   // a failed load goes to imgFallback (images.js)
+  function fieldLabel(field) { return { body: T('正文', 'Body'), transcript: T('转写', 'Transcript'), tags: T('标签', 'Tags'), author: T('作者', 'Author'), title: T('标题', 'Title'), summary: T('概述', 'Summary') }[field] || ''; }
+  function rowHtml(note) {
+    var match = X.library.search(note, els.search.value), video = isVideo(note), count = Math.max((note.images || []).length, (note.imagesRepo || []).length);
+    var metadata = [note.platform === 'bili' ? T('B站', 'Bilibili') : note.source === 'manual' ? T('粘贴', 'Pasted') : T('小红书', 'Xiaohongshu'), note.author ? '@' + note.author : '', X.catLabel(catOf(note).name), localDay(note.capturedAt || note.savedAt), video ? (note.durationText || fmtDur(note.duration)) : '', note.transcript ? T('转写 ', 'Transcript ') + note.transcript.length.toLocaleString() + T(' 字', ' characters') : count ? count + T(' 图', ' images') : ''].filter(Boolean);
+    var expired = note.demoExpired || (note.images || []).some(X.images.isExpired);
+    var selected = selectedIds.has(note.id);
+    return '<article class="note-row' + (focusedId === note.id ? ' is-focused' : '') + (selected ? ' is-selected' : '') + '" data-note="' + esc(note.id) + '" data-id="' + esc(note.id) + '" tabindex="0" draggable="true" aria-label="' + esc(note.title) + '">' +
+      (activePlace === 'archive' ? '<button class="btn" data-act="unarch" data-id="' + esc(note.id) + '">' + T('取出', 'Restore') + '</button>' : '<input class="selbox" type="checkbox" data-id="' + esc(note.id) + '" aria-label="' + esc(T('选择 ', 'Select ') + note.title) + '"' + (selected ? ' checked' : '') + '>') + coverHtml(note) +
+      '<div class="row-content"><h2 class="row-title">' + displayText(note.title || T('未命名', 'Untitled'), els.search.value) + '</h2><div class="row-excerpt">' + (els.search.value ? '<span>' + fieldLabel(match?.field) + ' · </span>' : '') + displayText(String(match?.text || '').replace(/\s+/g, ' '), els.search.value) + '</div><div class="row-meta">' + metadata.map(function (value) { return '<span>' + esc(value) + '</span>'; }).join('<span aria-hidden="true">·</span>') +
+      (expired ? '<button class="btn" data-act="fiximg" data-id="' + esc(note.id) + '">' + T('图片已失效 · 修复', 'Images expired · Fix') + '</button>' : '') + '<button class="btn row-more" data-act="preview" data-id="' + esc(note.id) + '" aria-label="' + T('笔记操作', 'Note actions') + '">' + svg('more') + '</button></div>' +
+      (note.captureState ? '<div class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'thin' ? '<button class="btn" data-act="paste-text" data-id="' + esc(note.id) + '">' + T('粘贴正文', 'Paste the text') + '</button>' : '') + '</div>' : '') + (note.url && !X.refs.isWebUrl(note.url) ? '<span class="note__link">' + esc(note.url) + '</span>' : '') + '</div>' + (pendingCaptures.has(note.id) ? '<span class="pending-bar"></span>' : '') + '</article>';
+  }
+  function captureMessage(note) {
+    if (pendingCaptures.has(note.id)) return note.captureProgress || T('正在读取…', 'Reading…');
+    if (note.captureState === 'video-offline') return T('已保存链接。转写需要本机视频服务，现在没开。', 'Link saved. Transcription needs the local video service, which is offline.');
+    if (note.captureState === 'thin') return T('只存了分享文字和链接，网站挡住了读取。', 'Share text and link saved. The site blocked reading.');
+    if (note.captureState === 'frames-missing') return T('转写已保存，截图没存上。检查仓库连接后可以重试。', 'Transcript saved. Frames could not be kept. Check the repository connection and retry.');
+    return '';
+  }
+  function filteredNotes() {
+    return X.store.getAll().filter(function (note) {
+      return (activePlace === 'archive' ? note.archived : !note.archived) && (activePlatform === 'all' || (note.platform || 'xhs') === activePlatform) && (activeType === 'all' || (activeType === 'video') === isVideo(note)) && X.library.search(note, els.search.value);
+    });
+  }
+  function renderRail(base) {
+    var all = X.store.getAll(), guides = X.store.getComps();
+    var places = [{ value: 'saved', label: T('收藏', 'Saved'), count: all.filter(function (n) { return !n.archived; }).length, icon: 'saved' }, { value: 'guides', label: T('合集', 'Guides'), count: guides.filter(function (c) { return !c.archived; }).length, icon: 'guide' }, { value: 'archive', label: T('归档', 'Archive'), count: all.filter(function (n) { return n.archived; }).length + guides.filter(function (c) { return c.archived; }).length, icon: 'archive' }];
+    var html = places.map(function (place) { return '<button class="place" data-place="' + place.value + '" aria-current="' + (activePlace === place.value) + '">' + svg(place.icon) + esc(place.label) + '<span>' + place.count + '</span></button>'; }).join('');
+    els.places.innerHTML = html; els.phonePlaces.innerHTML = html;
+    var counts = new Map(); base.forEach(function (n) { var key = catOf(n).name; counts.set(key, (counts.get(key) || 0) + 1); });
+    var topics = [{ name: 'all', count: base.length }].concat(Array.from(counts, function (entry) { return { name: entry[0], count: entry[1] }; }).sort(function (a, b) { return b.count - a.count; }));
+    var topicHtml = topics.map(function (topic) { return '<button class="topic" data-cat="' + esc(topic.name) + '" aria-pressed="' + (activeFilter === topic.name) + '">' + (topic.name === 'all' ? T('全部笔记', 'All notes') : esc(X.catLabel(topic.name))) + '<span>' + topic.count + '</span></button>'; }).join('');
+    els.catFilter.innerHTML = topicHtml; els.phoneTopics.innerHTML = topicHtml;
+    els.topicCaption.textContent = T('主题', 'Topics');
+    els.platFilter.innerHTML = '<p class="filter-label">' + T('来源', 'Source') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['xhs', T('小红书', 'XHS')], ['bili', T('B站', 'Bilibili')]].map(function (entry) { return '<button class="btn" data-dim="platform" data-val="' + entry[0] + '" aria-pressed="' + (activePlatform === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div><p class="filter-label">' + T('类型', 'Type') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['post', T('帖子', 'Posts')], ['video', T('视频', 'Videos')]].map(function (entry) { return '<button class="btn" data-dim="type" data-val="' + entry[0] + '" aria-pressed="' + (activeType === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div>';
+    var countBase = all.filter(function (note) {
+      return (activePlace === 'archive' ? note.archived : !note.archived) && (activeFilter === 'all' || catOf(note).name === activeFilter) && (!activeTag || (note.tags || []).includes(activeTag)) && X.library.search(note, els.search.value);
+    });
+    els.platFilter.querySelectorAll('[data-dim]').forEach(function (button) {
+      var count = countBase.filter(function (note) {
+        if (button.dataset.dim === 'platform') return (activeType === 'all' || (activeType === 'video') === isVideo(note)) && (button.dataset.val === 'all' || (note.platform || 'xhs') === button.dataset.val);
+        return (activePlatform === 'all' || (note.platform || 'xhs') === activePlatform) && (button.dataset.val === 'all' || (button.dataset.val === 'video') === isVideo(note));
+      }).length;
+      button.append(' ' + count);
+    });
+    els.railGuides.innerHTML = guides.filter(function (c) { return !c.archived; }).slice(0, 4).map(function (c) { return '<button class="rail-guide" data-cact="read" data-id="' + esc(c.id) + '" draggable="false">' + svg('guide') + '<span>' + esc(c.title) + '</span></button>'; }).join('');
+    els.archCount.textContent = all.filter(function (n) { return n.archived; }).length;
+    els.compArchCount.textContent = guides.filter(function (c) { return c.archived; }).length;
+  }
+  function renderLibrary() {
+    var previousFocus = document.activeElement;
+    var previousRowId = previousFocus.closest?.('[data-note]')?.dataset.note;
+    var focusedCheckbox = previousFocus.matches?.('.selbox');
+    var base = filteredNotes();
+    renderRail(base.filter(function (note) { return !activeTag || (note.tags || []).includes(activeTag); }));
+    var pile = base.filter(function (n) { return activeFilter === 'all' || catOf(n).name === activeFilter; });
+    visibleNotes = pile.filter(function (n) { return !activeTag || (n.tags || []).includes(activeTag); });
+    var title = activePlace === 'guides' ? T('合集', 'Guides') : activePlace === 'archive' ? T('归档', 'Archive') : activeFilter === 'all' ? T('收藏', 'Saved') : X.catLabel(activeFilter);
+    var query = els.search.value.trim();
+    var matchingGuides = X.store.getComps().filter(function (c) { return (activePlace === 'archive' ? c.archived : !c.archived) && X.library.search(c, query); });
+    els.pileTitle.innerHTML = '<h1>' + esc(query ? T('搜索「', 'Search “') + query + T('」', '”') : title) + '</h1><span>' + (activePlace === 'guides' ? matchingGuides.length + T(' 篇合集', ' guides') : visibleNotes.length + T(' 篇笔记', ' notes')) + (query ? ' · ' + matchingGuides.length + T(' 篇合集', ' guides') : '') + '</span>' + (!query && pile.length ? '<span>' + T('最近保存 ', 'Latest ') + esc(localDay(pile[0].capturedAt || pile[0].savedAt)) + '</span>' : '');
+    els.pileTags.innerHTML = activePlace === 'guides' ? '' : X.library.tags(pile).map(function (tag) { return '<button class="tag-filter" data-tag="' + esc(tag.tag) + '" aria-pressed="' + (activeTag === tag.tag) + '">#' + esc(tag.tag) + ' ' + tag.count + '</button>'; }).join('');
+    els.selectAll.hidden = activePlace !== 'saved' || !visibleNotes.length;
+    els.selectAll.textContent = T('全选这 ', 'Select these ') + visibleNotes.length + T(' 篇', '');
+    els.pileGuide.textContent = demo && activeFilter === '旅行' ? T('已整理成《京都五日》', 'Bound into “Kyoto in five days”') : '';
+    els.libCount.textContent = visibleNotes.length;
+    els.libList.hidden = activePlace === 'guides';
+    els.compsCard.hidden = !(activePlace === 'guides' || activePlace === 'archive' || query);
+    if (activePlace !== 'guides') els.libList.innerHTML = visibleNotes.length ? visibleNotes.map(rowHtml).join('') : emptyHtml(query);
+    els.compList.innerHTML = matchingGuides.length ? matchingGuides.map(guideRowHtml).join('') : activePlace === 'guides' ? '<div class="empty">' + svg('book') + '<h2>' + T('把同一主题的笔记装订在一起', 'Keep a topic together') + '</h2><p>' + T('选几篇同一主题的笔记，就能整理成一篇合集。', 'Select a few notes on one topic to bind them into a guide.') + '</p></div>' : '';
+    els.compCount.textContent = matchingGuides.length;
+    if (!focusedId || !noteById(focusedId)) focusedId = visibleNotes[0]?.id || null;
+    renderPreview(); updateSelBar(); X.images.hydrate(els.libList);
+    if (previousRowId && !document.querySelector('dialog[open]')) {
+      var replacement = Array.from(els.libList.querySelectorAll('[data-note]')).find(function (row) { return row.dataset.note === previousRowId; });
+      (focusedCheckbox ? replacement?.querySelector('.selbox') : replacement)?.focus({ preventScroll: true });
+    }
+  }
+  function renderComps() { renderLibrary(); }
+  function emptyHtml(query) {
+    if (query) return '<div class="empty"><p>' + esc(T('没有找到「', 'Nothing found for “') + query + T('」。正文、转写和标签都搜过了。', '”. Body text, transcripts and tags were searched.')) + '</p><button class="btn" data-clear-search>' + T('清除搜索', 'Clear search') + '</button></div>';
+    if (activePlace === 'archive') return '<p class="empty">' + T('整理进合集的笔记会自动放到这里。', 'Notes move here after they are bound into a guide.') + '</p>';
+    var guide = X.store.getComps().find(function (c) { return c.sourceNoteIds?.some(function (id) { return catOf(noteById(id) || {}).name === activeFilter; }); });
+    if (guide) return '<div class="empty"><p>' + esc(T('这一堆都整理进《', 'This pile is bound into “') + guide.title + T('》了', '”')) + '</p><button class="btn btn--primary" data-cact="read" data-id="' + esc(guide.id) + '">' + T('打开合集', 'Open guide') + '</button></div>';
+    return '<div class="empty"><h2>' + T('粘贴，就存好了', 'Paste it here to keep it') + '</h2><p>' + T('在小红书或B站点「分享」，复制链接，再粘到这里。视频转写需要本机服务，可以以后再开。', 'Copy a share link from Xiaohongshu or Bilibili, then paste it here. Video transcription uses an optional local service.') + '</p><button class="btn" data-act="demo">' + T('载入示例笔记', 'Load sample notes') + '</button></div>';
+  }
+  function guideRowHtml(c) {
+    var sources = X.refs.bind(c).sources, notes = (c.sourceNoteIds || []).map(noteById).filter(Boolean);
+    return '<article class="guide-row"><div class="guide-stack">' + notes.slice(0, 3).map(coverHtml).join('') + '</div><button data-cact="read" data-id="' + esc(c.id) + '"><span class="row-title">' + esc(c.title) + '</span><span class="row-excerpt">' + esc(c.summary) + '</span><span class="row-meta">' + sources.length + T(' 篇来源', ' sources') + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</span></button>' + (c.archived ? '<button class="btn" data-cact="unarch" data-id="' + esc(c.id) + '">' + T('取出', 'Restore') + '</button>' : '') + '</article>';
+  }
+  function previewHtml(note, source) {
+    if (!note) return '<div class="empty">' + svg('post') + '<p>' + T('选中一篇笔记，在这里查看正文和图片。', 'Choose a note to see its text and images here.') + '</p></div>';
+    var draft = noteDrafts.get(note.id);
+    var id = esc(note.id), actions = iconBtn('data-act="open" data-id="' + id + '"', '打开原帖', 'Open original', 'open') + iconBtn('data-act="copy-lib" data-id="' + id + '"', '复制 Markdown', 'Copy Markdown', 'copy');
+    if (!source) actions += iconBtn('data-act="topic" data-id="' + id + '"', '改主题', 'Change topic', 'edit') + ((note.images || []).some(X.images.isExpired) || note.demoExpired ? iconBtn('data-act="fiximg" data-id="' + id + '"', '修复图片', 'Fix images', 'fix') : '') + iconBtn('data-act="' + (note.archived ? 'unarch' : 'arch') + '" data-id="' + id + '"', note.archived ? '取出' : '归档', note.archived ? 'Restore' : 'Archive', 'archive') + iconBtn('data-act="del" data-id="' + id + '"', '删除', 'Delete', 'del', true);
+    if (!source && note.captureState && !pendingCaptures.has(note.id)) actions += '<button class="btn" data-act="retry-fetch" data-id="' + id + '">' + T('再读取一次', 'Try reading again') + '</button>';
+    return '<div class="preview-inner"><div class="preview-toolbar">' + actions + '</div>' + renderImages(note) + '<h2 class="preview-title">' + esc(note.title) + '</h2><div class="preview-meta">' + esc((note.platform === 'bili' ? T('B站', 'Bilibili') : T('小红书', 'Xiaohongshu')) + (note.author ? ' · @' + note.author : '') + ' · ' + X.catLabel(catOf(note).name)) + '</div><div class="tags">' + (note.tags || []).map(function (tag) { return '<span>#' + esc(tag) + '</span>'; }).join('') + '</div>' + (note.captureState ? '<p class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'video-offline' ? '<button class="btn" data-local-help>' + T('怎么开启', 'How to start it') + '</button>' : '') + '</p>' : '') + '<div class="note__body">' + esc(note.body) + '</div>' + renderTranscript(note, source && isVideo(note)) + (note.url ? X.refs.isWebUrl(note.url) ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('打开原帖', 'Open original') + '</a>' : '<span class="note__link">' + esc(note.url) + '</span>' : '') + (!source ? '<details class="note-editor"' + (note.captureState === 'thin' ? ' open' : '') + '><summary>' + T('粘贴正文或添加图片链接', 'Paste the text or add image links') + '</summary><label>' + T('正文', 'Text') + '<textarea data-note-text rows="6">' + esc(draft ? draft.text : note.body) + '</textarea></label><label>' + T('图片链接（可选）', 'Image links (optional)') + '<textarea data-note-images rows="2">' + esc(draft ? draft.images : (note.images || []).filter(X.refs.isWebUrl).join('\n')) + '</textarea></label><button class="btn btn--primary" data-act="save-text" data-id="' + id + '">' + T('保存', 'Save') + '</button></details>' : '') + '</div>';
+  }
+  function renderPreview() { els.preview.innerHTML = previewHtml(noteById(focusedId)); X.images.hydrate(els.preview); }
+  function showNote(id) {
+    focusedId = id; renderPreview();
+    if (innerWidth < 900) { els.noteDlg.classList.remove('tray-sheet'); els.noteDlg.innerHTML = '<div class="sheet-bar"><button class="btn" data-close-note>' + svg('back') + T('回到收藏', 'Back') + '</button></div>' + previewHtml(noteById(id)); els.noteDlg.showModal(); X.images.hydrate(els.noteDlg); }
+  }
+  function selectNote(id, value, range, keyboardInput) {
+    if (activePlace !== 'saved' || binding) return;
+    if (range && lastSelectedId) {
+      var a = visibleNotes.findIndex(function (n) { return n.id === lastSelectedId; }), b = visibleNotes.findIndex(function (n) { return n.id === id; });
+      if (a >= 0 && b >= 0) visibleNotes.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function (n) { selectedIds.add(n.id); });
+    } else if (value) selectedIds.add(id); else selectedIds.delete(id);
+    lastSelectedId = id; focusedId = id;
+    var row = Array.from(els.libList.querySelectorAll('[data-note]')).find(function (el) { return el.dataset.note === id; });
+    var cover = row?.querySelector('.cover'), start = cover?.getBoundingClientRect();
+    updateSelBar();
+    els.libList.querySelectorAll('[data-note]').forEach(function (el) { var selected = selectedIds.has(el.dataset.note); el.classList.toggle('is-selected', selected); el.querySelector('input').checked = selected; });
+    if (value && start && innerWidth >= 900 && !reduceMotion() && !keyboardInput) {
+      var endEl = Array.from(els.selectedStack.querySelectorAll('[data-stack]')).find(function (el) { return el.dataset.stack === id; })?.querySelector('.cover');
+      var end = endEl?.getBoundingClientRect();
+      if (end) {
+        var flight = cover.cloneNode(true);
+        flight.setAttribute('aria-hidden', 'true');
+        Object.assign(flight.style, { position: 'fixed', left: start.x + 'px', top: start.y + 'px', width: start.width + 'px', height: start.height + 'px', zIndex: 50, pointerEvents: 'none', transformOrigin: 'top left' });
+        document.body.append(flight);
+        flight.animate([{ transform: 'none', opacity: .9 }, { transform: 'translate(' + (end.x - start.x) + 'px,' + (end.y - start.y) + 'px) scale(' + end.width / start.width + ')', opacity: .6 }], { duration: 220, easing: 'cubic-bezier(.23,1,.32,1)' }).finished.finally(function () { flight.remove(); });
       }
     }
-    return '<div class="gallery">' + items.join('') + '</div>';
   }
-
-  function renderTags(tags){
-    if (!tags || !tags.length) return '';
-    return '<div class="tags">' + tags.map(function (t) {
-      return '<span class="tag">#' + esc(t) + '</span>';
-    }).join('') + '</div>';
+  function updateSelBar() {
+    selectedIds.forEach(function (id) { if (!noteById(id)) selectedIds.delete(id); });
+    var notes = Array.from(selectedIds).map(noteById).filter(Boolean), count = notes.length;
+    els.selBar.hidden = !count; els.preview.hidden = Boolean(count);
+    document.body.classList.toggle('has-selection', Boolean(count));
+    els.mobileSelection.hidden = !count; els.mobileSelection.querySelector('span').textContent = T('已选 ', 'Selected ') + count;
+    if (!count) return;
+    paneCollapsed = false; els.main.classList.remove('pane-collapsed');
+    els.selCount.textContent = T('整理 ', 'Bind ') + count + T(' 篇成合集', ' notes into a guide');
+    els.selectedStack.innerHTML = notes.map(function (note) { return '<div class="stack-item" data-stack="' + esc(note.id) + '">' + coverHtml(note) + '<span>' + esc(note.title) + '</span>' + iconBtn('data-remove-selection="' + esc(note.id) + '"', '移出选择', 'Remove from selection', 'close') + '</div>'; }).join('');
+    var images = notes.reduce(function (sum, note) { return sum + Math.max((note.images || []).length, (note.imagesRepo || []).length); }, 0);
+    if (els.includeImgs.dataset.selection !== Array.from(selectedIds).join(',')) { els.includeImgs.checked = images > 0; els.includeImgs.dataset.selection = Array.from(selectedIds).join(','); }
+    els.imageOptionText.textContent = T('也读图片里的文字（菜单、价目表）· 共 ', 'Also read text in images (menus, price lists) · ') + images + T(' 张', ' images') + (images > 100 ? T('，最多读取 100 张', ', the first 100 can be read') : '');
+    els.bindConsequence.textContent = T('整理后，这 ', 'After binding, these ') + count + T(' 篇会移到归档，合集里保留它们的链接。', ' notes move to the archive. The guide keeps links to them.');
+    els.guideMenu.innerHTML = X.store.getComps().filter(function (c) { return !c.archived; }).map(function (c) { return '<button class="btn" data-target-guide="' + esc(c.id) + '">' + esc(c.title) + '</button>'; }).join('') || '<p>' + T('还没有合集，可以先建一篇。', 'Create your first guide here.') + '</p>';
+    els.bindNotice.innerHTML = demo ? '<p>' + T('演示结果由 AI 按 Clipbind 的提示词整理，点击后回放，不会现场调用 AI。', 'Bound by an AI model with Clipbind’s prompt. This demo replays the result without a live AI call.') + '</p>' + (!X.library.replaySet(notes) ? '<p>' + T('演示版只为这两组准备了结果。', 'The demo has results for these two sets.') + '</p><button class="btn" data-demo-set="kyoto">' + T('选京都 12 篇', 'Select 12 Kyoto notes') + '</button><button class="btn" data-demo-set="food">' + T('选美食 8 篇', 'Select 8 food notes') + '</button>' : '') : !X.ai.isReady() ? '<p>' + T('需要先在设置里填 Anthropic 密钥。', 'Add your Anthropic key in Settings first.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '';
+    els.consolidateBtn.disabled = binding || (demo && (!X.library.replaySet(notes) || Boolean(els.addToComp.value)));
   }
-
-  function noteCardHtml(note, actionsHtml, opts){
-    opts = opts || {};
-    var cat = catOf(note);
-    var vid = isVideo(note);
-    var secondary = '';
-    if (note.platform !== 'bili' && !vid) {          // secondary categories from classify, XHS posts only
-      var cls = X.classify(note);
-      secondary = cls.ranked.slice(note.category ? 0 : 1, 3)
-        .filter(function (c) { return c.name !== cat.name; })
-        .map(function (c) { return '<span class="badge badge--soft">' + esc(X.catLabel(c.name)) + '</span>'; })
-        .join('');
+  function openTray() {
+    els.noteDlg.classList.add('tray-sheet');
+    els.noteDlg.replaceChildren();
+    var close = document.createElement('div'); close.className = 'sheet-bar'; close.innerHTML = '<button class="btn" data-close-note>' + svg('back') + T('回到选择', 'Back to selection') + '</button>';
+    els.noteDlg.append(close, els.selBar); els.noteDlg.showModal();
+  }
+  function chooseDemoSet(key) { selectedIds.clear(); activePlace = 'saved'; activeFilter = key === 'food' ? '美食' : '旅行'; activeTag = ''; X.store.getAll().filter(function (n) { return n.demoKey?.startsWith(key + '-'); }).forEach(function (note) { X.store.unarchive([note.id]); selectedIds.add(note.id); }); renderLibrary(); }
+  function onFetch(raw) {
+    return typeof HubSettingsRuntime === 'undefined' ? captureNote(raw) : HubSettingsRuntime.track(function () { return captureNote(raw); });
+  }
+  async function captureNote(raw) {
+    var text = (raw == null ? els.urlInput.value : raw).trim(); if (!text) return;
+    var url = X.extractUrl(text), bv = text.match(/\bBV[a-zA-Z0-9]{10}\b/);
+    if (!url && bv) url = 'https://www.bilibili.com/video/' + bv[0];
+    var existing = url && X.store.getAll().find(function (note) { return note.url === url; });
+    if (existing && (!existing.captureState || pendingCaptures.has(existing.id))) {
+      if (raw == null) els.urlInput.value = '';
+      showNote(existing.id);
+      setStatus(T('这条已经存好了', 'This note is already saved'), 'ok');
+      return;
     }
-    var sel = opts.selectable
-      ? '<label class="note__sel"><input type="checkbox" class="selbox" data-id="' + esc(note.id) + '"' + (opts.selected ? ' checked' : '') + '> ' + T('选入合集','Add to compilation') + '</label>'
-      : '';
-    // Folded by default (badges + title + one-line peek); click the title/arrow to expand — so a card
-    // doesn't fill the screen and the next one isn't half a scroll away
-    var peek = esc(String(note.body || note.transcript || '').replace(/\s+/g, ' ').trim().slice(0, 70));
-    var nImg = Math.max((note.images || []).length, (note.imagesRepo || []).length);
-    var meta = [];
-    if (nImg) meta.push(nImg + T(' 张图', nImg === 1 ? ' image' : ' images'));
-    if (note.transcript) meta.push(T('转写 ', 'transcript ') + note.transcript.length + T(' 字', ' ch'));
-    return '' +
-      '<article class="card note' + (opts.expanded ? '' : ' is-fold') + (opts.selected ? ' is-sel' : '') + '">' + sel +
-        '<div class="note__head">' +
-          platBadge(note) +
-          '<span class="badge">' + esc(X.catLabel(cat.name)) + '</span>' +
-          typeBadge(note) + secondary +
-          (meta.length ? '<span class="src">' + meta.join(' · ') + '</span>' : '') +
-          '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
-        '</div>' +
-        '<h3 class="note__title" data-fold>' + esc(note.title || T('未命名','Untitled')) + '</h3>' +
-        (note.author ? '<div class="note__author">@' + esc(note.author) + '</div>' : '') +
-        (peek ? '<div class="note__peek" data-fold>' + peek + '…</div>' : '') +
-        '<div class="note__more">' +
-          renderTags(note.tags) +
-          (note.body ? '<pre class="note__body">' + esc(note.body) + '</pre>' : '') +
-          renderTranscript(note) +
-          renderImages(note) +
-          (note.url ? (X.refs.isWebUrl(note.url)
-            ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('查看原文 ↗','View original ↗') + '</a>'
-            : '<span class="note__link">' + esc(note.url) + '</span>') : '') +
-        '</div>' +
-        '<div class="note__actions">' + actionsHtml + '</div>' +
-      '</article>';
+    var previous = existing ? Object.assign({}, existing) : null;
+    var fallback = existing ? Object.assign({}, existing) : X.buildManual(text, ''), video = /bilibili\.com|b23\.tv/i.test(url) || Boolean(bv) || isVideo(fallback);
+    fallback.url = url || fallback.url; fallback.platform = video ? 'bili' : fallback.platform || 'xhs'; fallback.isVideo = video;
+    fallback.capturedAt = new Date().toISOString();
+    var classification = X.classify(fallback); fallback.category = classification.primary.name;
+    var rec;
+    try {
+      rec = X.store.save(Object.assign({}, fallback, { captureState: url ? 'pending' : '', captureProgress: T('正在读取…', 'Reading…') }));
+      scheduleSync(); await X.store.flush();
+    } catch (error) {
+      if (!els.urlInput.value.trim()) els.urlInput.value = text;
+      renderLibrary();
+      setStatus(T('没保存上，请在页头重试。粘贴内容保留在本页。', 'Could not save. Retry in the header. Your capture is kept on this page.') + ' ' + error.message, 'err');
+      return;
+    }
+    if (raw == null && els.urlInput.value.trim() === text) els.urlInput.value = '';
+    activePlace = rec.archived ? 'archive' : 'saved'; activeFilter = 'all'; activeTag = ''; focusedId = rec.id;
+    if (url) pendingCaptures.add(rec.id);
+    renderLibrary();
+    animate(els.libList.querySelector('[data-note]'), { opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }, 200);
+    try {
+      var note = fallback;
+      if (demo && text === X.demo.captureText(X.i18n.lang)) {
+        await new Promise(function (resolve) { setTimeout(resolve, 500); });
+        X.store.update(rec.id, { captureProgress: T('演示回放 · 识别主题…', 'Demo replay · Finding the topic…') }); renderLibrary();
+        await new Promise(function (resolve) { setTimeout(resolve, 500); });
+        note = X.demo.captureNote(X.i18n.lang); note.captureState = '';
+      } else if (url && video) note = await captureVideo(url, fallback, rec.id);
+      else if (url) {
+        try { note = await X.fetchNote(text); if (isVideo(note)) note = await captureVideo(note.url || url, Object.assign({}, fallback, note), rec.id); }
+        catch (error) { note = Object.assign({}, fallback, { captureState: 'thin', fetchReason: error.message }); }
+      }
+      if (!noteById(rec.id)) return;
+      classification = X.classify(note);
+      var chosen = noteById(rec.id);
+      if (url && chosen.captureState !== 'pending') { setStatus(T('读取时这篇笔记又改过了，已保留修改后的内容。', 'This note changed while it was being read. Your edited copy is kept.'), 'ok'); return; }
+      X.store.update(rec.id, Object.assign({}, note, { id: rec.id, capturedAt: rec.capturedAt, category: chosen.topicChosen ? chosen.category : note.category || classification.primary.name, captureState: note.captureState === 'pending' ? '' : note.captureState || '', captureProgress: '' }));
+      scheduleSync();
+      var latest = noteById(rec.id);
+      var captureRevision = latest.savedAt;
+      var undo = function () {
+        if (noteById(rec.id)?.savedAt !== captureRevision) { setStatus(T('笔记后来又改过了，请打开它检查。', 'This note changed after capture. Open it to review the changes.'), 'err'); return; }
+        if (previous) X.store.update(rec.id, previous); else X.store.remove(rec.id);
+        selectedIds.delete(rec.id); renderLibrary(); scheduleSync(); setStatus(T('已撤销保存', 'Save undone'), 'ok');
+      };
+      setStatus((demo && text === X.demo.captureText(X.i18n.lang) ? T('演示回放 · ', 'Demo replay · ') : '') + T('已保存到「', 'Saved to ') + X.catLabel(catOf(latest).name) + T('」', ''), 'ok', [{ label: T('改主题', 'Change topic'), run: function () { showNote(rec.id); topicPicker(rec.id, innerWidth < 900 ? els.noteDlg : els.preview); } }, rememberUndo(undo)]);
+      if (!demo && (latest.images || []).length && X.images.ready()) X.images.archiveNote(latest).then(function (result) { if (noteById(rec.id)) { X.store.update(rec.id, { imagesRepo: result.repo }); scheduleSync(); renderLibrary(); } }).catch(function () {});
+    } catch (error) { if (noteById(rec.id)) X.store.update(rec.id, { captureState: video ? 'video-offline' : 'thin' }); setStatus(T('已保留粘贴文字和链接。', 'Your pasted text and link are kept.') + ' ' + error.message, 'err'); }
+    finally { pendingCaptures.delete(rec.id); renderLibrary(); }
   }
-
-  function showResult(note){
-    if(note!==currentNote)currentNoteSaved=false;
-    currentNote = note;
-    els.result.innerHTML = noteCardHtml(note,
-      '<button class="btn btn--primary" data-act="save">' + T('★ 收藏到本地库','★ Save to library') + '</button>' +
-      '<button class="btn" data-act="copy">' + T('复制为 Markdown','Copy as Markdown') + '</button>',
-      { expanded: true });
-    els.result.style.display = 'block';
-    X.images.hydrate(els.result);
-    els.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  async function captureVideo(url, fallback, id) {
+    if (!(await X.fetchsvc.health())) return Object.assign({}, fallback, { isVideo: true, captureState: 'video-offline' });
+    var progress = function (line) { if (noteById(id)) X.store.update(id, { captureProgress: line }); renderLibrary(); };
+    var result = await X.fetchsvc.fetchVideo(url, progress), frames = result.frames || [], note = result.note || fallback;
+    var kept = [];
+    if (frames.length) { progress(T('挑截图…', 'Choosing frames…')); var indices = await X.ai.judgeFrames(frames); kept = indices.map(function (i) { return frames[i]; }); }
+    var repository = [];
+    if (kept.length && X.images.ready()) {
+      try { repository = await X.images.saveFrames(note.key || 'v' + Date.now(), kept, function (i, n) { progress(T('存截图 ', 'Saving frames ') + i + '/' + n); }); }
+      catch (error) { note.captureState = 'frames-missing'; }
+    }
+    note.platform = note.platform || fallback.platform; note.isVideo = true; note.imagesRepo = repository; note.images = repository.map(function () { return note.cover || ''; }); delete note.key;
+    if (kept.length && !repository.length) { note.captureState = 'frames-missing'; setStatus(T('转写已保留，截图未存入仓库。请在设置里检查私有仓库连接。', 'Transcript kept. Check the private repository connection in Settings to keep video frames.'), 'err'); }
+    return note;
   }
-
+  function compToMarkdown(c) { return X.export.markdown(c, X.i18n.lang); }
+  async function runConsolidate(existing, reorgOnly) {
+    if (binding) return;
+    if (!demo) {
+      binding = true; bindStartedAt = Date.now();
+      var timer = setInterval(paintBindProgress, 1000);
+      try { await runRealConsolidate(existing, reorgOnly); }
+      finally { clearInterval(timer); binding = false; updateSelBar(); }
+      return;
+    }
+    var notes = Array.from(selectedIds).map(noteById).filter(Boolean), key = X.library.replaySet(notes);
+    if (!key || existing || reorgOnly) { setStatus(T('演示版只回放京都和美食两组的新合集。', 'The demo replays new guides for the Kyoto and food sets.'), 'ok'); return; }
+    binding = true; updateSelBar();
+    var start = Date.now();
+    for (var step of [T('打包图片', 'Packing images'), T('整理中', 'Binding'), T('完成', 'Done')]) { els.bindProgress.textContent = T('演示回放 · ', 'Demo replay · ') + step + ' · ' + ((Date.now() - start) / 1000).toFixed(1) + T(' 秒。请保持页面打开。', ' seconds. Keep this page open.'); await new Promise(function (resolve) { setTimeout(resolve, 600); }); }
+    var result = X.store.saveComp(X.demo.guide(key, X.i18n.lang));
+    var ids = notes.map(function (n) { return n.id; }); X.store.archive(ids); selectedIds.clear();
+    animate(els.selectedStack, { opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.8)' }, 240);
+    await new Promise(function (resolve) { setTimeout(resolve, reduceMotion() ? 0 : 240); });
+    binding = false; if (els.noteDlg.open) els.noteDlg.close(); renderLibrary(); openRead(result.id);
+    var restore = function () { X.store.unarchive(ids); renderLibrary(); scheduleSync(); setStatus(T('原笔记已取出', 'Source notes restored'), 'ok'); };
+    lastUndo = restore;
+    setStatus(T('已存为合集《', 'Saved as “') + result.title + T('》，', '”, ') + ids.length + T(' 篇原笔记已归档', ' source notes archived'), 'ok', [{ label: T('撤销归档', 'Restore them'), run: restore }]);
+  }
+  function paintBindProgress() {
+    els.bindProgress.textContent = bindStep + ' · ' + Math.floor((Date.now() - bindStartedAt) / 1000) + T(' 秒。请保持页面打开。', ' seconds. Keep this page open.');
+  }
+  function sourceNote(source, c) {
+    return (c.sourceNoteIds || []).map(noteById).filter(Boolean).find(function (n) { return source.url ? n.url === source.url : n.title === source.title; }) || X.store.getAll().find(function (n) { return source.url ? n.url === source.url : n.title === source.title; });
+  }
+  function marginCard(source, c, section) {
+    var note = sourceNote(source, c);
+    return '<button class="margin-card" data-read="src" data-n="' + source.n + '" data-section="' + section + '">' + (note ? coverHtml(note) : '') + '<span><strong>[' + source.n + '] ' + esc(X.refs.label(source)) + '</strong><small>' + (note ? esc((note.platform === 'bili' ? T('B站', 'Bilibili') : T('小红书', 'Xiaohongshu')) + (note.author ? ' · @' + note.author : '') + (note.duration ? ' · ' + fmtDur(note.duration) : '')) : T('来源笔记已不在此库中', 'Source note is no longer in this library')) + '</small></span></button>';
+  }
+  function compEditHtml(c) {
+    return '<input class="comp__ed-title" aria-label="' + T('合集标题', 'Guide title') + '" value="' + esc(c.title) + '"><textarea class="comp__ed-sum" aria-label="' + T('概述', 'Summary') + '" rows="3">' + esc(c.summary) + '</textarea>' + (c.sections || []).map(function (section, i) { return '<section class="read__sec"><input class="comp__ed-h" data-i="' + i + '" aria-label="' + T('板块标题', 'Section heading') + '" value="' + esc(section.heading) + '"><textarea class="comp__ed-c" data-i="' + i + '" aria-label="' + T('板块正文', 'Section text') + '" rows="10">' + esc(section.content) + '</textarea></section>'; }).join('');
+  }
+  function compReadHtml(c) {
+    var bound = X.refs.bind(c), editing = editingCompId === c.id;
+    var toc = bound.sections.map(function (section, i) { return '<li><span class="read__n">' + (i + 1) + '</span><a href="#read-sec-' + (i + 1) + '" data-read="jump" data-i="' + (i + 1) + '">' + esc(section.heading) + '</a></li>'; }).join('');
+    var body = '<h1 id="read-title">' + esc(c.title) + '</h1><p class="read__lede">' + esc(c.summary) + '</p>' + (c.images?.length ? '<div class="read__kept"><h2>' + T('合集里留下的图', 'Images kept in this guide') + '</h2>' + renderImages(c) + '</div>' : '') + bound.sections.map(function (section, i) { return '<section class="read__sec" id="read-sec-' + (i + 1) + '"><h2 tabindex="-1">' + esc(section.heading) + '</h2><div class="read__text">' + esc(section.content) + '</div><p class="read__cites">' + T('来源', 'Sources') + ' ' + section.refs.map(function (n) { return '<a href="#read-src-' + n + '" data-read="src" data-n="' + n + '">[' + n + ']</a>'; }).join(' ') + '</p></section>'; }).join('') + (!bound.sections.length ? '<p>' + T('这篇合集还没有板块。', 'This guide has no sections yet.') + '</p>' : '') + '<section class="read__all-sources"><h2>' + T('全部来源', 'All sources') + '</h2><ol>' + bound.sources.map(function (source) { return '<li id="read-src-' + source.n + '"><span class="read__n">[' + source.n + ']</span> <button class="btn" data-read="src" data-n="' + source.n + '"><span>' + esc(X.refs.label(source)) + '</span></button>' + (!source.cited ? '<span class="read__tag">' + T('并入了但没有单独标注', 'Folded in, not cited by a section') + '</span>' : '') + (!X.refs.isWebUrl(source.url) && source.url ? '<span class="note__link">' + esc(source.url) + '</span>' : '') + '</li>'; }).join('') + '</ol></section>';
+    return '<div class="read__bar"><button class="btn" data-read="close">' + svg('back') + T('回到收藏', 'Back to library') + '</button><span class="read__bar-title">' + esc(c.title) + '</span><span class="read__meta"><span>' + bound.sources.length + T(' 篇来源', ' sources') + '</span><span>' + (c.lang === 'zh' || c.lang === 'Simplified Chinese' ? T('中文', 'Chinese') : T('英文', 'English')) + '</span><span>' + esc(localDay(c.runAt || c.savedAt)) + '</span></span>' + (editing ? '<button class="btn btn--primary" data-read="save-edit">' + T('保存', 'Save') + '</button><button class="btn" data-read="cancel-edit">' + T('取消', 'Cancel') + '</button>' : '<button class="btn" data-read="copy">' + T('复制全文', 'Copy as text') + '</button><button class="btn" data-read="export">' + T('下载 Markdown', 'Download Markdown') + '</button><button class="btn" data-read="trace">' + T('整理记录', 'How it was made') + '</button><button class="btn phone-contents" data-read="contents">' + T('目录', 'Contents') + '</button><details class="reader-menu"><summary aria-label="' + T('合集操作', 'Guide actions') + '">' + svg('more') + '</summary><div class="menu-items">' + [['edit', T('编辑', 'Edit')], ['reorg', T('再整理一次', 'Re-organize')], ['add', T('加入更多笔记', 'Add notes')], [c.archived ? 'unarch' : 'arch', c.archived ? T('取出', 'Restore') : T('归档', 'Archive')], ['del', T('删除', 'Delete')]].map(function (action) { return '<button class="btn" data-read="' + action[0] + '">' + action[1] + '</button>'; }).join('') + '</div></details>') + '</div><div class="read__grid"><nav class="read__toc" aria-label="' + T('目录', 'Contents') + '"><p class="read__aside-h">' + T('目录', 'Contents') + '</p><ol>' + toc + '</ol></nav><article class="read__body">' + (editing ? '<h1 id="read-title" class="sr-only">' + T('编辑合集', 'Edit guide') + '</h1>' + compEditHtml(c) : body) + '</article><aside class="read__sources"><p class="read__aside-h">' + T('这一节的来源', 'Sources for this section') + '</p>' + bound.sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(bound.sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join('') + '</aside></div><aside id="sourcePeek" class="source-peek" hidden></aside>';
+  }
+  function alignMargins() {
+    if (innerWidth < 900 || els.readDlg.classList.contains('trace-open')) return;
+    var margin = els.readDlg.querySelector('.read__sources'); if (!margin) return;
+    var end = 0, top = margin.getBoundingClientRect().top;
+    els.readDlg.querySelectorAll('[data-margin]').forEach(function (group) { var section = els.readDlg.querySelector('#read-sec-' + group.dataset.margin); if (!section) return; var position = section.getBoundingClientRect().top - top; group.style.marginTop = Math.max(0, position - end) + 'px'; end = position + group.getBoundingClientRect().height + 24; });
+  }
+  function openRead(id, opener) {
+    var c = compById(id); if (!c) return;
+    readingCompId = id; readOpener = opener || document.activeElement; editingCompId = null;
+    els.readDlg.classList.remove('trace-open', 'contents-open', 'is-scrolled'); els.readDlg.innerHTML = compReadHtml(c);
+    if (!els.readDlg.open) els.readDlg.showModal(); els.readDlg.scrollTop = 0;
+    els.readDlg.style.setProperty('--read-bar-h', els.readDlg.querySelector('.read__bar').getBoundingClientRect().height + 'px');
+    els.readDlg.querySelector('button')?.focus(); X.images.hydrate(els.readDlg); document.fonts.ready.then(alignMargins);
+  }
+  function closeRead() { if (editingCompId && !confirm(T('放弃还没保存的修改？', 'Discard unsaved changes?'))) return; editingCompId = null; readingCompId = null; els.readDlg.close(); if (readOpener?.isConnected) readOpener.focus(); }
+  function openSource(n, opener) {
+    var c = compById(readingCompId), source = X.refs.bind(c).sources[n - 1]; if (!source) return;
+    peekOpener = opener; var peek = els.readDlg.querySelector('#sourcePeek'), note = sourceNote(source, c);
+    peek.hidden = false; peek.innerHTML = '<button class="btn" data-read="close-peek">' + svg('close') + T('关闭来源', 'Close source') + '</button>' + (note ? previewHtml(note, true) : '<div class="preview-inner"><h2 class="preview-title">' + esc(X.refs.label(source)) + '</h2><p>' + T('来源笔记已不在此库中，仍可打开原帖。', 'The source note is no longer in this library. Its original link is kept.') + '</p>' + (X.refs.isWebUrl(source.url) ? '<a href="' + esc(source.url) + '" target="_blank" rel="noreferrer">' + T('打开原帖', 'Open original') + '</a>' : '<span>' + esc(source.url) + '</span>') + '</div>');
+    els.readDlg.querySelectorAll('.margin-card').forEach(function (card) { card.classList.toggle('is-active', Number(card.dataset.n) === n); });
+    peek.setAttribute('tabindex', '-1'); peek.focus(); X.images.hydrate(peek); animate(peek, { opacity: 0, transform: innerWidth < 900 ? 'translateY(12px)' : 'translateX(12px)' }, { opacity: 1, transform: 'none' });
+  }
+  function closePeek() { els.readDlg.querySelector('#sourcePeek').hidden = true; if (peekOpener?.isConnected) peekOpener.focus(); }
+  function traceHtml(c) {
+    var sources = X.refs.bind(c), notes = (c.sourceNoteIds || []).map(noteById).filter(Boolean), videos = notes.filter(isVideo), chars = c.trace?.transcriptCharsUsed ?? videos.reduce(function (sum, note) { return sum + Math.min((note.transcript || '').length, 8000); }, 0);
+    return '<div class="trace"><h2 class="read__aside-h">' + T('整理记录', 'How it was made') + '</h2><p>' + notes.length + T(' 篇笔记整理成 ', ' notes bound into ') + sources.sections.length + T(' 节', ' sections') + '</p><p>' + videos.length + T(' 段视频，转写共 ', ' videos, ') + chars.toLocaleString() + T(' 字用于整理', ' transcript characters used') + '</p><p>' + (c.trace?.imagesRead ?? T('未记录', 'Not recorded')) + T(' 张图送入，留下 ', ' images read, ') + Math.max((c.images || []).length, (c.imagesRepo || []).length) + T(' 张', ' kept') + '</p><p>' + esc((c.model || 'Claude').replace(/claude-.*/, 'Claude')) + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</p>' + (c.demoKey ? '<p>' + T('由 AI 在本次构建中按应用提示词整理，演示中回放。来源与地点均为虚构。', 'Written by an AI model during this build using the app’s prompt, then replayed. Sources and locations are fictional.') + '</p>' : '') + '<ul>' + sources.sources.map(function (source) { return '<li>' + marginCard(source, c, 0) + '<small>' + sources.sections.map(function (section, i) { return section.refs.includes(source.n) ? (i + 1) + ' ' + section.heading : ''; }).filter(Boolean).map(esc).join(' · ') + (!source.cited ? T('并入了但没有单独标注', 'Folded in, not cited by a section') : '') + '</small></li>'; }).join('') + '</ul></div>';
+  }
+  function saveGuideEdit() {
+    var c = compById(readingCompId); if (!c) return;
+    if (c.savedAt !== editingRevision) {
+      setStatus(T('这篇合集刚被另一处更新了。请先复制正在编辑的文字，再取消编辑并重新打开。', 'This guide changed elsewhere. Copy your draft, then cancel editing and open the updated guide.'), 'err');
+      return;
+    }
+    var read = els.readDlg;
+    X.store.saveComp(Object.assign({}, c, { title: read.querySelector('.comp__ed-title').value.trim(), summary: read.querySelector('.comp__ed-sum').value.trim(), sections: c.sections.map(function (section, i) { return Object.assign({}, section, { heading: read.querySelector('.comp__ed-h[data-i="' + i + '"]').value, content: read.querySelector('.comp__ed-c[data-i="' + i + '"]').value }); }) }));
+    editingCompId = null; scheduleSync(); renderLibrary(); openRead(c.id, readOpener);
+  }
+  function seedSamples() { X.demo.notes(X.i18n.lang).forEach(function (note) { X.store.save(note); }); renderLibrary(); scheduleSync(); setStatus(T('已载入 36 篇虚构示例笔记', 'Loaded 36 fictional sample notes'), 'ok'); }
+  function seedDemo() {
+    var language = X.i18n.lang; if (demoLanguage === language) return; demoLanguage = language;
+    var notes = X.demo.notes(language), previous = new Map(X.store.getAll().filter(function (n) { return n.demoKey; }).map(function (n) { return [n.id, n]; }));
+    X.store.replaceAll(X.store.getAll().filter(function (n) { return !n.demoKey; }).concat(notes.map(function (note) { return Object.assign({}, note, { archived: previous.get(note.id)?.archived || false }); })));
+    var previousGuides = new Map(X.store.getComps().map(function (c) { return [c.id, c]; }));
+    X.store.replaceAllComps(X.store.getComps().filter(function (c) { return !c.demoKey; }).concat(['kyoto', 'food'].map(function (key) { var c = X.demo.guide(key, language); return Object.assign(c, { archived: previousGuides.get(c.id)?.archived || false }); })));
+    activeFilter = '旅行'; focusedId = 'demo-kyoto-1'; renderLibrary();
+    if (!els.urlInput.value || els.urlInput.dataset.sample === 'true') { els.urlInput.value = X.demo.captureText(language); els.urlInput.dataset.sample = 'true'; }
+  }
+  function renderStatic() {
+    if (renderedLanguage && renderedLanguage !== X.i18n.lang) {
+      els.status.hidden = true;
+      toastActions = [];
+      if (binding) bindStep = T('正在整理，请保持页面打开。', 'Binding. Keep this page open.');
+      else els.bindProgress.textContent = '';
+    }
+    renderedLanguage = X.i18n.lang;
+    X.i18n.applyStatic();
+    els.urlInput.placeholder = T('粘贴小红书或B站的链接、分享文字', 'Paste a Xiaohongshu or Bilibili link or share text'); els.urlInput.setAttribute('aria-label', els.urlInput.placeholder);
+    els.fetchBtn.textContent = T('保存', 'Save'); els.pasteBtn.textContent = T('粘贴', 'Paste');
+    els.search.placeholder = T('搜索笔记和合集', 'Search notes and guides'); els.search.setAttribute('aria-label', els.search.placeholder);
+    els.syncBtn.setAttribute('aria-label', T('同步', 'Sync')); els.searchToggle.setAttribute('aria-label', T('搜索', 'Search'));
+    els.rail.setAttribute('aria-label', T('收藏库', 'Library')); els.detailPane.setAttribute('aria-label', T('笔记预览', 'Note preview'));
+    document.querySelector('.list-column').setAttribute('aria-label', T('笔记和合集', 'Notes and guides'));
+    els.phonePlaces.setAttribute('aria-label', T('收藏库', 'Library'));
+    els.noteDlg.setAttribute('aria-label', T('笔记', 'Note'));
+    els.aboutBtn.textContent = T('它是怎么做的', 'How it works'); els.aboutBtn.hidden = !demo;
+    var settingsAbout = document.querySelector('#suite-app-controls [data-how]');
+    if (settingsAbout && settingsAbout.textContent !== els.aboutBtn.textContent) settingsAbout.textContent = els.aboutBtn.textContent;
+    els.newGuide.textContent = T('新合集', 'New guide'); els.existingGuide.textContent = compById(els.addToComp.value)?.title || T('并入已有合集', 'Add to a guide');
+    els.consolidateBtn.textContent = T('整理成合集', 'Bind into a guide'); els.openTray.textContent = els.consolidateBtn.textContent;
+    els.clearSel.setAttribute('aria-label', T('取消选择', 'Clear selection'));
+    els.exportMd.textContent = T('下载笔记（Markdown）', 'Download notes (Markdown)'); els.exportJson.textContent = T('下载笔记（JSON）', 'Download notes (JSON)');
+    els.fixAllBtn.textContent = T('修复所有图片', 'Fix all images'); els.fixAllBtn.title = T('把小红书会过期的图片存进你的私有仓库', 'Keep expiring Xiaohongshu images in your private repository');
+    els.archToggle.firstChild.textContent = T('归档 ', 'Archive '); els.compArchToggle.firstChild.textContent = T('已归档合集 ', 'Archived guides ');
+    document.querySelector('[data-toggle-rail]').textContent = railCollapsed ? T('显示侧栏', 'Show sidebar') : T('收起侧栏', 'Hide sidebar');
+    document.querySelector('[data-toggle-pane]').textContent = paneCollapsed ? T('显示预览', 'Show preview') : T('收起预览', 'Hide preview');
+    document.querySelector('.skip').textContent = T('跳到笔记', 'Skip to notes'); document.querySelector('.brand').setAttribute('aria-label', T('Clipbind 首页', 'Clipbind home'));
+    document.querySelectorAll('summary[aria-label]').forEach(function (el) { if (el.closest('.library-menu')) el.setAttribute('aria-label', T('收藏库工具', 'Library tools')); });
+    if (demo && !els.demoStrip.dataset.dismissed) { els.demoStrip.hidden = false; els.demoStrip.innerHTML = '<span>' + T('示例数据是虚构的。看看 12 篇京都笔记怎么变成一篇合集。', 'These sample notes are invented. See how 12 Kyoto notes became one guide.') + '</span><button class="btn" data-cact="read" data-id="demo-guide-kyoto">' + T('打开《京都五日》', 'Open the guide') + '</button><button class="btn" data-how>' + T('它是怎么做的', 'How it works') + '</button>' + iconBtn('data-dismiss-demo', '关闭示例提示', 'Dismiss demo strip', 'close'); }
+  }
+  function showInfo(shortcuts, localVideo) {
+    var title = shortcuts ? T('键盘快捷键', 'Keyboard shortcuts') : localVideo ? T('本机视频服务', 'Local video service') : T('它是怎么做的', 'How it works');
+    var stages = [
+      ['parse.js', T('粘贴与读取', 'Paste and read'), T('Jina HTML、Jina Markdown、AllOrigins 依次尝试。网站拦截时保留分享文字和链接。', 'Try Jina HTML, Jina Markdown, then AllOrigins. Keep share text and links when reading is blocked.'), 'node check-capture.mjs'],
+      ['classify.js', T('自动找主题', 'Find the topic'), T('按中文关键词评分，保存时不用选文件夹。主题随时能改。', 'Chinese keyword scoring finds a topic. Change it after saving.'), 'check-redesign.mjs'],
+      ['store.js', T('保存在浏览器', 'Keep a browser copy'), T('正文、转写和图片链接放进 IndexedDB。完整备份在设置里。', 'Keep text, transcripts and image links in IndexedDB. Full backup is in Settings.'), 'settings-v2.test.mjs'],
+      ['merge.js', T('两台设备一起用', 'Merge two devices'), T('同步到自己的私有仓库。合并两边记录，保留删除记录，冲突时重读再合并。', 'Sync to a private repository. Merge records and deletion lists, then retry revision conflicts.'), 'node check.mjs · 40 cases · --break'],
+      ['ai.js', T('整理成一篇合集', 'Bind a guide'), T('Claude 去重、保留具体信息，把每一节与来源对应。图里的菜单与价目表也能读。', 'Claude de-duplicates, keeps concrete details and links each section to its sources. Image text can be included.'), 'node check-models.mjs'],
+      ['refs.js', T('沿来源读回去', 'Follow the sources'), T('全文统一编号，点引用可看原笔记。复制与 Markdown 下载共用同一套来源逻辑。', 'Shared citation numbering opens the saved note. Text copy and Markdown download use the same source resolver.'), 'node check-export.mjs'],
+      ['fetch.js', T('视频留在本机处理', 'Process video locally'), T('yt-dlp 下载，faster-whisper 转写，按画面差异取帧，再由 Claude 挑出有信息的截图。登录态和媒体留在本机。示例转写是虚构脚本。', 'yt-dlp downloads, faster-whisper transcribes, frame differences find candidates, then Claude selects useful frames. Sessions and media stay local. Demo transcripts are scripted.'), 'node check-capture.mjs']
+    ];
+    var keys = [['/', T('搜索', 'Search')], ['a', T('粘贴输入框', 'Capture field')], ['j / k', T('下一篇、上一篇', 'Next or previous note')], ['x', T('选择笔记', 'Select note')], ['⌘A', T('全选当前列表', 'Select current list')], ['b', T('整理所选笔记', 'Bind selection')], ['e', T('归档', 'Archive')], ['[ / ]', T('收起侧栏、预览', 'Collapse rail or preview')], ['n / p', T('阅读下一节、上一节', 'Next or previous section')], ['z', T('撤销', 'Undo')], ['Esc', T('关闭上层，再取消选择', 'Close top layer, then clear selection')]];
+    els.infoDlg.innerHTML = '<button class="btn" data-close-info>' + svg('close') + T('关闭', 'Close') + '</button><h1 id="info-title">' + title + '</h1>' + (shortcuts ? '<div class="shortcut-list">' + keys.map(function (key) { return '<kbd>' + key[0] + '</kbd><span>' + key[1] + '</span>'; }).join('') + '</div>' : localVideo ? '<p>' + stages[6][2] + '</p><p>' + T('在电脑上按仓库 local/README.md 启动服务，然后到设置的连接部分保存本机服务口令。', 'Start the service following local/README.md, then save its local service token under Connections in Settings.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '<p>' + T('笔记进来，带着来源的合集出去。每一步都能在代码和测试里找到。', 'A saved pile becomes a guide with traceable sources. Follow each step in the code and its checks.') + '</p><div class="pipeline">' + stages.map(function (stage) { return '<article><h2>' + stage[1] + '</h2><p>' + stage[2] + '</p><a href="https://github.com/NickkkLian/content-organizer/blob/main/js/' + stage[0] + '" target="_blank" rel="noreferrer">' + stage[0] + '</a><p><code>' + stage[3] + '</code></p></article>'; }).join('') + '</div>');
+    els.infoDlg.showModal();
+  }
+  function handleNoteAction(button) {
+    var id = button.dataset.id, note = noteById(id), action = button.dataset.act;
+    if (action === 'demo') return seedSamples(); if (!note) return;
+    if (action === 'preview' || action === 'paste-text') showNote(id);
+    else if (action === 'retry-fetch') onFetch(note.url || note.body);
+    else if (action === 'open') { if (X.refs.isWebUrl(note.url)) window.open(note.url, '_blank', 'noreferrer'); }
+    else if (action === 'copy-lib') copyText(noteToMarkdown(note));
+    else if (action === 'copy-transcript') copyText(note.transcript);
+    else if (action === 'topic') topicPicker(id, button.closest('.preview-inner'));
+    else if (action === 'arch' || action === 'unarch') { action === 'arch' ? X.store.archive([id]) : X.store.unarchive([id]); selectedIds.delete(id); renderLibrary(); scheduleSync(); setStatus(action === 'arch' ? T('已归档', 'Archived') : T('已取出', 'Restored'), 'ok', [rememberUndo(function () { action === 'arch' ? X.store.unarchive([id]) : X.store.archive([id]); renderLibrary(); scheduleSync(); })]); }
+    else if (action === 'del' && confirm(T('删除这篇笔记？', 'Delete this note?'))) { X.store.remove(id); selectedIds.delete(id); if (els.noteDlg.open) els.noteDlg.close(); renderLibrary(); scheduleSync(); }
+    else if (action === 'fiximg') { if (demo) { X.store.update(id, { demoExpired: false }); renderLibrary(); setStatus(T('演示回放 · 图片已修复', 'Demo replay · Images repaired'), 'ok'); } else fixNoteImages(id).then(function () { renderLibrary(); scheduleSync(); }).catch(function (error) { setStatus(error.message, 'err'); }); }
+    else if (action === 'save-text') {
+      var container = button.closest('.note-editor');
+      var text = container.querySelector('[data-note-text]').value;
+      var imageText = container.querySelector('[data-note-images]').value;
+      var parsed = X.buildManual(text, imageText);
+      var changedImages = imageText !== (note.images || []).filter(X.refs.isWebUrl).join('\n');
+      var images = changedImages ? parsed.images : note.images;
+      var repository = changedImages ? parsed.images.map(function (url) { var index = (note.images || []).indexOf(url); return index < 0 ? null : (note.imagesRepo || [])[index] || null; }) : note.imagesRepo;
+      noteDrafts.delete(id);
+      X.store.update(id, { body: parsed.body || text, images: images, imagesRepo: repository, tags: Array.from(new Set((note.tags || []).concat(parsed.tags))), captureState: '' });
+      renderLibrary();
+      if (els.noteDlg.open) showNote(id);
+      scheduleSync();
+      setStatus(T('正文已保存', 'Text saved'), 'ok');
+    }
+  }
+  function handleReadAction(button) {
+    var action = button.dataset.read, c = compById(readingCompId);
+    if (action === 'close') return closeRead();
+    if (action === 'src') return openSource(Number(button.dataset.n), button);
+    if (action === 'close-peek') return closePeek();
+    if (action === 'copy') return copyText(compToMarkdown(c));
+    if (action === 'export') return download(X.export.filename(c), compToMarkdown(c), 'text/markdown;charset=utf-8');
+    if (action === 'jump') { var section = els.readDlg.querySelector('#read-sec-' + button.dataset.i); section?.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' }); section?.querySelector('h2')?.focus({ preventScroll: true }); els.readDlg.classList.remove('contents-open'); }
+    if (action === 'contents') els.readDlg.classList.toggle('contents-open');
+    if (action === 'trace') { var open = els.readDlg.classList.toggle('trace-open'); els.readDlg.querySelector('.read__sources').innerHTML = open ? traceHtml(c) : X.refs.bind(c).sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(X.refs.bind(c).sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join(''); if (!open) alignMargins(); }
+    if (action === 'edit') { editingCompId = c.id; editingRevision = c.savedAt; els.readDlg.innerHTML = compReadHtml(c); els.readDlg.querySelector('.comp__ed-title').focus(); }
+    if (action === 'save-edit') saveGuideEdit();
+    if (action === 'cancel-edit') { editingCompId = null; openRead(c.id, readOpener); }
+    if (action === 'add') { closeRead(); activePlace = 'saved'; renderLibrary(); els.addToComp.value = c.id; els.existingGuide.textContent = c.title; els.newGuide.setAttribute('aria-pressed', 'false'); els.existingGuide.setAttribute('aria-pressed', 'true'); }
+    if (action === 'reorg' && confirm(T('重新整理这篇合集？会去重、合并与重排。', 'Re-organize this guide? It will de-duplicate, merge and reorder the text.'))) { closeRead(); runConsolidate(c, true); }
+    if (action === 'arch' || action === 'unarch') { X.store.saveComp(Object.assign({}, c, { archived: action === 'arch' })); closeRead(); renderLibrary(); scheduleSync(); }
+    if (action === 'del' && confirm(T('删除这篇合集？', 'Delete this guide?'))) { X.store.removeComp(c.id); closeRead(); renderLibrary(); scheduleSync(); }
+  }
+  function bind() {
+    els.captureForm.addEventListener('submit', function (event) { event.preventDefault(); onFetch(); });
+    els.urlInput.addEventListener('input', function () { els.urlInput.dataset.sample = 'false'; });
+    els.pasteBtn.addEventListener('click', async function () { try { await onFetch(await navigator.clipboard.readText()); } catch (error) { setStatus(T('请把剪贴板内容粘进输入框，再点保存。', 'Paste your clipboard into the field, then choose Save.'), 'err'); els.urlInput.focus(); } });
+    document.addEventListener('paste', function (event) { if (event.target.closest('input,textarea,[contenteditable=true]') || document.querySelector('dialog[open]')) return; var text = event.clipboardData?.getData('text/plain'); if (text) { event.preventDefault(); onFetch(text); } });
+    els.search.addEventListener('input', function () { activeTag = ''; if (activePlace === 'guides') activePlace = 'saved'; renderLibrary(); });
+    els.searchToggle.addEventListener('click', function () { document.querySelector('.topbar').classList.toggle('search-open'); els.search.focus(); });
+    els.selectAll.addEventListener('click', function () { visibleNotes.forEach(function (n) { selectedIds.add(n.id); }); renderLibrary(); });
+    els.clearSel.addEventListener('click', function () { if (binding) return; selectedIds.clear(); if (els.noteDlg.open) els.noteDlg.close(); renderLibrary(); });
+    els.newGuide.addEventListener('click', function () { els.addToComp.value = ''; els.newGuide.setAttribute('aria-pressed', 'true'); els.existingGuide.setAttribute('aria-pressed', 'false'); els.guideMenu.hidden = true; updateSelBar(); });
+    els.existingGuide.addEventListener('click', function () { els.guideMenu.hidden = !els.guideMenu.hidden; });
+    els.consolidateBtn.addEventListener('click', function () { runConsolidate(compById(els.addToComp.value) || null); });
+    els.openTray.addEventListener('click', openTray);
+    els.noteDlg.addEventListener('close', function () { if (els.noteDlg.contains(els.selBar)) els.detailPane.append(els.selBar); });
+    document.addEventListener('close', function (event) { if (event.target.contains(els.status)) document.body.append(els.status); }, true);
+    document.addEventListener('input', function (event) {
+      if (!event.target.matches('[data-note-text],[data-note-images]')) return;
+      var editor = event.target.closest('.note-editor');
+      var id = editor.querySelector('[data-act=save-text]').dataset.id;
+      noteDrafts.set(id, { text: editor.querySelector('[data-note-text]').value, images: editor.querySelector('[data-note-images]').value });
+    });
+    els.syncBtn.addEventListener('click', doSync);
+    els.fixAllBtn.addEventListener('click', function () { if (demo) setStatus(T('演示数据的图片都保存在应用里。', 'Demo images are kept with the app.'), 'ok'); else fixAllImages(); });
+    els.exportJson.addEventListener('click', function () { download('clipbind-notes.json', JSON.stringify(X.store.getAll(), null, 2), 'application/json'); });
+    els.exportMd.addEventListener('click', function () { download('clipbind-notes.md', X.store.getAll().map(noteToMarkdown).join('\n\n---\n\n'), 'text/markdown'); });
+    els.archToggle.addEventListener('click', function () { activePlace = 'archive'; activeFilter = 'all'; activeTag = ''; selectedIds.clear(); renderLibrary(); });
+    els.compArchToggle.addEventListener('click', function () { activePlace = 'archive'; activeFilter = 'all'; renderLibrary(); });
+    els.aboutBtn.addEventListener('click', function () { showInfo(); });
+    document.addEventListener('click', function (event) {
+      var imageLink = event.target.closest('.gallery a');
+      if (imageLink) {
+        var image = imageLink.querySelector('img');
+        if (image?.src && safeImage(image.src)) {
+          event.preventDefault();
+          var lightbox = document.getElementById('imageDlg');
+          lightbox.innerHTML = '<button class="btn" data-close-image>' + svg('close') + T('关闭图片', 'Close image') + '</button><h1 id="image-title">' + esc(image.alt) + '</h1><img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '">';
+          lightbox.showModal();
+          return;
+        }
+      }
+      var button = event.target.closest('button, a[data-read]'); if (!button) return;
+      if (button.hasAttribute('data-close-image')) document.getElementById('imageDlg').close();
+      if (button.dataset.place) { activePlace = button.dataset.place; activeFilter = 'all'; activeTag = ''; selectedIds.clear(); renderLibrary(); }
+      if (button.dataset.cat) { activePlace = activePlace === 'archive' ? 'archive' : 'saved'; activeFilter = button.dataset.cat; activeTag = ''; try { localStorage.setItem('clipbind-pile', activeFilter); } catch (error) {} renderLibrary(); }
+      if (button.dataset.tag) { activeTag = activeTag === button.dataset.tag ? '' : button.dataset.tag; renderLibrary(); }
+      if (button.dataset.dim) { if (button.dataset.dim === 'platform') activePlatform = button.dataset.val; else activeType = button.dataset.val; activeTag = ''; renderLibrary(); }
+      if (button.dataset.act) handleNoteAction(button);
+      if (button.dataset.cact === 'read') openRead(button.dataset.id, button);
+      if (button.dataset.cact === 'unarch') { var c = compById(button.dataset.id); X.store.saveComp(Object.assign({}, c, { archived: false })); renderLibrary(); scheduleSync(); }
+      if (button.dataset.read) { event.preventDefault(); handleReadAction(button); }
+      if (button.hasAttribute('data-toast')) toastActions[Number(button.dataset.toast)]?.run();
+      if (button.hasAttribute('data-dismiss-toast')) els.status.hidden = true;
+      if (button.hasAttribute('data-dismiss-demo')) { els.demoStrip.dataset.dismissed = 'true'; els.demoStrip.hidden = true; }
+      if (button.hasAttribute('data-how')) showInfo();
+      if (button.hasAttribute('data-close-info')) els.infoDlg.close();
+      if (button.hasAttribute('data-close-note')) els.noteDlg.close();
+      if (button.hasAttribute('data-open-ai')) { if (els.infoDlg.open) els.infoDlg.close(); if (els.noteDlg.open) els.noteDlg.close(); SuiteSettings.open('ai'); }
+      if (button.hasAttribute('data-local-help')) showInfo(false, true);
+      if (button.dataset.removeSelection) { selectedIds.delete(button.dataset.removeSelection); renderLibrary(); }
+      if (button.dataset.targetGuide) { els.addToComp.value = button.dataset.targetGuide; els.existingGuide.textContent = compById(button.dataset.targetGuide).title; els.newGuide.setAttribute('aria-pressed', 'false'); els.existingGuide.setAttribute('aria-pressed', 'true'); els.guideMenu.hidden = true; updateSelBar(); }
+      if (button.dataset.demoSet) chooseDemoSet(button.dataset.demoSet);
+      if (button.dataset.topicChoice) { X.store.update(button.dataset.id, { category: button.dataset.topicChoice, topicChosen: true }); scheduleSync(); renderLibrary(); if (els.noteDlg.open) showNote(button.dataset.id); }
+      if (button.hasAttribute('data-clear-search')) { els.search.value = ''; renderLibrary(); }
+      if (button.hasAttribute('data-toggle-rail')) { railCollapsed = !railCollapsed; els.main.classList.toggle('rail-collapsed', railCollapsed); renderStatic(); }
+      if (button.hasAttribute('data-toggle-pane')) { paneCollapsed = !paneCollapsed; els.main.classList.toggle('pane-collapsed', paneCollapsed); renderStatic(); }
+    });
+    els.libList.addEventListener('click', function (event) { var row = event.target.closest('[data-note]'); if (!row || event.target.closest('button,input,a')) return; if (selectedIds.size) selectNote(row.dataset.note, !selectedIds.has(row.dataset.note), event.shiftKey); else showNote(row.dataset.note); });
+    els.libList.addEventListener('click', function (event) { var checkbox = event.target.closest('.selbox'); if (checkbox) selectNote(checkbox.dataset.id, checkbox.checked, event.shiftKey); });
+    els.libList.addEventListener('focusin', function (event) {
+      var row = event.target.closest('[data-note]');
+      if (!row) return;
+      focusedId = row.dataset.note;
+      els.libList.querySelectorAll('[data-note]').forEach(function (entry) { entry.classList.toggle('is-focused', entry === row); });
+    });
+    var pressTimer, pressX, pressY, longPressed = false;
+    els.libList.addEventListener('pointerdown', function (event) { if (event.pointerType !== 'touch' || event.target.closest('button,input')) return; var row = event.target.closest('[data-note]'); if (!row) return; pressX = event.clientX; pressY = event.clientY; longPressed = false; pressTimer = setTimeout(function () { selectNote(row.dataset.note, true); longPressed = true; }, 450); });
+    els.libList.addEventListener('pointermove', function (event) { if (Math.abs(event.clientX - pressX) + Math.abs(event.clientY - pressY) > 10) clearTimeout(pressTimer); });
+    ['pointerup', 'pointercancel'].forEach(function (type) { els.libList.addEventListener(type, function () { clearTimeout(pressTimer); }); });
+    els.libList.addEventListener('click', function (event) { if (longPressed) { event.preventDefault(); event.stopImmediatePropagation(); longPressed = false; } }, true);
+    els.libList.addEventListener('dragstart', function (event) { var row = event.target.closest('[data-note]'); if (row) { if (!selectedIds.has(row.dataset.note)) selectNote(row.dataset.note, true); event.dataTransfer.setData('text/plain', row.dataset.note); } });
+    els.railGuides.addEventListener('dragover', function (event) { if (event.target.closest('[data-cact]')) event.preventDefault(); });
+    els.railGuides.addEventListener('drop', function (event) { var target = event.target.closest('[data-cact]'); if (!target) return; event.preventDefault(); els.addToComp.value = target.dataset.id; updateSelBar(); });
+    els.readDlg.addEventListener('cancel', function (event) { event.preventDefault(); var peek = els.readDlg.querySelector('#sourcePeek'); if (peek && !peek.hidden) closePeek(); else closeRead(); });
+    els.readDlg.addEventListener('scroll', function () { els.readDlg.classList.toggle('is-scrolled', els.readDlg.scrollTop > 100); }, { passive: true });
+    window.addEventListener('resize', alignMargins);
+    document.addEventListener('keydown', keyboard);
+    window.addEventListener('beforeunload', function (event) { if (pendingCaptures.size || binding || editingCompId || noteDrafts.size) { event.preventDefault(); event.returnValue = ''; } });
+  }
+  function keyboard(event) {
+    if (event.defaultPrevented) return;
+    if (event.key === 'Escape' && els.readDlg.open) { event.preventDefault(); var peek = els.readDlg.querySelector('#sourcePeek'); if (peek && !peek.hidden) closePeek(); else closeRead(); return; }
+    if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { if (!binding) { selectedIds.clear(); renderLibrary(); } event.preventDefault(); return; }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !document.querySelector('dialog[open]')) { event.preventDefault(); document.querySelector('.topbar').classList.add('search-open'); els.search.focus(); return; }
+    if (event.target.closest('input,textarea,select,[contenteditable=true]')) return;
+    if (els.infoDlg.open || els.noteDlg.open || document.querySelector('.suite-panel[open]')) return;
+    if (els.readDlg.open) { if (['n', 'p'].includes(event.key) && Appearance.shortcutsOn()) { var headings = Array.from(els.readDlg.querySelectorAll('.read__sec h2')), current = headings.findIndex(function (h) { return h === document.activeElement; }), next = headings[Math.max(0, Math.min(headings.length - 1, current + (event.key === 'n' ? 1 : -1)))]; next?.focus(); next?.scrollIntoView({ block: 'start' }); } return; }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') { event.preventDefault(); if (activePlace === 'saved') { visibleNotes.forEach(function (n) { selectedIds.add(n.id); }); renderLibrary(); } return; }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); document.querySelector('.topbar').classList.add('search-open'); els.search.focus(); return; }
+    if (!Appearance.shortcutsOn() || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key === '/') { event.preventDefault(); document.querySelector('.topbar').classList.add('search-open'); els.search.focus(); }
+    if (event.key === 'a') { event.preventDefault(); els.urlInput.focus(); }
+    if (event.key === '?') showInfo(true);
+    if (event.key === 'z') lastUndo?.();
+    if (event.key === '[') { railCollapsed = !railCollapsed; els.main.classList.toggle('rail-collapsed', railCollapsed); }
+    if (event.key === ']') { paneCollapsed = !paneCollapsed; els.main.classList.toggle('pane-collapsed', paneCollapsed); }
+    if ((event.key === 'j' || event.key === 'k') && activePlace === 'guides') { var guides = Array.from(els.compList.querySelectorAll('[data-cact=read]')); var current = guides.indexOf(document.activeElement); guides[Math.max(0, Math.min(guides.length - 1, current + (event.key === 'j' ? 1 : -1)))]?.focus(); return; }
+    if (event.key === 'j' || event.key === 'k') { var index = visibleNotes.findIndex(function (n) { return n.id === focusedId; }); var note = visibleNotes[Math.max(0, Math.min(visibleNotes.length - 1, index + (event.key === 'j' ? 1 : -1)))]; if (note) { focusedId = note.id; renderPreview(); var row = Array.from(els.libList.querySelectorAll('[data-note]')).find(function (el) { return el.dataset.note === note.id; }); row?.focus(); } }
+    if (event.key === 'x' && focusedId) { event.preventDefault(); selectNote(focusedId, !selectedIds.has(focusedId), false, true); }
+    if (event.key === 'Enter' && event.target.matches('[data-note]')) showNote(event.target.dataset.note);
+    if (event.key === 'e' && focusedId && activePlace === 'saved') { X.store.archive([focusedId]); selectedIds.delete(focusedId); renderLibrary(); scheduleSync(); }
+    if (event.key === 'b' && selectedIds.size) { if (innerWidth < 900) openTray(); else runConsolidate(compById(els.addToComp.value)); }
+  }
+  function init() {
+    ['main','status','urlInput','search','rail','places','phonePlaces','catFilter','phoneTopics','topicCaption','platFilter','railGuides','archCount','compArchCount','pileTitle','pileTags','selectAll','pileGuide','libCount','libList','compsCard','compList','compCount','preview','detailPane','selBar','mobileSelection','selCount','selectedStack','includeImgs','imageOptionText','bindConsequence','guideMenu','bindNotice','bindProgress','consolidateBtn','addToComp','noteDlg','readDlg','infoDlg','fetchBtn','pasteBtn','syncBtn','syncStatus','searchToggle','aboutBtn','newGuide','existingGuide','clearSel','exportMd','exportJson','fixAllBtn','archToggle','compArchToggle','openTray','captureForm','demoStrip'].forEach(function (id) { els[id] = document.getElementById(id); });
+    try { activeFilter = localStorage.getItem('clipbind-pile') || 'all'; } catch (error) {}
+    renderStatic(); bind(); initTips(); X.app.ready = true;
+    if (demo) seedDemo(); else renderLibrary(); updateSyncUI();
+    if (X.sync.isConfigured()) doSync();
+    var observed = new MutationObserver(function () { var container = document.querySelector('#suite-app-controls'); if (container && !container.querySelector('[data-how]')) { var button = document.createElement('button'); button.className = 'btn'; button.dataset.how = ''; button.textContent = T('它是怎么做的', 'How it works'); container.append(button); } });
+    observed.observe(document.body, { childList: true, subtree: true });
+    if (typeof ResizeObserver !== 'undefined') {
+      var headerSize = new ResizeObserver(function () { document.documentElement.style.setProperty('--header-height', document.querySelector('.topbar').getBoundingClientRect().height + 'px'); });
+      headerSize.observe(document.querySelector('.topbar'));
+    }
+  }
+  function hasEditingDrafts() { return editingCompId !== null || noteDrafts.size > 0 || selectedIds.size > 0 || Boolean(els.urlInput?.value.trim() && els.urlInput.dataset.sample !== 'true'); }
+  X.app = {
+    ready: false, hasEditingDrafts: hasEditingDrafts,
+    hasContentDrafts: function () { return editingCompId !== null || noteDrafts.size > 0 || Boolean(els.urlInput?.value.trim() && els.urlInput.dataset.sample !== 'true'); },
+    unsaved: function () { return hasEditingDrafts() || pendingCaptures.size > 0 || binding || syncing || Boolean(syncTimer) || X.sync.hasUnsynced() || X.store.error(); },
+    cancelSync: function () { clearTimeout(syncTimer); syncTimer = null; }, scheduleSync: scheduleSync,
+    resetDrafts: function () { selectedIds.clear(); noteDrafts.clear(); editingCompId = null; readingCompId = null; if (els.readDlg.open) els.readDlg.close(); if (els.noteDlg.open) els.noteDlg.close(); els.urlInput.value = ''; },
+    refreshAI: updateSelBar,
+    rerender: function () { if (!els.libList) return; renderStatic(); if (demo) seedDemo(); renderLibrary(); updateSyncUI(); }
+  };
+  window.addEventListener('clipbind-storage-error', function () { if (els.status) setStatus(T('本机副本没保存上，请到设置里重试，或先导出完整备份。', 'This browser copy could not be saved. Retry in Settings or export a full backup.'), 'err'); });
+  document.addEventListener('DOMContentLoaded', function () {
+    X.store.init().then(function () {
+      var start = async function () { await X.settings.initializeSource(); init(); };
+      return typeof HubSettingsRuntime === 'undefined' ? start() : HubSettingsRuntime.track(start);
+    }).catch(function (error) { init(); X.settings.pause(true); setStatus(error.message, 'err'); });
+  });
   function noteToMarkdown(note){
     var cat = catOf(note);
     var md = '## ' + (note.title || T('未命名','Untitled')) + '\n\n';
@@ -213,123 +677,6 @@ window.XHS = window.XHS || {};
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
 
-  function seedSamples(){
-    ((X.samples && X.samples.NOTES) || []).forEach(function (s) {
-      var rec = Object.assign({ source: 'sample', url: '', images: [] }, s);
-      if (!rec.category) { var cls = X.classify(rec); rec.category = cls.primary.name; rec.categoryEmoji = cls.primary.emoji; }
-      X.store.save(rec);
-    });
-    renderLibrary();
-    setStatus(T('已载入 3 篇示例笔记（可随时删除）','Loaded 3 sample notes (delete them any time)'), 'ok');
-  }
-
-  /* ?demo=1 on an empty library: the three sample notes, and the compilation they were consolidated into if this
-     checkout carries one. That file is written by make-demo-compilation.mjs, which costs one API call, so a fork
-     may well not have it — and the library on its own is still a complete demo. */
-  function seedDemo(){
-    if (X.store.getAll().length) return;
-    seedSamples();
-    if (X.store.getComps().length) return;
-    /* One cached compilation per language: the model answers in the language the interface was in when the run was
-       made, so a reader in English gets the English one. Falling back the other way is better than showing nothing —
-       a compilation in the other language still shows what the reading view is — and the view prints the language
-       and date the file records, so it is never passed off as something it is not. */
-    var want = X.i18n.lang === 'zh' ? ['demo/compilation.zh.json', 'demo/compilation.json']
-                                    : ['demo/compilation.json', 'demo/compilation.zh.json'];
-    (function attempt(i){
-      if (i >= want.length) return;
-      fetch(want[i], { cache: 'no-cache' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (c) {
-          if (!c || !Array.isArray(c.sections)) return attempt(i + 1);
-          X.store.saveComp(c);
-          renderComps();
-        })
-        .catch(function () { attempt(i + 1); });
-    })(0);
-  }
-
-  // ---------- Library ----------
-  function buildFilters(notes){
-    var counts = {};
-    notes.forEach(function (n) {
-      var key = catOf(n).name;
-      counts[key] = (counts[key] || 0) + 1;
-    });
-    var html = '<button class="chip' + (activeFilter === 'all' ? ' chip--on' : '') + '" data-cat="all">' + T('全部 ','All ') + notes.length + '</button>';
-    Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).forEach(function (k) {
-      html += '<button class="chip' + (activeFilter === k ? ' chip--on' : '') + '" data-cat="' + esc(k) + '">' + esc(X.catLabel(k)) + ' ' + counts[k] + '</button>';
-    });
-    els.catFilter.innerHTML = html;
-  }
-
-  // Platform + type filter groups (rendered into #platFilter)
-  function ptChip(dim, val, zh, en, count, active){
-    return '<button class="chip' + (active ? ' chip--on' : '') + '" data-dim="' + dim + '" data-val="' + val + '">' + T(zh, en) + ' ' + count + '</button>';
-  }
-  function buildPlatType(base){
-    if (!els.platFilter) return;
-    var xhsN = base.filter(function (n) { return (n.platform || 'xhs') !== 'bili'; }).length;
-    var biliN = base.filter(function (n) { return n.platform === 'bili'; }).length;
-    var vidN = base.filter(isVideo).length, postN = base.length - vidN;
-    var h = ptChip('plat', 'all', '全部', 'All', base.length, activePlatform === 'all');
-    if (xhsN) h += ptChip('plat', 'xhs', '小红书', 'XHS', xhsN, activePlatform === 'xhs');
-    if (biliN) h += ptChip('plat', 'bili', 'B站', 'Bilibili', biliN, activePlatform === 'bili');
-    h += '<span class="chips__sep"></span>';
-    h += ptChip('type', 'all', '全部', 'All', base.length, activeType === 'all');
-    if (postN) h += ptChip('type', 'post', '图文', 'Posts', postN, activeType === 'post');
-    if (vidN) h += ptChip('type', 'video', '视频', 'Videos', vidN, activeType === 'video');
-    els.platFilter.innerHTML = h;
-  }
-
-  function renderLibrary(){
-    var all = X.store.getAll();
-    var base = all.filter(function (n) { return viewArchived ? n.archived : !n.archived; });
-    var archivedCount = all.filter(function (n) { return n.archived; }).length;
-    if (els.archCount) els.archCount.textContent = archivedCount;
-    if (els.archToggle) els.archToggle.classList.toggle('chip--on', viewArchived);
-    buildPlatType(base);
-    var ptBase = base.filter(function (n) {
-      if (activePlatform !== 'all' && (n.platform || 'xhs') !== activePlatform) return false;
-      if (activeType === 'video' && !isVideo(n)) return false;
-      if (activeType === 'post' && isVideo(n)) return false;
-      return true;
-    });
-    buildFilters(ptBase);
-    var q = (els.search.value || '').trim().toLowerCase();
-    var list = ptBase.filter(function (n) {
-      if (activeFilter !== 'all' && catOf(n).name !== activeFilter) return false;
-      if (!q) return true;
-      var hay = ((n.title || '') + ' ' + (n.body || '') + ' ' + (n.transcript || '') + ' ' + (n.author || '') + ' ' + (n.tags || []).join(' ')).toLowerCase();
-      return hay.indexOf(q) !== -1;
-    });
-    els.libCount.textContent = list.length + ' / ' + ptBase.length + T(' 篇', ptBase.length === 1 ? ' note' : ' notes') + (viewArchived ? T('（已归档）',' (archived)') : '');
-    if (!base.length) {
-      els.libList.innerHTML = '<p class="empty">' + (viewArchived
-        ? T('还没有已归档的笔记。整理成合集后，作为素材的笔记会自动归档到这里。','No archived notes yet. After you consolidate, the source notes are auto-archived here.')
-        : T('还没有收藏。整理一篇笔记后点「收藏到本地库」。','No saved notes yet. Organize a note, then click "Save to library".') +
-          '<br><button class="btn btn--primary" data-act="demo">' + T('载入示例笔记','Load sample notes') + '</button>') + '</p>';
-      return;
-    }
-    if (!list.length) { els.libList.innerHTML = '<p class="empty">' + T('没有匹配的笔记。','No matching notes.') + '</p>'; return; }
-    els.libList.innerHTML = list.map(function (n) {
-      var needFix = (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
-      var fixBtn = needFix ? iconBtn('data-act="fiximg" data-id="' + esc(n.id) + '"', '修复图片', 'Fix images', 'fix') : '';
-      var actions = viewArchived
-        ? iconBtn('data-act="copy-lib" data-id="' + esc(n.id) + '"', '复制 MD', 'Copy MD', 'copy') +
-          iconBtn('data-act="open" data-id="' + esc(n.id) + '"', '原文', 'Original', 'open') + fixBtn +
-          '<button class="btn btn--primary" data-act="unarch" data-id="' + esc(n.id) + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>' +
-          iconBtn('data-act="del" data-id="' + esc(n.id) + '"', '删除', 'Delete', 'del', true)
-        : iconBtn('data-act="copy-lib" data-id="' + esc(n.id) + '"', '复制 MD', 'Copy MD', 'copy') +
-          iconBtn('data-act="open" data-id="' + esc(n.id) + '"', '原文', 'Original', 'open') + fixBtn +
-          iconBtn('data-act="arch" data-id="' + esc(n.id) + '"', '归档', 'Archive', 'archive') +
-          iconBtn('data-act="del" data-id="' + esc(n.id) + '"', '删除', 'Delete', 'del', true);
-      return noteCardHtml(n, actions, { selectable: !viewArchived, selected: selectedIds.has(n.id) });
-    }).join('');
-    X.images.hydrate(els.libList);
-  }
-
-  // ---------- Image repair (re-fetch the post for fresh links → archive into the private repo) ----------
   async function fixNoteImages(id, quiet){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var note = X.store.getAll().find(function (n) { return n.id === id; });
     if (!note) return { ok: 0, fail: 0 };
@@ -375,27 +722,17 @@ window.XHS = window.XHS || {};
     } finally { els.fixAllBtn.disabled = false; }
   });}
 
-  // ---------- Multi-select → AI consolidation ----------
-  function updateSelBar(){
-    var n = selectedIds.size;
-    els.selBar.style.display = n ? 'flex' : 'none';
-    if (!n) return;
-    els.selCount.textContent = T('已选 ','Selected ') + n + T(' 篇', n === 1 ? ' note' : ' notes');
-    var comps = X.store.getComps();
-    els.addToComp.innerHTML = '<option value="">' + T('加入已有合集…','Add to an existing compilation…') + '</option>' +
-      comps.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</option>'; }).join('');
-  }
-
-  async function runConsolidate(existingComp, reorgOnly){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+  async function runRealConsolidate(existingComp, reorgOnly){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
+    var outputLang = X.i18n.lang;
     if (!X.ai || !X.ai.isReady()){
       setStatus(T('请先在设置的 AI 部分填写 Anthropic API 密钥','Enter your Anthropic API key in Settings → AI first'), 'err');
       SuiteSettings.open('ai');
       return;
     }
-    var notes = reorgOnly ? [] : X.store.getAll().filter(function (n) { return selectedIds.has(n.id); });
+    var notes = reorgOnly ? [] : Array.from(selectedIds).map(noteById).filter(Boolean);
     if (!notes.length && !existingComp){ setStatus(T('请先勾选笔记','Select some notes first'), 'err'); return; }
     els.consolidateBtn.disabled = true; els.addToComp.disabled = true;
-    setStatus(reorgOnly ? T('AI 再整理中…（去重合并、剔除无效信息，请勿关闭页面）','Re-organizing… (dedupe & clean, keep this page open)') : T('AI 整理中…（约 10–30 秒，请勿关闭页面）','AI consolidating… (~10–30s, keep this page open)'), 'loading');
+    setStatus(reorgOnly ? T('再整理中…（去重合并、剔除无效信息，请勿关闭页面）','Re-organizing… (dedupe & clean, keep this page open)') : T('整理中…（约 10–30 秒，请勿关闭页面）','Binding… (~10–30s, keep this page open)'), 'loading');
     try {
       var posts = notes.map(function (n) { return { title: n.title, body: n.body, tags: n.tags, url: n.url, transcript: n.transcript, platform: n.platform, isVideo: isVideo(n) }; });
       // Optional: analyse images too — attach every image of the selected notes (the Claude API allows 100 per request; beyond that we truncate and say so)
@@ -430,9 +767,10 @@ window.XHS = window.XHS || {};
         var warn = [];
         if (skippedCap) warn.push(T('超过 100 张上限，' + skippedCap + ' 张未送入', skippedCap + ' over the 100-image cap'));
         if (skippedDead) warn.push(T(skippedDead + ' 张已过期且未归档（可先点「修复全部图片」）', skippedDead + ' expired & unarchived (run "Fix all images" first)'));
-        setStatus(T('AI 整理中（含 ' + total + ' 张图，图多时需 1–3 分钟）…', 'AI consolidating (' + total + ' images — may take 1–3 min)…') + (warn.length ? ' · ' + warn.join(T('；', '; ')) : ''), 'loading');
+        setStatus(T('整理中（含 ' + total + ' 张图，图多时需 1–3 分钟）…', 'Binding (' + total + ' images — may take 1–3 min)…') + (warn.length ? ' · ' + warn.join(T('；', '; ')) : ''), 'loading');
       }
       var res = await X.ai.consolidate(posts, existingComp || null);
+      if (existingComp && compById(existingComp.id)?.savedAt !== existingComp.savedAt) throw new Error(T('目标合集刚被另一处更新，请重新打开它再试。', 'The target guide changed elsewhere. Open its latest version and try again.'));
       var sections = (res.sections || []).map(function (s) {
         var srcs = (s.source_indices || []).map(function (i) {
           var nn = notes[i - 1]; return nn ? { title: nn.title || T('未命名','Untitled'), url: nn.url || '' } : null;
@@ -441,7 +779,7 @@ window.XHS = window.XHS || {};
       });
       var prevIds = (existingComp && existingComp.sourceNoteIds) || [];
       var prevUrls = (existingComp && existingComp.sourceUrls) || [];
-      // Keep the necessary images: the AI names (via keep_images) the ones text can't replace; merge with the compilation's existing images, de-duplicated
+      // Keep the necessary images: the AI names (via keep_images) the ones text can't replace; merge with the guide's existing images, de-duplicated
       var seenI = {}, cImgs = [], cRepo = [];
       var addImg = function (u, r) { var k = r || u; if (!k || seenI[k]) return; seenI[k] = 1; cImgs.push(u || ''); cRepo.push(r || null); };
       var prevI = (existingComp && existingComp.images) || [], prevR = (existingComp && existingComp.imagesRepo) || [];
@@ -454,269 +792,22 @@ window.XHS = window.XHS || {};
         archived: existingComp ? !!existingComp.archived : false,
         sourceNoteIds: Array.from(new Set(prevIds.concat(notes.map(function (n) { return n.id; })))),
         sourceUrls: Array.from(new Set(prevUrls.concat(notes.map(function (n) { return n.url; }).filter(Boolean)))),
-        model: X.ai.getConfig().model
+        model: X.ai.getConfig().model, runAt: new Date().toISOString(), lang: outputLang, trace: { imagesRead: Object.keys(imgMap).length, transcriptCharsUsed: posts.reduce(function (sum, post) { return sum + Math.min((post.transcript || '').length, 8000); }, 0), inputNotes: notes.length }
       };
-      X.store.saveComp(comp);
+      var saved = X.store.saveComp(comp);
       X.store.archive(notes.map(function (n) { return n.id; }));   // consolidated source notes are archived automatically
       selectedIds.clear();
       renderLibrary(); renderComps(); updateSelBar();
-      setStatus(notes.length ? T('整理完成 ✓ 已存入合集，原笔记已自动归档','Done ✓ Saved to a compilation; source notes auto-archived') : T('再整理完成 ✓ 合集已更新（去重合并、清理无效信息）','Re-organized ✓ Compilation updated'), 'ok');
+      setStatus(notes.length ? T('整理完成 ✓ 已存入合集，原笔记已自动归档','Done ✓ Saved to a guide; source notes auto-archived') : T('再整理完成 ✓ 合集已更新（去重合并、清理无效信息）','Re-organized ✓ Guide updated'), 'ok');
       scheduleSync();
-      els.compsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      openRead(saved.id); var restore = function () { X.store.unarchive(notes.map(function (n) { return n.id; })); renderLibrary(); scheduleSync(); }; lastUndo = restore; setStatus(T('合集已保存，原笔记已归档', 'Guide saved, source notes archived'), 'ok', [{ label: T('撤销归档', 'Restore them'), run: restore }]);
     } catch (e) {
-      setStatus(T('AI 整理失败：','AI consolidation failed: ') + e.message, 'err');
+      els.bindProgress.textContent = T('整理失败，笔记还在，可以重试。', 'Binding failed. Your notes are kept. Try again.') + ' ' + e.message; setStatus(els.bindProgress.textContent, 'err');
     } finally {
       els.consolidateBtn.disabled = false; els.addToComp.disabled = false;
     }
   });}
 
-  // ---------- Compilation rendering ----------
-  function compToMarkdown(c){
-    return X.export.markdown(c, X.i18n.lang);
-  }
-  function compCardHtml(c){
-    var nSrc = X.refs.bind(c).sources.length;
-    var meta = '<span class="badge badge--clip"' + (c.topic ? ' title="' + esc(c.topic) + '"' : '') +
-        '><span>' + esc(c.topic || T('合集','Compilation')) + '</span></span>' +
-      (c.model ? '<span class="badge badge--soft">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '') +
-      /* The same count the reading view shows, from the same place: js/refs.js binds the sources a compilation
-         actually cites. Counting c.sourceUrls instead made the shipped demo say "0 sources" on a card whose
-         three sections each cite one — that field only carries notes that had a link, and a pasted note has none. */
-      '<span class="src">' + nSrc + T(' 篇来源', nSrc === 1 ? ' source' : ' sources') + '</span>';
-    var secs = (c.sections || []).map(function (s) {
-      var src = (s.sources && s.sources.length)
-        ? '<div class="comp__src">' + s.sources.map(function (x) {
-            if (x.url && X.refs.isWebUrl(x.url))
-              return '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + esc(x.title || T('链接','link')) + ' ↗</a>';
-            return '<a>' + esc(x.title || x.url || '') + '</a>';   // no href: plain text
-          }).join('') + '</div>'
-        : '';
-      return '<div class="comp__sec"><h4>' + esc(s.heading) + '</h4><div class="body">' + esc(s.content) + '</div>' + src + '</div>';
-    }).join('');
-    var arch = viewCompArchived
-      ? '<button class="btn btn--primary" data-cact="unarch" data-id="' + esc(c.id) + '">' + T('↩︎ 取出','↩︎ Restore') + '</button>'
-      : iconBtn('data-cact="arch" data-id="' + esc(c.id) + '"', '归档', 'Archive', 'archive');
-    return '<article class="card comp is-fold">' +
-      '<div class="comp__meta">' + meta +
-        '<button class="note__fold" data-fold title="' + T('展开 / 收起','Expand / collapse') + '">▾</button>' +
-      '</div>' +
-      '<h3 class="comp__title" data-fold>' + esc(c.title || T('未命名合集','Untitled compilation')) + '</h3>' +
-      (c.summary ? '<div class="comp__summary">' + esc(c.summary) + '</div>' : '') +
-      '<div class="comp__more">' + secs + renderImages(c) + '</div>' +
-      '<div class="note__actions">' +
-        '<button class="btn btn--primary" data-cact="read" data-id="' + esc(c.id) + '">' + T('阅读','Read') + '</button>' +
-        iconBtn('data-cact="reorg" data-id="' + esc(c.id) + '"', '重新整理', 'Re-organize', 'reorg') +
-        iconBtn('data-cact="edit" data-id="' + esc(c.id) + '"', '编辑', 'Edit', 'edit') +
-        iconBtn('data-cact="copy" data-id="' + esc(c.id) + '"', '复制 MD', 'Copy MD', 'copy') +
-        arch +
-        iconBtn('data-cact="del" data-id="' + esc(c.id) + '"', '删除', 'Delete', 'del', true) +
-      '</div></article>';
-  }
-
-  // Manual compilation editing: title / summary / each section's heading and body
-  function compEditHtml(c){
-    var secs = (c.sections || []).map(function (s, i) {
-      return '<div class="comp__sec">' +
-        '<input class="comp__ed-h" data-i="' + i + '" value="' + esc(s.heading || '') + '" placeholder="' + T('板块标题','Section heading') + '">' +
-        '<textarea class="comp__ed-c" data-i="' + i + '" rows="8">' + esc(s.content || '') + '</textarea></div>';
-    }).join('');
-    return '<article class="card comp is-editing">' +
-      '<div class="comp__meta"><span class="badge">' + T('编辑中','Editing') + '</span></div>' +
-      '<input class="comp__ed-title" value="' + esc(c.title || '') + '" placeholder="' + T('合集标题','Compilation title') + '">' +
-      '<textarea class="comp__ed-sum" rows="2" placeholder="' + T('一句话概括','One-line summary') + '">' + esc(c.summary || '') + '</textarea>' +
-      secs +
-      '<div class="note__actions">' +
-        '<button class="btn btn--primary" data-cact="save-edit" data-id="' + esc(c.id) + '">' + T('保存','Save') + '</button>' +
-        '<button class="btn btn--ghost" data-cact="cancel-edit" data-id="' + esc(c.id) + '">' + T('取消','Cancel') + '</button>' +
-      '</div></article>';
-  }
-  /* ---------- Reading view ----------
-     A compilation is a piece of writing, and the card grid is a filing cabinet: four folded cards to a row, actions
-     under each. So reading happens in its own surface — a modal dialog over the library, with the sections in reading
-     order down the middle, a table of contents beside them, and one numbered list of everything the piece was made
-     from. js/refs.js builds that list: the numbers under each section point into it. */
-  function compById(id){
-    return X.store.getComps().find(function (c) { return c.id === id; }) || null;
-  }
-  function reduceMotion(){
-    return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  }
-
-  function readCitesHtml(refs){
-    if (!refs.length) return '';
-    return '<p class="read__cites">' + T('来源','From') + ' ' + refs.map(function (n) {
-      return '<a href="#read-src-' + n + '" data-read="src" data-n="' + n + '">[' + n + ']</a>';
-    }).join(' ') + '</p>';
-  }
-
-  function compReadHtml(c){
-    var b = X.refs.bind(c);
-    var secs = b.sections.map(function (s, i) {
-      return '<section class="read__sec" id="read-sec-' + (i + 1) + '">' +
-        '<h2 tabindex="-1">' + esc(s.heading || T('无标题板块','Untitled section')) + '</h2>' +
-        '<div class="read__text">' + esc(s.content) + '</div>' +
-        readCitesHtml(s.refs) + '</section>';
-    }).join('');
-    var toc = b.sections.map(function (s, i) {
-      return '<li><span class="read__n">' + (i + 1) + '</span>' +
-        '<a href="#read-sec-' + (i + 1) + '" data-read="jump" data-i="' + (i + 1) + '">' +
-        esc(s.heading || T('无标题板块','Untitled section')) + '</a></li>';
-    }).join('');
-    var sources = b.sources.map(function (x) {
-      var text = esc(X.refs.label(x));
-      return '<li id="read-src-' + x.n + '"' + (x.cited ? '' : ' class="is-uncited"') + '>' +
-        '<span class="read__n">' + x.n + '</span>' +
-        (X.refs.isWebUrl(x.url) ? '<a href="' + esc(x.url) + '" target="_blank" rel="noreferrer">' + text + ' ↗</a>' : '<span>' + text + '</span>') +
-        (x.cited ? '' : '<span class="read__tag" title="' +
-          T('这篇被并进了正文，但没有哪一节单独标注它。','Folded into the piece, but no section cites it on its own.') + '">' +
-          T('未单独引用','uncited') + '</span>') + '</li>';
-    }).join('');
-    var model = c.model ? '<span class="read__badge">' + esc(String(c.model).replace('claude-', '')) + '</span>' : '';
-    /* runAt is when the model wrote this, which is the date worth showing; savedAt is when this browser stored it
-       and js/store.js sets it on every save, because the merge rule between two devices is latest-savedAt-wins.
-       Showing savedAt made a cached compilation look as though it had been made today, every day — the opposite of
-       what the cache was supposed to make visible (found 2026-09-22). */
-    var when = (c.runAt || c.savedAt) ? '<span>' + esc(localDay(c.runAt || c.savedAt)) + '</span>' : '';
-    /* the language it was written in, when the file says: a compilation can be read in the other language */
-    var inLang = c.lang ? '<span class="read__badge">' + esc(c.lang) + '</span>' : '';
-    return '<div class="read__bar">' +
-        '<button class="btn btn--ghost" data-read="close">' + T('← 回收藏库','← Back to the library') + '</button>' +
-        '<span class="read__meta">' + model + inLang + when +
-          '<span>' + b.sources.length + T(' 篇来源', b.sources.length === 1 ? ' source' : ' sources') + '</span></span>' +
-        '<button class="btn btn--ghost" data-read="copy">' + T('复制 MD','Copy MD') + '</button>' +
-        '<button class="btn btn--ghost" data-read="export">' + T('导出 MD','Export MD') + '</button>' +
-      '</div>' +
-      '<div class="read__grid">' +
-        (toc ? '<nav class="read__toc" aria-label="' + T('板块','Sections') + '">' +
-          '<p class="read__aside-h">' + T('板块','Sections') + '</p><ol>' + toc + '</ol></nav>' : '') +
-        '<article class="read__body">' +
-          '<h1 id="read-title">' + esc(c.title || T('未命名合集','Untitled compilation')) + '</h1>' +
-          (c.summary ? '<p class="read__lede">' + esc(c.summary) + '</p>' : '') +
-          (secs || '<p class="empty">' + T('这篇合集还没有板块。','This compilation has no sections yet.') + '</p>') +
-          renderImages(c) +
-        '</article>' +
-        (sources ? '<aside class="read__sources" aria-label="' + T('来源','Sources') + '">' +
-          '<p class="read__aside-h">' + T('来源','Sources') + '</p><ol>' + sources + '</ol></aside>' : '') +
-      '</div>';
-  }
-
-  /* Built once, when it opens: while a modal dialog is up the rest of the page is inert, so neither the language
-     button nor anything else can change what is under it. `opener` is the button that opened it — a dialog returns
-     focus to whatever had it, and a compilation can also be opened from code, where that is the document body. */
-  function openRead(id, opener){
-    var c = compById(id); if (!c || !els.readDlg) return;
-    readingCompId = id;
-    readOpener = opener || null;
-    els.readDlg.innerHTML = compReadHtml(c);
-    if (!els.readDlg.open) els.readDlg.showModal();
-    els.readDlg.scrollTop = 0;
-    /* The bar is sticky and everything below it is scrolled to a position that has to clear it, so its height is
-       measured here rather than written in the stylesheet: it wraps to two rows on a phone and to three when the
-       model's name is long, and a number typed into CSS is right only for the case someone happened to look at.
-       The stylesheet keeps a value for the frame before this runs. */
-    var bar = els.readDlg.querySelector('.read__bar');
-    if (bar) els.readDlg.style.setProperty('--read-bar-h', bar.getBoundingClientRect().height + 'px');
-    X.images.hydrate(els.readDlg);   // images kept in the compilation are archived in the repo and load asynchronously
-  }
-  function closeRead(){
-    var opener = readOpener;
-    readingCompId = null; readOpener = null;
-    if (els.readDlg && els.readDlg.open) els.readDlg.close();
-    /* Closing puts the keyboard back on the button that opened the view. The browser does this by itself when the
-       reader clicked or tabbed to that button; it does not when the view was opened from code, and then focus is
-       left inside a dialog that is no longer displayed. */
-    if (opener && opener.isConnected) opener.focus();
-  }
-
-  /* An in-page link has to take the keyboard with it, or the next Tab carries on from wherever the reader was. */
-  function readJump(link, id){
-    var target = els.readDlg.querySelector('#' + id);
-    if (!target) return;
-    /* the heading of a section, the link of a source entry, and the entry itself when it has no link to offer */
-    var land = target.querySelector('h2, a') || target;
-    if (land.tagName !== 'A' && !land.hasAttribute('tabindex')) land.setAttribute('tabindex', '-1');
-    target.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
-    land.focus({ preventScroll: true });
-    if (link.getAttribute('data-read') === 'jump') {
-      els.readDlg.querySelectorAll('.read__toc a[aria-current]').forEach(function (a) { a.removeAttribute('aria-current'); });
-      link.setAttribute('aria-current', 'true');
-    }
-  }
-
-  function renderComps(){
-    if(editingCompId!==null&&document.querySelector('.comp.is-editing'))return;
-    var all = X.store.getComps();
-    var archN = all.filter(function (c) { return c.archived; }).length;
-    if (els.compArchCount) els.compArchCount.textContent = archN;
-    if (els.compArchToggle) els.compArchToggle.classList.toggle('chip--on', viewCompArchived);
-    var comps = all.filter(function (c) { return viewCompArchived ? c.archived : !c.archived; });
-    els.compCount.textContent = comps.length
-      ? '· ' + comps.length + T(' 篇', comps.length === 1 ? ' item' : ' items') + (viewCompArchived ? T('（已归档）',' (archived)') : '') : '';
-    els.compList.innerHTML = comps.length
-      ? comps.map(function (c) { return c.id === editingCompId ? compEditHtml(c) : compCardHtml(c); }).join('')
-      : '<p class="empty">' + (viewCompArchived
-          ? T('没有已归档的合集。','No archived compilations.')
-          : T('还没有合集。在收藏库勾选几篇同主题的笔记，点「AI 整理成合集」。','No compilations yet. Tick a few same-topic notes in the library, then click "AI consolidate".')) + '</p>';
-    X.images.hydrate(els.compList);   // images kept in compilations (archived in the repo) get blob URLs asynchronously
-  }
-
-  // ---------- Events ----------
-  async function onFetch(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
-    var v = els.urlInput.value.trim();
-    if (!v) { setStatus(T('请输入小红书链接','Enter an XHS link'), 'err'); return; }
-    els.fetchBtn.disabled = true;
-    setStatus(T('正在抓取并整理…（首次较慢，约 5–15 秒）','Fetching & organizing… (first run is slower, ~5–15s)'), 'loading');
-    try {
-      var note = await X.fetchNote(v);
-      setStatus(T('整理完成 ✓ 已自动分类','Done ✓ Auto-classified'), 'ok');
-      showResult(note);
-    } catch (e) {
-      setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');
-    } finally {
-      els.fetchBtn.disabled = false;
-    }
-  });}
-
-  function onParseManual(){
-    var t = els.manualText.value.trim();
-    if (!t) { setStatus(T('请粘贴笔记文案','Paste the note text first'), 'err'); return; }
-    setStatus(T('整理完成 ✓ 已自动分类','Done ✓ Auto-classified'), 'ok');
-    showResult(X.buildManual(t, els.manualImages.value));
-  }
-
-  function saveCurrent(){
-    if (!currentNote) { setStatus(T('没有待收藏的内容，先抓取或手动录入一条','Nothing to save — fetch or add a note first'), 'err'); return; }
-    var cls = X.classify(currentNote);
-    var rec;
-    /* ⚠️ A failed save must be visible. There was no try here before: once local storage was full
-       it threw, the function died before showing "Saved ★", and the user saw a button that did nothing. */
-    try {
-      rec = X.store.save(Object.assign({}, currentNote, {
-        category: cls.primary.name, categoryEmoji: cls.primary.emoji
-      }));
-    } catch (e) {
-      // A video fetch takes minutes and the content is still in the result box above — don't let it look lost
-      setStatus(T('收藏失败：','Save failed: ') + (e && e.message ? e.message : e) +
-                T('｜这条还在上面，腾出空间后再点一次就能存。','｜The note is still shown above — free some space and click again.'), 'err');
-      return;
-    }
-    currentNoteSaved=true;
-    setStatus(T('已收藏 ★','Saved ★'), 'ok');
-    renderLibrary();
-    scheduleSync();
-    // Archive images in the background right after saving (links are signed and expire; the sooner they're in your repo, the safer)
-    if ((rec.images || []).length && X.images.ready()) {
-      X.images.archiveNote(rec).then(function (res) {
-        if (!res.ok && !res.fail) return;
-        X.store.update(rec.id, { imagesRepo: res.repo });
-        renderLibrary();
-        scheduleSync();
-        if (res.ok) setStatus(T('已收藏 ★ 图片已永久归档（','Saved ★ Images archived permanently (') + res.ok + '/' + (rec.images || []).length + T('）',')'), 'ok');
-      }).catch(function () { /* not connected or failed: "Fix images" can archive any time before the links expire */ });
-    }
-  }
-
-  // ---------- Cloud sync (silently skipped without a token; works purely locally) ----------
   var syncTimer = null;
   var syncing = false;
 
@@ -756,243 +847,15 @@ window.XHS = window.XHS || {};
 
   function scheduleSync(){
     X.sync.queueSave();
-    X.store.flush().then(()=>SaveStatus.store.retained(SaveStatus.key("content.json"),true),()=>SaveStatus.store.retained(SaveStatus.key("content.json"),false));
+    var flush = X.store.flush();
+    SaveStatus.localSave(flush, function () { SaveStatus.localSave(X.store.retryPersistence(), scheduleSync); });
+    flush.then(()=>SaveStatus.store.retained(SaveStatus.key("content.json"),true),()=>SaveStatus.store.retained(SaveStatus.key("content.json"),false));
     if (!X.sync || !X.sync.isConfigured()) return;
     clearTimeout(syncTimer);
     syncTimer = setTimeout(()=>{syncTimer=null;doSync();}, 800);   // debounce: a burst of edits triggers one sync
   }
 
 
-  function bind(){
-    $$('.tab').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        $$('.tab').forEach(function (t) { t.classList.remove('tab--on'); });
-        tab.classList.add('tab--on');
-        var mode = tab.getAttribute('data-mode');
-        document.getElementById('mode-link').style.display = mode === 'link' ? 'block' : 'none';
-        document.getElementById('mode-manual').style.display = mode === 'manual' ? 'block' : 'none';
-        document.getElementById('mode-video').style.display = mode === 'video' ? 'block' : 'none';
-        if (mode === 'video') refreshFetchStatus();
-      });
-    });
-
-    els.fetchBtn.addEventListener('click', onFetch);
-    els.urlInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') onFetch(); });
-    els.parseManualBtn.addEventListener('click', onParseManual);
-
-    // The local service keeps its existing frontend transport; only its credential form moves.
-    els.fetchVideoBtn.addEventListener('click',onFetchVideo);
-    els.videoInput.addEventListener('keydown',function(e){if(e.key==='Enter')onFetchVideo();});
-
-    els.result.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-act]'); if (!b) return;
-      var act = b.getAttribute('data-act');
-      if (act === 'save') saveCurrent();
-      else if (act === 'copy') copyText(noteToMarkdown(currentNote));
-    });
-
-    els.catFilter.addEventListener('click', function (e) {
-      var c = e.target.closest('[data-cat]'); if (!c) return;
-      activeFilter = c.getAttribute('data-cat'); renderLibrary();
-    });
-    els.platFilter.addEventListener('click', function (e) {
-      var c = e.target.closest('[data-dim]'); if (!c) return;
-      var dim = c.getAttribute('data-dim'), val = c.getAttribute('data-val');
-      if (dim === 'plat') activePlatform = val; else if (dim === 'type') activeType = val;
-      activeFilter = 'all'; renderLibrary();
-    });
-    els.search.addEventListener('input', renderLibrary);
-
-    els.libList.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-act]'); if (!b) return;
-      var id = b.getAttribute('data-id');
-      var note = X.store.getAll().find(function (n) { return n.id === id; });
-      var act = b.getAttribute('data-act');
-      if (act === 'demo') { seedSamples(); scheduleSync(); }
-      else if (act === 'del') { if (confirm(T('删除这篇收藏？','Delete this saved note?'))) { X.store.remove(id); renderLibrary(); scheduleSync(); } }
-      else if (act === 'copy-lib') { copyText(noteToMarkdown(note)); }
-      else if (act === 'open') { if (note && X.refs.isWebUrl(note.url)) window.open(note.url, '_blank', 'noreferrer'); }
-      else if (act === 'arch') { X.store.archive([id]); selectedIds.delete(id); renderLibrary(); updateSelBar(); scheduleSync(); }
-      else if (act === 'unarch') { X.store.unarchive([id]); renderLibrary(); scheduleSync(); }
-      else if (act === 'fiximg') {
-        b.disabled = true;
-        fixNoteImages(id).then(function (r) {
-          renderLibrary(); scheduleSync();
-          setStatus(r.ok ? T('已归档 ','Archived ') + r.ok + T(' 张图片 ✓',' images ✓') + (r.fail ? T('，','; ') + r.fail + T(' 张失败',' failed') : '')
-                         : T('没有归档成功的图片（原帖可能已删除或需登录）','No images archived (post deleted or login required)'), r.ok ? 'ok' : 'err');
-        }).catch(function (e) { if (e.message !== 'no token') setStatus(T('修复失败：','Fix failed: ') + e.message, 'err'); })
-          .finally(function () { b.disabled = false; });
-      }
-    });
-    els.fixAllBtn.addEventListener('click', fixAllImages);
-
-    els.exportJson.addEventListener('click', function () {
-      download('xhs-notes.json', JSON.stringify(X.store.getAll(), null, 2), 'application/json');
-    });
-    els.exportMd.addEventListener('click', function () {
-      download('xhs-notes.md', X.store.getAll().map(noteToMarkdown).join('\n\n---\n\n'), 'text/markdown');
-    });
-    els.archToggle.addEventListener('click', function () { viewArchived = !viewArchived; activeFilter = 'all'; selectedIds.clear(); renderLibrary(); updateSelBar(); });
-
-    els.syncBtn.addEventListener('click', doSync);
-
-
-
-    els.libList.addEventListener('change', function (e) {
-      var cb = e.target.closest('input.selbox'); if (!cb) return;
-      var id = cb.getAttribute('data-id');
-      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-      var art = cb.closest('.note'); if (art) art.classList.toggle('is-sel', cb.checked);
-      updateSelBar();
-    });
-    els.consolidateBtn.addEventListener('click', function () { runConsolidate(null); });
-    els.addToComp.addEventListener('change', function () {
-      var id = els.addToComp.value; els.addToComp.value = '';
-      if (!id) return;
-      var comp = X.store.getComps().find(function (c) { return c.id === id; });
-      if (comp) runConsolidate(comp);
-    });
-    els.clearSel.addEventListener('click', function () { selectedIds.clear(); renderLibrary(); updateSelBar(); });
-    els.compList.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-cact]'); if (!b) return;
-      var id = b.getAttribute('data-id');
-      var act = b.getAttribute('data-cact');
-      var comp = X.store.getComps().find(function (c) { return c.id === id; });
-      if (act === 'read') { openRead(id, b); }
-      else if (act === 'copy') { if (comp) copyText(compToMarkdown(comp)); }
-      else if (act === 'reorg') { if (comp && confirm(T('对这篇合集再整理一次？会去重合并、剔除无效信息、精炼重排。','Re-organize this compilation? It will dedupe, clean and tighten.'))) runConsolidate(comp, true); }
-      else if (act === 'edit') { editingCompId = id; renderComps(); }
-      else if (act === 'cancel-edit') { editingCompId = null; renderComps(); }
-      else if (act === 'save-edit') {
-        var card = b.closest('.comp.is-editing');
-        if (card && comp) {
-          var val = function (sel) { var el = card.querySelector(sel); return el ? el.value : null; };
-          X.store.saveComp(Object.assign({}, comp, {
-            title: String(val('.comp__ed-title') != null ? val('.comp__ed-title') : (comp.title || '')).trim(),
-            summary: String(val('.comp__ed-sum') || '').trim(),
-            sections: (comp.sections || []).map(function (s, i) {
-              var h = card.querySelector('.comp__ed-h[data-i="' + i + '"]');
-              var cc = card.querySelector('.comp__ed-c[data-i="' + i + '"]');
-              return Object.assign({}, s, { heading: h ? h.value.trim() : s.heading, content: cc ? cc.value : s.content });
-            })
-          }));
-          editingCompId = null; renderComps(); scheduleSync();
-          setStatus(T('合集已保存 ✓','Compilation saved ✓'), 'ok');
-        }
-      }
-      else if (act === 'arch' || act === 'unarch') {
-        if (comp) { X.store.saveComp(Object.assign({}, comp, { archived: act === 'arch' })); renderComps(); scheduleSync(); }
-      }
-      else if (act === 'del') { if (confirm(T('删除这篇合集？','Delete this compilation?'))) { X.store.removeComp(id); renderComps(); updateSelBar(); scheduleSync(); } }
-    });
-    /* Esc closes the dialog without going through closeRead(), so the two variables it would have cleared are
-       cleared here instead. Best effort on purpose: whether a dialog fires `close` after Esc has turned out to vary
-       between browser versions, so nothing depends on this — everything that matters reads dialog.open, and the
-       opener is only focused if it is still connected. */
-    if (els.readDlg) els.readDlg.addEventListener('close', function () { readingCompId = null; readOpener = null; });
-
-    /* The reading view: close, copy, and the two kinds of in-page link (a section from the contents, a source from a
-       section). */
-    if (els.readDlg) els.readDlg.addEventListener('click', function (e) {
-      var el = e.target.closest('[data-read]'); if (!el) return;
-      var act = el.getAttribute('data-read');
-      if (act === 'close') { closeRead(); return; }
-      if (act === 'copy') { var c = compById(readingCompId); if (c) copyText(compToMarkdown(c)); return; }
-      if (act === 'export') { var exported = compById(readingCompId); if (exported) download(X.export.filename(exported), compToMarkdown(exported), 'text/markdown;charset=utf-8'); return; }
-      e.preventDefault();
-      readJump(el, act === 'jump' ? 'read-sec-' + el.getAttribute('data-i') : 'read-src-' + el.getAttribute('data-n'));
-    });
-
-    // Card folding: click the title / arrow to expand or collapse (shared by note and compilation cards)
-    document.addEventListener('click', function (e) {
-      var f = e.target.closest('[data-fold]'); if (!f) return;
-      var card = f.closest('.note, .comp'); if (card) card.classList.toggle('is-fold');
-    });
-    if (els.jumpComps) els.jumpComps.addEventListener('click', function () { els.compsCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-    if (els.jumpLib) els.jumpLib.addEventListener('click', function () {
-      var c = els.libList.closest('.card') || els.libList; c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    if (els.compArchToggle) els.compArchToggle.addEventListener('click', function () {
-      viewCompArchived = !viewCompArchived; editingCompId = null; renderComps();
-    });
-    // AI credentials and model defaults are owned by canonical Settings.
-  }
-
-  // ---------- 🎬 Fetch video (local service + AI frame judging) ----------
-  async function refreshFetchStatus(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
-    if (!els.fetchStatus) return;
-    var ok = await X.fetchsvc.health();
-    els.fetchStatus.className = ok ? DOT_CLASS.on : DOT_CLASS.off;
-    /* Offline should not read as "a dependency is missing". Running this step locally is a
-       design decision: yt-dlp needs the browser's logged-in session, and transcription and
-       frame extraction happen on the same machine, so neither the session nor the media
-       ever leaves it. Saying so is the difference between "by design" and "unfinished". */
-    els.fetchStatus.title = ok
-      ? T('本地服务在线','Local service online')
-      : T('本地服务未启动。转写和抽帧刻意放在你自己的电脑上跑——登录态和媒体文件都不出本机。启动方法见仓库 local/README.md',
-          'Local service not running. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it. See local/README.md to start it.');
-  });}
-  async function onFetchVideo(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
-    var url = (els.videoInput.value || '').trim();
-    if (!url) { setStatus(T('粘一条视频链接','Paste a video link'), 'err'); return; }
-    if (!(await X.fetchsvc.health())) {
-      refreshFetchStatus();
-      /* The line a first-time visitor is most likely to hit. Phrased as "go install something"
-         it reads as unfinished; it should say why this step is local at all, and offer a way
-         to see the output without installing anything. */
-      setStatus(T('连不上本地抓取服务。转写和抽帧是在你自己的电脑上跑的（登录态和媒体文件不出本机），所以要先起这个服务：见仓库 local/README.md，起好后在设置的连接部分里填口令。想先看它产出什么样：清空库后点「载入示例笔记」，里面有一条带完整转写的视频。',
-                 'Cannot reach the local fetch service. Transcription and frame extraction run on your own machine by design — your login session and the media never leave it — so this step needs that service: see local/README.md, then paste its token in Settings → Connection. Want to see what it produces first? Load the sample notes (empty library) — one of them is a video with a full transcript.'), 'err');
-      return;
-    }
-    els.fetchVideoBtn.disabled = true;
-    try {
-      var res = await X.fetchsvc.fetchVideo(url, function (line) { setStatus(line, 'loading'); });
-      var note = res.note || {}, frames = res.frames || [];
-      var kept = [];
-      if (frames.length) {
-        setStatus(T('AI 判断截图有没有用…','AI judging which screenshots are useful…'), 'loading');
-        var idx = await X.ai.judgeFrames(frames);
-        kept = idx.map(function (i) { return frames[i]; });
-      }
-      // Save screenshots: don't swallow errors — failures must be visible, and the status reports the number
-      // actually saved, not the number the AI picked
-      var imagesRepo = [], imgErr = '';
-      if (kept.length) {
-        if (!X.images.ready()) {
-          imgErr = T('未连接 GitHub（在设置的连接部分里填令牌）→ 截图没法归档，本次未保存图片',
-                     'GitHub not connected (set the token in Settings → Connection) → screenshots were not archived');
-        } else {
-          setStatus(T('存截图 0/' + kept.length + '…','Saving screenshots 0/' + kept.length + '…'), 'loading');
-          try {
-            imagesRepo = await X.images.saveFrames(note.key || ('v' + Date.now()), kept, function (i, n) {
-              setStatus(T('存截图 ' + i + '/' + n + '…','Saving screenshots ' + i + '/' + n + '…'), 'loading');
-            });
-          } catch (e) {
-            imgErr = T('截图归档失败：','Saving screenshots failed: ') + (e && e.message ? e.message : e);
-          }
-        }
-      }
-      note.platform = note.platform || (/bilibili\.com|\/video\/BV/i.test(note.url || '') ? 'bili' : 'xhs');
-      note.isVideo = true;
-      note.imagesRepo = imagesRepo;
-      note.images = imagesRepo.map(function () { return note.cover || ''; });
-      delete note.key;
-      showResult(note);
-      var doneMsg = T('抓取完成 — 转写 ' + ((note.transcript || '').length) + ' 字，截图 ' + imagesRepo.length + '/' + kept.length + ' 张已存。点「★ 收藏」入库。',
-        'Done — ' + ((note.transcript || '').length) + ' transcript chars, ' + imagesRepo.length + '/' + kept.length + ' screenshots saved. Click Save.');
-      setStatus(imgErr ? (doneMsg + ' — ' + imgErr) : doneMsg, imgErr ? 'err' : 'ok');
-      els.videoInput.value = '';
-    } catch (e) {
-      setStatus(T('抓取失败：','Fetch failed: ') + e.message, 'err');
-    } finally { els.fetchVideoBtn.disabled = false; }
-  });}
-
-  /* One tooltip for every [data-tip] control (the icon-only card actions). It is a single fixed layer placed by
-     script, so it never pushes the page sideways at 375 and never sits on another button: above the control if there
-     is room and nothing is there, otherwise below. It shows on hover after a short delay (so sweeping across a row does
-     not flash every name), at once on keyboard focus, and on a long press on touch screens — where a long press shows
-     the name instead of running the action; an ordinary tap still runs it. The text is the button's own aria-label,
-     so it follows the interface language. */
   function initTips(){
     var tip = document.createElement('div');
     tip.className = 'tip'; tip.setAttribute('aria-hidden', 'true');
@@ -1073,57 +936,5 @@ window.XHS = window.XHS || {};
     X.tips = { show: show, hide: hide, el: tip };   // exposed for UI checks
   }
 
-  function init(){
-    initTips();
-    ['status','result','urlInput','fetchBtn','manualText','manualImages','parseManualBtn',
-     'catFilter','platFilter','search','libList','libCount','exportJson','exportMd','clearAll',
-     'syncStatus','syncBtn',
-     'selBar','selCount','consolidateBtn','addToComp','clearSel','compsCard','compCount','compList',
-     'archToggle','archCount','fixAllBtn','includeImgs',
-     'videoInput','fetchVideoBtn','fetchStatus',
-     'jumpComps','jumpLib','compArchToggle','compArchCount','readDlg'
-    ].forEach(function (id) { els[id] = document.getElementById(id); });
-    X.i18n.applyStatic();
-    bind();X.app.ready=true;
-    renderLibrary();
-    renderComps();
-    setStatus('');
-    updateSyncUI();
-    if (X.sync && X.sync.isConfigured()) doSync();   // pull from the cloud on load: multi-device sync
-    if (/[?&]demo=1\b/.test(location.search)) seedDemo();
-  }
 
-  // Lets i18n.toggleLang re-render everything dynamic after a language switch
-  function hasEditingDrafts(){return editingCompId!==null||selectedIds.size>0||Boolean(els.readDlg?.open)||(!currentNoteSaved&&(Boolean(currentNote)||['urlInput','manualText','manualImages','videoInput'].some(k=>Boolean(els[k]?.value.trim()))));}
-  X.app={
-    ready:false,
-    hasEditingDrafts,
-    unsaved:()=>hasEditingDrafts()||syncing||Boolean(syncTimer)||X.sync.hasUnsynced()||X.store.error(),
-    cancelSync(){clearTimeout(syncTimer);syncTimer=null;},
-    scheduleSync,
-    resetDrafts(){currentNote=null;currentNoteSaved=false;editingCompId=null;readingCompId=null;selectedIds.clear();if(els.readDlg?.open)els.readDlg.close();for(const k of ['urlInput','manualText','manualImages','videoInput'])if(els[k])els[k].value='';if(els.result){els.result.innerHTML='';els.result.style.display='none';}},
-    rerender(){if(!els.libList)return;renderLibrary();renderComps();updateSelBar();updateSyncUI();if(currentNote)showResult(currentNote);},
-  };
-  document.addEventListener('input',e=>{if(['urlInput','manualText','manualImages','videoInput'].includes(e.target.id))currentNoteSaved=false;});
-  window.addEventListener('clipbind-storage-error',()=>{if(els.status)setStatus(T('本机副本未能保存。请先导出完整私有备份，再关闭或重试。','This browser copy could not be saved. Export the full private backup before closing, then retry.'),'err');});
-
-
-  /* Load the local library into memory first (the first run migrates it from localStorage to IndexedDB), then render.
-     If the migration fails the app still starts — the store falls back to reading localStorage rather than going blank. */
-  document.addEventListener('DOMContentLoaded', function () {
-    var before = 0;
-    try { for (var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i);
-      if (/^xhs_/.test(k)) before += (localStorage.getItem(k) || '').length; } } catch (e) {}
-    X.store.init().then(async function (r) {return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
-      await X.settings.initializeSource();
-      init();
-      if (r && r.migrated) setStatus(T(
-        '已把本地收藏库搬到浏览器数据库（腾出约 ' + Math.round(before / 1024) + ' KB）',
-        'Moved the local library into IndexedDB (freed ~' + Math.round(before / 1024) + ' KB of localStorage)'), 'ok');
-    });}).catch(function (e) {
-      init();
-      X.settings.pause(true);
-      setStatus(T('本地库载入异常：','Local library failed to load: ') + (e && e.message ? e.message : e), 'err');
-    });
-  });
 })(window.XHS);

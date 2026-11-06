@@ -55,7 +55,8 @@ async function openWith(url) {
   // the page's global object is the window, as in a browser
   const ctx = Object.assign(window, { document, localStorage: { length: 0, key: () => null, getItem: () => null, setItem() {} },
     location: { search: '', hostname: 'localhost' }, navigator: {}, console, setTimeout, clearTimeout, URL, Promise,
-    addEventListener() {}, removeEventListener() {}, matchMedia: () => stand(), confirm: () => false });
+    addEventListener() {}, removeEventListener() {}, matchMedia: () => stand(), confirm: () => false,
+    URLSearchParams, MutationObserver: class { observe() {} } });
   ctx.window = ctx.self = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(HERE, 'js', 'refs.js'), 'utf8'), ctx);
@@ -63,10 +64,10 @@ async function openWith(url) {
   for (const fn of docListeners.DOMContentLoaded || []) fn();
   await new Promise((r) => setTimeout(r, 0));             // store.init() resolves, then init() binds the handlers
 
-  const clicks = byId.libList && byId.libList.__listeners.click;
-  if (!clicks || !clicks.length) throw new Error('the app never bound a click handler on the library list');
-  const button = { getAttribute: (a) => ({ 'data-id': 'n1', 'data-act': 'open' })[a] ?? null };
-  for (const fn of clicks) fn({ target: { closest: (s) => (s === '[data-act]' ? button : null) } });
+  const clicks = docListeners.click;
+  if (!clicks || !clicks.length) throw new Error('the app never bound its delegated action handler');
+  const button = { dataset: { id: 'n1', act: 'open' }, hasAttribute: () => false };
+  for (const fn of clicks) fn({ target: { closest: (s) => (s === 'button, a[data-read]' ? button : null) } });
   return opened;
 }
 

@@ -2,9 +2,9 @@
 
 **Read saved Xiaohongshu and Bilibili notes as one piece, with links back to its sources.**
 
-For people whose useful saved posts are scattered across two platforms: keep a library, organise it, and read a sectioned compilation with numbered source references.
+For people whose useful saved posts are scattered across two platforms. Save immediately, find a topic pile, then bind its notes into a guide with numbered sources.
 
-**[Try the live demo](https://nickkklian.github.io/content-organizer/?demo=1)** — three sample notes and a saved compilation. Open **Compilations**, then press **Read**. Viewing the saved result needs no key or sign-in; it does not run a new AI request.
+**[Try the live demo](https://nickkklian.github.io/content-organizer/?demo=1)**. It has 36 fictional notes and finished Kyoto and food guides in English and Chinese. Open the Kyoto guide and follow source **[4]** to a video transcript. Selecting either prepared topic set replays its saved result. The demo labels the replay and makes no live AI request.
 
 ![Clipbind: the saved compilation in reading view, with sections and numbered source references](docs/launch-reading.png)
 
@@ -22,28 +22,18 @@ Open **http://localhost:8000/?demo=1**. The app is static, with no build step. N
 
 ## What it does
 
-- **Capture** — paste a Xiaohongshu link (fetched through public reader proxies and parsed from the
-  page's embedded state), or paste the share text by hand, or hand a video link to a small local
-  service that transcribes it on your own Mac.
+- **Capture** — paste a link, share text or a video ID into one field and choose **Save**. The capture is kept before fetching starts. Failed reads retain the text and link, with a place to paste the body and retry. Video transcription uses the optional local service.
 - **Organise** — automatic categorisation by keyword scoring (tags weigh more than titles, titles
   more than body), platform / type / category filters, search, archive, Markdown and JSON export.
 - **Consolidate** — tick several notes and let Claude merge them into one piece: de-duplicated,
   grouped into sections, with every section pointing back at its sources. Images can be sent along
   so text inside menus, slides and price lists ends up in the write-up; the model also decides which
   images are worth keeping because text can't replace them.
-- **Read it** — a compilation opens in its own view: the sections in reading order down a measured
-  column, a table of contents beside them, and one numbered list of everything the piece was made
-  from. Each section carries the numbers it drew on, and each number is a link into that list. The
-  keyboard goes with the reader — a link to a section lands on its heading, a reference lands on the
-  entry in the source list — and none of it touches the URL.
+- **Read it** — a guide opens in a full-screen reader with a contents list, measured text column and sources beside each section. A citation opens the saved note with its body, transcript, images and original link. **How it was made** shows which notes fed each section. Edit the guide where you read it.
 - **Keep it** — images on Xiaohongshu's CDN carry a signed expiry; the app archives them into your
   private repo so saved notes don't rot, and offers a one-click repair for notes whose links already
   died.
-- **Take it with you** — open a saved compilation with **Read**, then **Export MD** to download its
-  title, summary, sections, generation metadata and complete numbered source list. **Copy MD** uses the
-  same output. Repeated sources keep one number; included sources with no section citation are marked
-  **uncited**. Export uses the saved document, needs no key and makes no AI or sync request. The document's
-  language is preserved. Existing library JSON/Markdown downloads still export notes.
+- **Take it with you** — **Copy as text** puts the full Markdown text on the clipboard. **Download Markdown** saves that same text as a file. Both use the existing exporter and keep shared source numbering. Notes-only downloads and image repair are in the library tools menu. Binding moves source notes to **Archive**, with **Restore them** available afterwards.
 
 The compilation export is a text artifact: images are not embedded. Markdown and HTML in the saved text
 stay literal, as in the reading view. Only HTTP(S) sources become links; other source addresses remain
@@ -68,9 +58,10 @@ URLs before sharing it.
 
 ```
 index.html            shell; static strings carry data-i18n keys
-styles.css            layout, card folding, 4 → 2 → 1 column grid, phone rules
+styles.css            topic rail, cover rows, preview and bind tray, source-linked reader, phone sheets
 js/i18n.js            dictionary + T(zh, en) helper
-js/samples.js         the three sample notes ?demo=1 loads, and what the cached demo compilation was made from
+js/samples.js         36 fictional notes in each language, including two long video transcripts
+js/library.js         search snippets, topic-tag counts and exact demo replay sets
 js/classify.js        keyword categoriser (Chinese keywords — the content is Chinese)
 js/parse.js           Xiaohongshu fetch chain: Jina HTML → Jina markdown → AllOrigins → manual
 js/merge.js           the merge rules: union by id, tombstones win, latest savedAt wins (DOM-free, tested)
@@ -82,6 +73,8 @@ js/images.js          archiving, expiry detection, proxy fallbacks, vision sizin
 js/fetch.js           client for the local video service (EventSource)
 js/ai.js              consolidation + frame judging (structured outputs)
 js/app.js             UI, sample data, event wiring
+demo/                 two guides per language, exact prompt records and replay data
+assets/fonts/         self-hosted Figtree, Source Serif 4 and sliced Noto Serif SC, with OFL licences
 local/                the optional video service and its double-click toggle app (see local/README.md)
 check.mjs             40 cases over js/merge.js and js/refs.js; --break has to make the right one fail
 check-export.mjs      order, numbering, complete sources, language, escaping, settings exclusion, empty and large exports
@@ -149,23 +142,18 @@ node tools/check-css.mjs --break   # deletes rules to show the check can go red
 node check-csp.mjs                 # the Content-Security-Policy is script-src 'self' + the inline scripts' hashes
 node check-csp.mjs --write         # after editing an inline script in index.html: update the hashes
 node check-models.mjs              # every AI request names Claude Opus 5.5, Sonnet 5.5 or Haiku 5.5 (fetch replaced by a recorder)
+node check-redesign.mjs            # classification, search, tag counts and bilingual replay data
+node check-capture.mjs             # normal Save form, concurrent captures, offline video and failed writes
+node --test test/*.test.mjs        # Settings contracts and migration
 ```
 
 Cloud sync and image archiving need a fine-grained GitHub token with Contents read/write on a private
 repo of yours; AI features need an Anthropic API key. Both are entered under **Connections** and stored
 only in the browser. The video service is optional — see [`local/README.md`](local/README.md).
 
-`demo/compilation.json` is the sample notes put through the AI step once and kept; where it is present,
-`?demo=1` lists it under the sample notes and **Read** opens the reading view, with no key of your own. The model answers in the language the interface was in, so
-there is one file per language and the page loads yours first. To make them (one API call each, a few cents):
+The current replay data is generated by `node tools/build-demo.mjs`. The coding agent authored the four guides using the exact prompt and structured-output schema in `js/ai.js`. Each `demo/*.prompt-run.json` keeps the inputs, prompt, schema, result and hash. No live model API was used for this build. The SVG covers are original drawings under MIT, with their generator beside the data. All venues, prices and source URLs are fictional.
 
-```bash
-ANTHROPIC_API_KEY=sk-ant-… node make-demo-compilation.mjs            # demo/compilation.json
-ANTHROPIC_API_KEY=sk-ant-… node make-demo-compilation.mjs --lang zh  # demo/compilation.zh.json
-```
-
-It loads `js/ai.js` — the same file the browser runs, not a copy of the prompt — so what the demo shows
-is what the app does. Each file records the model, the language and the date, and the reading view shows them.
+The older `make-demo-compilation.mjs` remains a standalone live-generation helper. Its output files are separate from the current replay bundle. Running that helper uses the caller's Anthropic key.
 
 ## Limitations
 
@@ -176,9 +164,7 @@ is what the app does. Each file records the model, the language and the date, an
 - Calling the Anthropic API from a browser requires the `anthropic-dangerous-direct-browser-access`
   header; the key never leaves your machine, but this is a personal-tool trade-off, not a pattern for
   multi-user products.
-- The merge rules are tested; the interface around them is not. `check.mjs` covers what happens when two
-  devices have both written and what the reading view's source list should say — not the rendering, the
-  fetching or the sync's HTTP handling, which are exercised by using the app.
+- `check.mjs` covers merge and source identity. `check-redesign.mjs` covers the library view rules and demo sets. Live proxy availability, local transcription and model output still depend on their external services.
 - A compilation is what one model run produced. Re-running **Re-organize** tightens it, and editing it by
   hand is the other half of that — neither is a claim that the result is right.
 

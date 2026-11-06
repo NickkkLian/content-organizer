@@ -1,0 +1,129 @@
+{
+  "title": "温哥华周末早午餐",
+  "topic": "温哥华美食",
+  "summary": "八篇笔记整理成一个不用赶路的周末。先选能坐下的时间，再看菜单、两人预算与饭后步道。店铺均为虚构。",
+  "sections": [
+    {
+      "heading": "先选时间，再选店",
+      "content": "周六早一点去燕麦窗，灯塔街 18 号，8:00–15:00，9:30 前较好入座，10:30 后约等 25 分钟。窗边两人桌，四人先约。周日燕麦窗不开，8:00 可以去桦木煎饼屋，海风路 9 号，14:00 收，10:00 前到，只收借记卡。想晚一点，苔色餐桌在杉木街 42 号，周末 9:00–16:00。雨天订红砖早餐房，枫巷 31 号，周末 8:30–14:30，前一天可订 9:00 或 13:00，迟到保留十分钟，室外等位处没有顶棚。",
+      "sources": [
+        {
+          "title": "周六早午餐，先从灯塔街开始",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "店铺时间放一起，不用挨个翻",
+          "url": "https://example.com/clipbind/food-8"
+        },
+        {
+          "title": "两家薄饼店，价差值不值",
+          "url": "https://example.com/clipbind/food-5"
+        },
+        {
+          "title": "带朋友吃素，别只看菜单图标",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "雨天排队？这家能预约",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "菜单与饮食限制",
+      "content": "燕麦窗两张荞麦薄饼 C$18，水果加 C$4，咖啡 C$5；想咸味选这里。无麸质面糊共用烤盘，过敏先问。桦木三张厚薄饼 C$22，含苹果酱，咖啡 C$5，两人分食需各点饮料。苔色豆腐炒蛋 C$19、番茄 C$6、燕麦拿铁 C$6，可点单时把黄油换橄榄油；蘑菇汤含鸡汤，不能只看叶子图标。轮椅走苔色侧门，正门有一级台阶。红砖蛋盘 C$21，茶 C$4，伞放门口桶里。",
+      "sources": [
+        {
+          "title": "周六早午餐，先从灯塔街开始",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "两家薄饼店，价差值不值",
+          "url": "https://example.com/clipbind/food-5"
+        },
+        {
+          "title": "带朋友吃素，别只看菜单图标",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "雨天排队？这家能预约",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "两个人的预算",
+      "content": "燕麦窗两份薄饼两杯咖啡小计 C$46，预留税和小费 C$12，总计约 C$58。苔色两份炒蛋两杯燕麦拿铁小计 C$50，预留 C$12，总计 C$62。红砖两份蛋盘两杯茶 C$50，预留 C$13，总计 C$63。这些只是演示预算，不能当税率，停车另算，付款前可问清账单。",
+      "sources": [
+        {
+          "title": "周末预算，菜单价以外还要留多少",
+          "url": "https://example.com/clipbind/food-7"
+        },
+        {
+          "title": "周六早午餐，先从灯塔街开始",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "带朋友吃素，别只看菜单图标",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "雨天排队？这家能预约",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "吃完走走，再喝一杯",
+      "content": "从燕麦窗向南走六分钟到灯塔河道，沿水 1.6 公里到白石小桥，约半小时，终点有洗手间。雨天改走平行铺装路，多 200 米，避开湿木板。回程公交在杉木街路口。终点再走七分钟到回声咖啡，港湾小径 7 号，8:00–17:00、周二休息。手冲 C$6，鸡蛋吐司 C$14，续滤泡 C$3。周末 11:00–14:00 不接笔记本，其他时段可用长桌，仅两处插座；窗边桌限两人，电话到外面打。店铺、地址、时间与价格均为虚构，真实出门前查当天营业。",
+      "sources": [
+        {
+          "title": "早午餐后，沿河走到哪儿",
+          "url": "https://example.com/clipbind/food-6"
+        },
+        {
+          "title": "咖啡馆能不能坐久一点",
+          "url": "https://example.com/clipbind/food-3"
+        },
+        {
+          "title": "店铺时间放一起，不用挨个翻",
+          "url": "https://example.com/clipbind/food-8"
+        }
+      ]
+    }
+  ],
+  "keep_images": [],
+  "id": "demo-guide-food",
+  "demoKey": "food",
+  "sourceNoteIds": [
+    "demo-food-1",
+    "demo-food-2",
+    "demo-food-3",
+    "demo-food-4",
+    "demo-food-5",
+    "demo-food-6",
+    "demo-food-7",
+    "demo-food-8"
+  ],
+  "sourceUrls": [
+    "https://example.com/clipbind/food-1",
+    "https://example.com/clipbind/food-2",
+    "https://example.com/clipbind/food-3",
+    "https://example.com/clipbind/food-4",
+    "https://example.com/clipbind/food-5",
+    "https://example.com/clipbind/food-6",
+    "https://example.com/clipbind/food-7",
+    "https://example.com/clipbind/food-8"
+  ],
+  "images": [],
+  "imagesRepo": [],
+  "lang": "zh",
+  "runAt": "2026-11-06T03:21:22.917Z",
+  "savedAt": "2026-11-06T03:21:22.917Z",
+  "model": "AI-authored demo",
+  "trace": {
+    "imagesRead": 8,
+    "transcriptCharsUsed": 0,
+    "inputNotes": 8
+  }
+}

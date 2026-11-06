@@ -1,0 +1,1313 @@
+[
+  {
+    "family": "Noto Serif SC",
+    "license": "OFL-1.1",
+    "version": "5.3.1",
+    "files": [
+      {
+        "file": "noto-serif-sc-4-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/4-400-normal.woff2",
+        "bytes": 2760,
+        "sha256": "70b69aa90209f7390276e8dfdf3a8ef8ba20a7845be107ebf0aa988a13e1c6ca"
+      },
+      {
+        "file": "noto-serif-sc-5-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/5-400-normal.woff2",
+        "bytes": 15264,
+        "sha256": "f78717bd58e04beb1a467cb2457ea8da14912e75608559e0f106f02db965ffcd"
+      },
+      {
+        "file": "noto-serif-sc-6-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/6-400-normal.woff2",
+        "bytes": 8900,
+        "sha256": "7fab1516bb96d2bfd65f2d67eadb3ba14fe745232f613ea7e7afe7d713556dbf"
+      },
+      {
+        "file": "noto-serif-sc-21-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/21-400-normal.woff2",
+        "bytes": 13968,
+        "sha256": "198318a26fef917346dd6ed4c78da03f1c5760a04ca865b70f414183890ebba0"
+      },
+      {
+        "file": "noto-serif-sc-22-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/22-400-normal.woff2",
+        "bytes": 44632,
+        "sha256": "68cf19eb70c5a1cad04ba1eb7b89231843e12aab918963c898b7e744e87e726f"
+      },
+      {
+        "file": "noto-serif-sc-23-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/23-400-normal.woff2",
+        "bytes": 39092,
+        "sha256": "31deec0c69ec5cb783a3a7746bc03e4cb9fec134303cb5a02170ad1eb65cbd4c"
+      },
+      {
+        "file": "noto-serif-sc-24-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/24-400-normal.woff2",
+        "bytes": 43748,
+        "sha256": "74edac9ceae09ba64ec6c5029a45a768dcfa40a4b6cce51c8b0418150b18c384"
+      },
+      {
+        "file": "noto-serif-sc-25-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/25-400-normal.woff2",
+        "bytes": 41088,
+        "sha256": "20b2e93a5303c61e6b0e44dfa042f994d82c3ad07f516cf597ed9dcd7beec66e"
+      },
+      {
+        "file": "noto-serif-sc-26-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/26-400-normal.woff2",
+        "bytes": 37516,
+        "sha256": "ee1c7471882eaf5709ad479d849bcc70eef214803732bdfb8dd56fd502e132dd"
+      },
+      {
+        "file": "noto-serif-sc-27-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/27-400-normal.woff2",
+        "bytes": 34048,
+        "sha256": "04a269894c40bda831579d523c916d592937a71c81be01cc5334368c7b5d5bca"
+      },
+      {
+        "file": "noto-serif-sc-28-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/28-400-normal.woff2",
+        "bytes": 35520,
+        "sha256": "6d6246c6fd7a03e5eee9ccbbae5a0bf67ff9624535575e2a34a7bb1d10b3d862"
+      },
+      {
+        "file": "noto-serif-sc-29-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/29-400-normal.woff2",
+        "bytes": 38108,
+        "sha256": "2b99bfe3ebbbee489e29e6e7261bd43911b4fef73f567c40fb046726d6e1fba5"
+      },
+      {
+        "file": "noto-serif-sc-30-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/30-400-normal.woff2",
+        "bytes": 40412,
+        "sha256": "d64a121cdd32be0a6e82bec5a9c918893ea9537f07a8bb2f10e6a6654bb2f598"
+      },
+      {
+        "file": "noto-serif-sc-31-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/31-400-normal.woff2",
+        "bytes": 33856,
+        "sha256": "a888b15fb48d49247cfbaee526993f75b6c118573b4a1664560f34998940274c"
+      },
+      {
+        "file": "noto-serif-sc-32-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/32-400-normal.woff2",
+        "bytes": 35632,
+        "sha256": "286168fa3f8c3ff0393f7be781beedb78d319703458e84233d490b91427cb064"
+      },
+      {
+        "file": "noto-serif-sc-33-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/33-400-normal.woff2",
+        "bytes": 34764,
+        "sha256": "668cb1a991576f49da8bb311efb227e888752b05d4a5983d39fab70b5e056d6f"
+      },
+      {
+        "file": "noto-serif-sc-34-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/34-400-normal.woff2",
+        "bytes": 33960,
+        "sha256": "66c35dc76153487b017608264634ea093981271548c59aaa394772ed08c81e73"
+      },
+      {
+        "file": "noto-serif-sc-35-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/35-400-normal.woff2",
+        "bytes": 33388,
+        "sha256": "550c508b2da2f686ad407094fc61abb8ca4955579a2a651296e4687df991eebd"
+      },
+      {
+        "file": "noto-serif-sc-36-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/36-400-normal.woff2",
+        "bytes": 30716,
+        "sha256": "e3e327821de43568afbf311b9a52234c28e34a5eac2969d7bde522704dd11ce7"
+      },
+      {
+        "file": "noto-serif-sc-37-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/37-400-normal.woff2",
+        "bytes": 35708,
+        "sha256": "53b49f61dc76d9ec3e302fc4d2e64f1cdf81ec61902f7216e58d68f348972973"
+      },
+      {
+        "file": "noto-serif-sc-38-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/38-400-normal.woff2",
+        "bytes": 39684,
+        "sha256": "0ed19348b9acc0d78251a9358dfcd406f1e68d86ed3d3080dcf2352042e37131"
+      },
+      {
+        "file": "noto-serif-sc-39-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/39-400-normal.woff2",
+        "bytes": 37824,
+        "sha256": "27e6d1a3e8135ddcd1bcac7dd2de96fb40a43efc38d84e414b802e2bafcb66a2"
+      },
+      {
+        "file": "noto-serif-sc-40-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/40-400-normal.woff2",
+        "bytes": 34364,
+        "sha256": "1b5b7e6eba0a7a95f142349a9a214f55c30b025183a5ddc64e364ac6e5472b1e"
+      },
+      {
+        "file": "noto-serif-sc-41-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/41-400-normal.woff2",
+        "bytes": 26576,
+        "sha256": "f97119290ab53f15ddcf931c20f89ac822787b59fcbde8439bca09ff9ba77405"
+      },
+      {
+        "file": "noto-serif-sc-42-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/42-400-normal.woff2",
+        "bytes": 33116,
+        "sha256": "cb42250607c16ac6644ad2bfcb783c3355ede2fd3834cc2d5cd9c2e343d2ce6d"
+      },
+      {
+        "file": "noto-serif-sc-43-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/43-400-normal.woff2",
+        "bytes": 30832,
+        "sha256": "b5b61d6a1157229150ff66d1d2997ff72d0e6722e92e05ba7b3ebe716b36a2da"
+      },
+      {
+        "file": "noto-serif-sc-44-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/44-400-normal.woff2",
+        "bytes": 37972,
+        "sha256": "c79ebadffcbc63731481f32fb59c3690e776cd0dea07bc3bc920c9f58573f6ea"
+      },
+      {
+        "file": "noto-serif-sc-45-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/45-400-normal.woff2",
+        "bytes": 47976,
+        "sha256": "674be02327f6b5489cbe5d5cc9c8fddba0604b359523d25d3cc6c98d11742a28"
+      },
+      {
+        "file": "noto-serif-sc-46-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/46-400-normal.woff2",
+        "bytes": 40772,
+        "sha256": "0931bf8ea722d78f80595729507547f67e4b45344ef8b21381c20cdcd32be2bf"
+      },
+      {
+        "file": "noto-serif-sc-47-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/47-400-normal.woff2",
+        "bytes": 38900,
+        "sha256": "32e1b98d5994e97170930a6f8b833715ea3965dd2a1415fcd6046e96c7055433"
+      },
+      {
+        "file": "noto-serif-sc-48-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/48-400-normal.woff2",
+        "bytes": 33700,
+        "sha256": "087d91daec02168b3fbfc2d4cbd9dcf9e7b6edf262c2e58abc12ceee4da9253a"
+      },
+      {
+        "file": "noto-serif-sc-49-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/49-400-normal.woff2",
+        "bytes": 37080,
+        "sha256": "85ac5231f9a586452eeb6b5b23198e547dcc18fc6903755d7ff87a2af5bdc7ef"
+      },
+      {
+        "file": "noto-serif-sc-50-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/50-400-normal.woff2",
+        "bytes": 33908,
+        "sha256": "a914664a32e633cb38770d83feb472e90e4ace016ccafb0634f3e4f9ded0d6ec"
+      },
+      {
+        "file": "noto-serif-sc-51-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/51-400-normal.woff2",
+        "bytes": 30040,
+        "sha256": "dadb6d424a9bd9264082a0fcb522cd1b92b74126f6508d125a549c6a52a2f306"
+      },
+      {
+        "file": "noto-serif-sc-52-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/52-400-normal.woff2",
+        "bytes": 35772,
+        "sha256": "8fbd3b1114a2d94c6166d85dc093f43487def661be2fdc369c4207d1ad681344"
+      },
+      {
+        "file": "noto-serif-sc-53-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/53-400-normal.woff2",
+        "bytes": 28512,
+        "sha256": "d02835c0c38db449e5bdc5d02e3cdee9a98c5a83668db45ea4c3ceedeb26ad98"
+      },
+      {
+        "file": "noto-serif-sc-54-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/54-400-normal.woff2",
+        "bytes": 36656,
+        "sha256": "60e16a0fc5c4b5b056334b1217802a9e06d2a56cd37a1b75ac9ed72c63246e8f"
+      },
+      {
+        "file": "noto-serif-sc-55-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/55-400-normal.woff2",
+        "bytes": 32452,
+        "sha256": "9335e5aa92ad3ef8b200e7816cc4a09848be9ead6178319db16c22cd3d63da02"
+      },
+      {
+        "file": "noto-serif-sc-56-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/56-400-normal.woff2",
+        "bytes": 37056,
+        "sha256": "32064b13723da0ce323148eabc3aead3cd3123d41cb6f020f08c0d818a0d6a5c"
+      },
+      {
+        "file": "noto-serif-sc-57-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/57-400-normal.woff2",
+        "bytes": 39076,
+        "sha256": "c719a170320a936006435ef3b866396ccb3240f095e6192cd1a9676a45364913"
+      },
+      {
+        "file": "noto-serif-sc-58-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/58-400-normal.woff2",
+        "bytes": 43316,
+        "sha256": "7db027f41d886ba883186df4149118bf2bd67d209fa20e6b35cead28ec00b2ef"
+      },
+      {
+        "file": "noto-serif-sc-59-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/59-400-normal.woff2",
+        "bytes": 36416,
+        "sha256": "0a274c73d62090bcd19ce602b70333b65a2949ffff0fb58a9c0764c28b14eea6"
+      },
+      {
+        "file": "noto-serif-sc-60-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/60-400-normal.woff2",
+        "bytes": 31860,
+        "sha256": "c4d16a9a50ff199e3fb1f724e4de1554d988125d5b9f82e2141cd96d8a099009"
+      },
+      {
+        "file": "noto-serif-sc-61-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/61-400-normal.woff2",
+        "bytes": 32148,
+        "sha256": "bc969adb767ff5c0da99b82efc653ea11200cfec96a7acd21202ad780c24ffdb"
+      },
+      {
+        "file": "noto-serif-sc-62-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/62-400-normal.woff2",
+        "bytes": 41948,
+        "sha256": "1d36caa852ee220398f9a65ad101a67b24fcc7a113146a0d1db6aa0b1d5d7313"
+      },
+      {
+        "file": "noto-serif-sc-63-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/63-400-normal.woff2",
+        "bytes": 33804,
+        "sha256": "7dbf09a682a4e05cc0de4c5fe93a79d3bdc6053147f29a21f295da532e5e26e5"
+      },
+      {
+        "file": "noto-serif-sc-64-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/64-400-normal.woff2",
+        "bytes": 27052,
+        "sha256": "1bd4082ecf77eca7a90b0d8f2bed3757ea13268fb0fc693d6b46653aec202e72"
+      },
+      {
+        "file": "noto-serif-sc-65-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/65-400-normal.woff2",
+        "bytes": 30352,
+        "sha256": "8c63cc77c1d220108f47708b6806eddb56da5fddc877d2e8f8bed9f592e82719"
+      },
+      {
+        "file": "noto-serif-sc-66-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/66-400-normal.woff2",
+        "bytes": 36504,
+        "sha256": "c4afcce8095fbb98cdfee097ffaeacd4f5bf6692d4b655ff3fc82651a8199937"
+      },
+      {
+        "file": "noto-serif-sc-67-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/67-400-normal.woff2",
+        "bytes": 37656,
+        "sha256": "4984939cfbdf151cde1a5108c294d310e749def5d91af0f3b1b3495eb963a5fa"
+      },
+      {
+        "file": "noto-serif-sc-68-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/68-400-normal.woff2",
+        "bytes": 28556,
+        "sha256": "28302b1b4d060e430cf017b32df943740cdfb5a9bc34e4e7f9998db0f5aeb051"
+      },
+      {
+        "file": "noto-serif-sc-69-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/69-400-normal.woff2",
+        "bytes": 38460,
+        "sha256": "d4be17011f92b819855d0fc092230c0eb13baad1be4bd17d9b6bd9b0ee8ebd6b"
+      },
+      {
+        "file": "noto-serif-sc-70-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/70-400-normal.woff2",
+        "bytes": 27820,
+        "sha256": "c257f9abfc8b90cae12396c85fdb0bd69f3feb09ab1935faab7bbc67e4b89512"
+      },
+      {
+        "file": "noto-serif-sc-71-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/71-400-normal.woff2",
+        "bytes": 33128,
+        "sha256": "99b09b56badaabbd842d58a0b48905b2b62eb8dc91514081264247c1eebaf102"
+      },
+      {
+        "file": "noto-serif-sc-72-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/72-400-normal.woff2",
+        "bytes": 34460,
+        "sha256": "ce64b49d6f171ff84ab32e47a8846dd08c2492fd51ee1f4a010f86e5cd07ef2e"
+      },
+      {
+        "file": "noto-serif-sc-73-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/73-400-normal.woff2",
+        "bytes": 29204,
+        "sha256": "4f7bc6b6b51b96c5d7107a4b1476e4d6136ff0b019a0adf5c028eec37d3175b7"
+      },
+      {
+        "file": "noto-serif-sc-74-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/74-400-normal.woff2",
+        "bytes": 39460,
+        "sha256": "7b8dd20a7927cc71bee8cfea0555909a93172423e62b18c84b3dcf9dd173d34b"
+      },
+      {
+        "file": "noto-serif-sc-75-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/75-400-normal.woff2",
+        "bytes": 30712,
+        "sha256": "cd9fa7f2609359dd37475cf265ea8d0e2faa146aff777d0068290e9747ef3017"
+      },
+      {
+        "file": "noto-serif-sc-76-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/76-400-normal.woff2",
+        "bytes": 34612,
+        "sha256": "9513ffe226cad7bee226ef503eeb32733443530882cd9dbd628fcc54ab066533"
+      },
+      {
+        "file": "noto-serif-sc-77-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/77-400-normal.woff2",
+        "bytes": 27224,
+        "sha256": "9d298d19de6fa484d53e9fc566a784320d3a34b9dac7f96e60a8e7afd97f28dc"
+      },
+      {
+        "file": "noto-serif-sc-78-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/78-400-normal.woff2",
+        "bytes": 37096,
+        "sha256": "f1b0994f0406bf6f01cd31ea312cbf2f7e114e224053f6040a57a3720066bbce"
+      },
+      {
+        "file": "noto-serif-sc-79-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/79-400-normal.woff2",
+        "bytes": 30736,
+        "sha256": "f08743b215770a2dc231e056d0128b8a5b607985e2aabbeb76a19a8d0df455ad"
+      },
+      {
+        "file": "noto-serif-sc-80-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/80-400-normal.woff2",
+        "bytes": 23408,
+        "sha256": "032133d339d581d98340adf3ee80873501ce838abfc0ad9b8d2e87d90cf2f273"
+      },
+      {
+        "file": "noto-serif-sc-81-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/81-400-normal.woff2",
+        "bytes": 31920,
+        "sha256": "72b8d3706a36345da7281d52b8e1402646541a2a873059443a825e6ac21fe0c9"
+      },
+      {
+        "file": "noto-serif-sc-82-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/82-400-normal.woff2",
+        "bytes": 32600,
+        "sha256": "f2fd134835797badf5edb26ff2513507cf67827b0503b53493c4a07a3543acb1"
+      },
+      {
+        "file": "noto-serif-sc-83-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/83-400-normal.woff2",
+        "bytes": 30896,
+        "sha256": "4e65935907a097807dcbc71ab80d0ac87ece0c60e09437c85e79546cc0e3c966"
+      },
+      {
+        "file": "noto-serif-sc-84-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/84-400-normal.woff2",
+        "bytes": 22548,
+        "sha256": "1402df11d4b72efc3d38950afb081a291f789972c6b50a61ac5e58f880b71a44"
+      },
+      {
+        "file": "noto-serif-sc-85-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/85-400-normal.woff2",
+        "bytes": 21816,
+        "sha256": "5f82871e558477f3b479dad534993f2bc5b41aa99cf8bb867a2bbe7ccc3b5569"
+      },
+      {
+        "file": "noto-serif-sc-86-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/86-400-normal.woff2",
+        "bytes": 25288,
+        "sha256": "6db58b686996d0b7294fdb6c0de070a5655e3c1a7ed95f58931e9a365092fa92"
+      },
+      {
+        "file": "noto-serif-sc-87-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/87-400-normal.woff2",
+        "bytes": 5460,
+        "sha256": "038988b9ce055fe20e1fb309fa28e21dd1667460940f492349f3aa3ff4ae37a0"
+      },
+      {
+        "file": "noto-serif-sc-88-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/88-400-normal.woff2",
+        "bytes": 6152,
+        "sha256": "2b9a72a0157f70b1e4b257d0aa13d701597c6ea375063fd3d07f24e4c37673b8"
+      },
+      {
+        "file": "noto-serif-sc-89-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/89-400-normal.woff2",
+        "bytes": 6992,
+        "sha256": "5bd78eaa1e1a17f42075daf692695bb13f9f246b56283ac1933d79d1f4a5b80f"
+      },
+      {
+        "file": "noto-serif-sc-90-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/90-400-normal.woff2",
+        "bytes": 5952,
+        "sha256": "092b908aedd7b6519bde9089c1ac420741875099f8289c0f82d546f8324592e9"
+      },
+      {
+        "file": "noto-serif-sc-91-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/91-400-normal.woff2",
+        "bytes": 5900,
+        "sha256": "dce4d29c20d5c9c4c4ad04045deac4eeea687eb12712bccc752793afe4b65c18"
+      },
+      {
+        "file": "noto-serif-sc-97-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/97-400-normal.woff2",
+        "bytes": 1528,
+        "sha256": "7dff162a55902117310b7b2938d2754df36a2b718499ce7e30bbd73448835680"
+      },
+      {
+        "file": "noto-serif-sc-98-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/98-400-normal.woff2",
+        "bytes": 2516,
+        "sha256": "7cee9b36e6eceafdf0ac327e8d6b2825b581033460a4c5bfa964f2a2ca23811b"
+      },
+      {
+        "file": "noto-serif-sc-99-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/99-400-normal.woff2",
+        "bytes": 6920,
+        "sha256": "648e7d3f5a03ba9f9b49804e474220dd155d31e1b2b5b3ee7bd4772717cf3bcf"
+      },
+      {
+        "file": "noto-serif-sc-100-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/100-400-normal.woff2",
+        "bytes": 44800,
+        "sha256": "d3c38854e9bbe14c9e9e7007d47fbecf9bd51e7a67585c96538f1e40a1f8def2"
+      },
+      {
+        "file": "noto-serif-sc-101-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/101-400-normal.woff2",
+        "bytes": 41212,
+        "sha256": "424c0e24e4d5ff3c27bc40b55a7826693259012525d82673eaae00e2def71aea"
+      },
+      {
+        "file": "noto-serif-sc-102-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/102-400-normal.woff2",
+        "bytes": 42172,
+        "sha256": "fbb76004518f2c84e088db7f422bbbb6b322fef39f636f89aa0463a114de5373"
+      },
+      {
+        "file": "noto-serif-sc-103-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/103-400-normal.woff2",
+        "bytes": 44476,
+        "sha256": "45fb7120ec9d94c70bd107bffadfc17176c0e81cc531b115324fc872a6948aba"
+      },
+      {
+        "file": "noto-serif-sc-104-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/104-400-normal.woff2",
+        "bytes": 42612,
+        "sha256": "02acf1996e65a18f1740e9d6bc22ab75b0095aeedb014d43fc8653154af09f17"
+      },
+      {
+        "file": "noto-serif-sc-105-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/105-400-normal.woff2",
+        "bytes": 42780,
+        "sha256": "b05da70aec9bf352fb77b3a07e5477c95587eb836a720943460a49d8fffc84d2"
+      },
+      {
+        "file": "noto-serif-sc-106-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/106-400-normal.woff2",
+        "bytes": 43148,
+        "sha256": "a69e4919aaf46031a1bfa206280a497669b2af64f0de0a973cfdb0601406a1cf"
+      },
+      {
+        "file": "noto-serif-sc-107-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/107-400-normal.woff2",
+        "bytes": 41844,
+        "sha256": "3c9fded1c99c9b9ff49a2946e3f9d1fdfffe7d99f5afb83ed36bcdfa4cb863db"
+      },
+      {
+        "file": "noto-serif-sc-108-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/108-400-normal.woff2",
+        "bytes": 43852,
+        "sha256": "a9d450627989c9e65347e9ea95146034f15d168b74285e84e8a23d256c3ef28c"
+      },
+      {
+        "file": "noto-serif-sc-109-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/109-400-normal.woff2",
+        "bytes": 41812,
+        "sha256": "f07bcd4a75335ccd17deaf012e51b732658b69d340363aec9ad8392b4ad1d7b8"
+      },
+      {
+        "file": "noto-serif-sc-110-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/110-400-normal.woff2",
+        "bytes": 41908,
+        "sha256": "5f828453da22a27898473a8a844d1d7d1a56cadaf76471a9c676ac9ff131e291"
+      },
+      {
+        "file": "noto-serif-sc-111-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/111-400-normal.woff2",
+        "bytes": 42724,
+        "sha256": "781006ca8d5463354fb6fde2b118875a6da699b1796ce22be3abc003777b6b71"
+      },
+      {
+        "file": "noto-serif-sc-112-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/112-400-normal.woff2",
+        "bytes": 39948,
+        "sha256": "8b2392a29608a069b9636467ec19a0aed362671d8a4f3dd403b5dd13926cbc2a"
+      },
+      {
+        "file": "noto-serif-sc-113-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/113-400-normal.woff2",
+        "bytes": 39828,
+        "sha256": "a39469f99e4d3b6e269ff700d8b2edc0bea839d0c46cf43d0c1a1c8a71ad8dc7"
+      },
+      {
+        "file": "noto-serif-sc-114-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/114-400-normal.woff2",
+        "bytes": 39360,
+        "sha256": "70c38bdf292733a2167b8091110fc650442b9888cece984552ec6c90775b0e22"
+      },
+      {
+        "file": "noto-serif-sc-115-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/115-400-normal.woff2",
+        "bytes": 38216,
+        "sha256": "e613ce4ca826a1e6a94565095e32385ae30644870f0e6e11465f1570a308fe9a"
+      },
+      {
+        "file": "noto-serif-sc-116-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/116-400-normal.woff2",
+        "bytes": 35464,
+        "sha256": "0e385bef95ce8fdfac8b3e1776f042b59e02c4d3160a967809fb6a8a22b0990e"
+      },
+      {
+        "file": "noto-serif-sc-117-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/117-400-normal.woff2",
+        "bytes": 35120,
+        "sha256": "85a1ff3520d799b288f00df8ba06a99e9bbd3565897ad72c5e6733ccd3926a0c"
+      },
+      {
+        "file": "noto-serif-sc-118-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/118-400-normal.woff2",
+        "bytes": 30804,
+        "sha256": "2d8ada37568200a83ad829b355c863a705e875cde00571c89a8f903b138b3907"
+      },
+      {
+        "file": "noto-serif-sc-119-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/119-400-normal.woff2",
+        "bytes": 54348,
+        "sha256": "6ac1bd4876fb82d1c4c97536319937f610648b79cd852c941f89cbfe00c8bdb8"
+      },
+      {
+        "file": "noto-serif-sc-cyrillic-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/cyrillic-400-normal.woff2",
+        "bytes": 8040,
+        "sha256": "22c78938835f757b4b1d2a99cde0fc731c206d5681eb98dd5199bfd600cd9fff"
+      },
+      {
+        "file": "noto-serif-sc-vietnamese-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/vietnamese-400-normal.woff2",
+        "bytes": 5956,
+        "sha256": "992ce1137e064f4ba4384533d84f0a07af2b7ed72e447f632be14cea07c63436"
+      },
+      {
+        "file": "noto-serif-sc-latinext-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/latin-ext-400-normal.woff2",
+        "bytes": 5724,
+        "sha256": "ff6d9a53e368c9cb7ef501c7c71bcbc00349c7eb0d7fad0d1ca806f8faa26c7e"
+      },
+      {
+        "file": "noto-serif-sc-latin-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/latin-400-normal.woff2",
+        "bytes": 18616,
+        "sha256": "bdcea43c45c24598e317c0ee5b003c95ab9047b0541efb5b803e3da7c27877a9"
+      },
+      {
+        "file": "noto-serif-sc-4-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/4-600-normal.woff2",
+        "bytes": 2788,
+        "sha256": "b739fe495b4eb47c735e6c663fa2a4c656a0026d3ae4097b2b023ee887aeb5b6"
+      },
+      {
+        "file": "noto-serif-sc-5-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/5-600-normal.woff2",
+        "bytes": 15384,
+        "sha256": "ad258273df972c232e7ef25cb047c71dde5fbd5cd201d0663fd4390f86a94ca2"
+      },
+      {
+        "file": "noto-serif-sc-6-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/6-600-normal.woff2",
+        "bytes": 8896,
+        "sha256": "1f67fc23825a0f0c669552db2a0dcb9c5e1893667ae2ed22cc472c633ca9975b"
+      },
+      {
+        "file": "noto-serif-sc-21-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/21-600-normal.woff2",
+        "bytes": 14112,
+        "sha256": "7be70c755719e2f212d223a884aa476a8f9e2cffae756e641afe673254e8db91"
+      },
+      {
+        "file": "noto-serif-sc-22-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/22-600-normal.woff2",
+        "bytes": 45156,
+        "sha256": "31afca110b27b8b40a8ff1d585bf7beeecdec94805f7588b5d086332d8e0b07f"
+      },
+      {
+        "file": "noto-serif-sc-23-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/23-600-normal.woff2",
+        "bytes": 39640,
+        "sha256": "8fa2b42b74158f6b1c0eed8d998552a38ace2b0f4200c0a539fbf2431ca41236"
+      },
+      {
+        "file": "noto-serif-sc-24-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/24-600-normal.woff2",
+        "bytes": 44256,
+        "sha256": "1fbe1b12d7763054e27fd016e74dbae44c13325cacdec70ad2799ab93468617b"
+      },
+      {
+        "file": "noto-serif-sc-25-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/25-600-normal.woff2",
+        "bytes": 41504,
+        "sha256": "a28bcad99cefaa966eb5a9a01bb70c8fc5e7b601179e233b37b5b11483a6e518"
+      },
+      {
+        "file": "noto-serif-sc-26-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/26-600-normal.woff2",
+        "bytes": 38140,
+        "sha256": "07253b10134948ec7860a49eb27898cd83bb62da9ea12622fb7a91adf67cabd5"
+      },
+      {
+        "file": "noto-serif-sc-27-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/27-600-normal.woff2",
+        "bytes": 34260,
+        "sha256": "71e92fb0b23f3fdcfb0d187e141afb63747f851a572ef90e707faa9395bf4541"
+      },
+      {
+        "file": "noto-serif-sc-28-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/28-600-normal.woff2",
+        "bytes": 35968,
+        "sha256": "95cc6941e481e6f755137c6a97b2b775a0aef8d15e3ecc882024d06efedaa261"
+      },
+      {
+        "file": "noto-serif-sc-29-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/29-600-normal.woff2",
+        "bytes": 38648,
+        "sha256": "36c08a8fb6b188b01c21667ade3f5714265ab4687e57f06429e21eca1290a7a0"
+      },
+      {
+        "file": "noto-serif-sc-30-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/30-600-normal.woff2",
+        "bytes": 40704,
+        "sha256": "1efcbb8be423a652aff8d6f5ee36c3f8c992daf0b2d18c9ccaeed9145eb361d2"
+      },
+      {
+        "file": "noto-serif-sc-31-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/31-600-normal.woff2",
+        "bytes": 34200,
+        "sha256": "0f51bf0a36b751b9dd8b54739807751b48c2eb27665243d63aeb01b51a68ca17"
+      },
+      {
+        "file": "noto-serif-sc-32-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/32-600-normal.woff2",
+        "bytes": 35932,
+        "sha256": "72f8148186e4e687aff4c92b8e262bcab2e04a3b4830f26721d81462f16bf6e4"
+      },
+      {
+        "file": "noto-serif-sc-33-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/33-600-normal.woff2",
+        "bytes": 35364,
+        "sha256": "2e8d21662c631e74f616ea829dd8ee1d64d21753a91f67194954e91dc16f54ad"
+      },
+      {
+        "file": "noto-serif-sc-34-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/34-600-normal.woff2",
+        "bytes": 34364,
+        "sha256": "1929961d6031fa1176a005cbc573ef16ce9855afd761126fe2404506143b520b"
+      },
+      {
+        "file": "noto-serif-sc-35-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/35-600-normal.woff2",
+        "bytes": 33688,
+        "sha256": "359cb28bbb1665d5c678d437625a029d66d239ef0123b57d1d93dcf57d0da2da"
+      },
+      {
+        "file": "noto-serif-sc-36-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/36-600-normal.woff2",
+        "bytes": 30844,
+        "sha256": "7c5180e852dc33dca4a90b556420dd0f4954688e82915058454b558b7d01d105"
+      },
+      {
+        "file": "noto-serif-sc-37-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/37-600-normal.woff2",
+        "bytes": 36208,
+        "sha256": "5edef44a71459a1f39fe0aaf5e66b6be428ca4ce941c3139f8a50c364903b0f6"
+      },
+      {
+        "file": "noto-serif-sc-38-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/38-600-normal.woff2",
+        "bytes": 39992,
+        "sha256": "13b1d45feb94c60beb0f3b7ebb2d4f4a89640e8d9b5260ed1953e7dada6f39a7"
+      },
+      {
+        "file": "noto-serif-sc-39-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/39-600-normal.woff2",
+        "bytes": 38124,
+        "sha256": "1c2d435458b8ea785358084d7acb75f0b0828a007d2d106d72ac091a0899321a"
+      },
+      {
+        "file": "noto-serif-sc-40-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/40-600-normal.woff2",
+        "bytes": 34588,
+        "sha256": "cc73d607db2d199244411952b78e8d5d05721aa41999dc3c26afc6790d3150e6"
+      },
+      {
+        "file": "noto-serif-sc-41-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/41-600-normal.woff2",
+        "bytes": 26888,
+        "sha256": "287033f108a23d6d5797f315e496bdf66d5479928f57428e0f6cc766e7eaa1e1"
+      },
+      {
+        "file": "noto-serif-sc-42-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/42-600-normal.woff2",
+        "bytes": 33432,
+        "sha256": "1da0b895ca1cf4120080691963bd6ba5c01ce55313f8ba54ca795620d86bbfa8"
+      },
+      {
+        "file": "noto-serif-sc-43-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/43-600-normal.woff2",
+        "bytes": 31244,
+        "sha256": "b19552cc2a7ad9d4c15c1c267c6eb21c535cb7a40f5a76aac52cf89e6eec6c1f"
+      },
+      {
+        "file": "noto-serif-sc-44-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/44-600-normal.woff2",
+        "bytes": 38492,
+        "sha256": "10c50b2f8bbe631896efbf3cc5c2262bb4f545c1797e8d2dca336acbec28bcf7"
+      },
+      {
+        "file": "noto-serif-sc-45-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/45-600-normal.woff2",
+        "bytes": 48420,
+        "sha256": "1b537b0c50413a12d9a5e61d7a37aab0933bd6ac1bf62075cc121eb08de24725"
+      },
+      {
+        "file": "noto-serif-sc-46-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/46-600-normal.woff2",
+        "bytes": 40764,
+        "sha256": "4cfd117c48adfcf6e831e7f0bcb6d984bc387eee13f842d80fee79fda33b3afd"
+      },
+      {
+        "file": "noto-serif-sc-47-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/47-600-normal.woff2",
+        "bytes": 39228,
+        "sha256": "1b1f7eab67cfd2a86c1e214ad43b4a2c2c641be9e93974687c52b694d8604aa3"
+      },
+      {
+        "file": "noto-serif-sc-48-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/48-600-normal.woff2",
+        "bytes": 34168,
+        "sha256": "c418d6728fccd0f89dd09df0bcb97e7510773e9a99a6f8eb8a76b3826bb1f402"
+      },
+      {
+        "file": "noto-serif-sc-49-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/49-600-normal.woff2",
+        "bytes": 37200,
+        "sha256": "febeebe4bb705714bb8c617a0bbd8328b001830044f923fdf3a70b5b8b9af3b9"
+      },
+      {
+        "file": "noto-serif-sc-50-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/50-600-normal.woff2",
+        "bytes": 34268,
+        "sha256": "44a0ff23a2fa16d43a508d972372ec03a118324d8017e1043cb8c632dc49ac56"
+      },
+      {
+        "file": "noto-serif-sc-51-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/51-600-normal.woff2",
+        "bytes": 30488,
+        "sha256": "7d30a7b6acd143a27efd4cfe1e2b3366d86bf23a46366045e97c0f39a089d307"
+      },
+      {
+        "file": "noto-serif-sc-52-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/52-600-normal.woff2",
+        "bytes": 36108,
+        "sha256": "3685a1cf8d586c1109cd8170e0a848392fa4f97195df0c90f9510366d3fddc59"
+      },
+      {
+        "file": "noto-serif-sc-53-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/53-600-normal.woff2",
+        "bytes": 28912,
+        "sha256": "00272115b8df7efe03640ce6b9595df8d8db85ec967fbf9d5d8499cef890869a"
+      },
+      {
+        "file": "noto-serif-sc-54-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/54-600-normal.woff2",
+        "bytes": 36972,
+        "sha256": "c53e975a40fcdccce199fd859379a9a458f3643187de0d2260162e7e300b0796"
+      },
+      {
+        "file": "noto-serif-sc-55-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/55-600-normal.woff2",
+        "bytes": 32852,
+        "sha256": "f3faa09cc15ce2d4f7b8ce453f8b5a7d418fae6dcc932d69308effba280d35be"
+      },
+      {
+        "file": "noto-serif-sc-56-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/56-600-normal.woff2",
+        "bytes": 37548,
+        "sha256": "f7f9c6f7ddea51d6d568ef9f2bd5ea12fc693bf1ad5252ebc4aa0d4c32783098"
+      },
+      {
+        "file": "noto-serif-sc-57-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/57-600-normal.woff2",
+        "bytes": 39556,
+        "sha256": "0fd342c682a2b3a7fdcad1c9b659ad693d5ee9694c8f3750e3f8960c18e269e9"
+      },
+      {
+        "file": "noto-serif-sc-58-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/58-600-normal.woff2",
+        "bytes": 43832,
+        "sha256": "873c7d18ffee45bea09660fb358fc6a2da115fc5cb55034dc4a3d15ce93d7562"
+      },
+      {
+        "file": "noto-serif-sc-59-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/59-600-normal.woff2",
+        "bytes": 36784,
+        "sha256": "0c5a20782e6c93a428f385bd328cb24c2e089c205ebc81a3a06844d26f8d7e4d"
+      },
+      {
+        "file": "noto-serif-sc-60-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/60-600-normal.woff2",
+        "bytes": 32288,
+        "sha256": "3a79efd176e36d51d0df9a11846a6ef433d76e9831cb7fe1ff1e7197fbda3ddd"
+      },
+      {
+        "file": "noto-serif-sc-61-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/61-600-normal.woff2",
+        "bytes": 32516,
+        "sha256": "67358a3a19e1aea34fdd1a51be01735e487ebcf2331c43a700a270d2ea096bf9"
+      },
+      {
+        "file": "noto-serif-sc-62-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/62-600-normal.woff2",
+        "bytes": 42260,
+        "sha256": "6d9b93962e7599488d1be7496b9c00913a6c0ce666030b3f9c35358f85aa460b"
+      },
+      {
+        "file": "noto-serif-sc-63-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/63-600-normal.woff2",
+        "bytes": 34052,
+        "sha256": "d3042790639f22bd9b17175dc8380b0c0f01150c69b6b56cc028debc5ab39af3"
+      },
+      {
+        "file": "noto-serif-sc-64-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/64-600-normal.woff2",
+        "bytes": 27280,
+        "sha256": "2e461a54e44cad2b4f02a22483abe1a768e34d5380cfc05e0cd78ad7690d3760"
+      },
+      {
+        "file": "noto-serif-sc-65-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/65-600-normal.woff2",
+        "bytes": 30940,
+        "sha256": "a712b3e342d121346960025927dc39243d9bcaca67f8b8cf6cc091cb546fff1d"
+      },
+      {
+        "file": "noto-serif-sc-66-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/66-600-normal.woff2",
+        "bytes": 36864,
+        "sha256": "a32149a455fc8661150219c4404093c134b256819fe9e6592867876428f42061"
+      },
+      {
+        "file": "noto-serif-sc-67-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/67-600-normal.woff2",
+        "bytes": 38396,
+        "sha256": "f01d4a26879645748f1bb2a5f1d6a9861ca0872b0df3a8098fc4d064c314f360"
+      },
+      {
+        "file": "noto-serif-sc-68-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/68-600-normal.woff2",
+        "bytes": 29152,
+        "sha256": "edec42ac94ed36fbd7d80e513ed07eb38bb65a97aa0401011586d967e6d5ae95"
+      },
+      {
+        "file": "noto-serif-sc-69-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/69-600-normal.woff2",
+        "bytes": 38808,
+        "sha256": "8f00466823d3f69eb5e853e81ac17ee0ea1ddbd2bf0212b6c73a06516e9400e9"
+      },
+      {
+        "file": "noto-serif-sc-70-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/70-600-normal.woff2",
+        "bytes": 28120,
+        "sha256": "d6f71efbeb94437c080d736e663cba8b4c07aae26ceb264e04e84cd26b550a6f"
+      },
+      {
+        "file": "noto-serif-sc-71-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/71-600-normal.woff2",
+        "bytes": 33548,
+        "sha256": "dfd000675bb0fc0c66cff51a2f0839c21b39c2de0158f43ab55fb91ee0fd90cf"
+      },
+      {
+        "file": "noto-serif-sc-72-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/72-600-normal.woff2",
+        "bytes": 35012,
+        "sha256": "d90b05d9aee110263de410ba4ce7a85ba93157142a8c9ad22ea6219ba76e8ef6"
+      },
+      {
+        "file": "noto-serif-sc-73-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/73-600-normal.woff2",
+        "bytes": 29652,
+        "sha256": "285ace59bd082f3cd840ed1e10a1f6dc7aeb239f1766d284dca5cb92a95882d1"
+      },
+      {
+        "file": "noto-serif-sc-74-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/74-600-normal.woff2",
+        "bytes": 39920,
+        "sha256": "cfcc7baaaf6feafbe50249c3c8f584ffefd234597fe8a4b8c9d3b70c416b3b31"
+      },
+      {
+        "file": "noto-serif-sc-75-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/75-600-normal.woff2",
+        "bytes": 31148,
+        "sha256": "75402d8015550aca7b4d9f0986841e4cf73f51961159fbfbd8f634339dd79e2f"
+      },
+      {
+        "file": "noto-serif-sc-76-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/76-600-normal.woff2",
+        "bytes": 34992,
+        "sha256": "940298ce0e8b1a8a6b352a866f5bab12ca13a528ba18189450c2ac71932a913e"
+      },
+      {
+        "file": "noto-serif-sc-77-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/77-600-normal.woff2",
+        "bytes": 27564,
+        "sha256": "8a8f0e6becae2e34c91a7d6ae1a5dc23ad1ace16badc0ed514f6b92d20f21b5e"
+      },
+      {
+        "file": "noto-serif-sc-78-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/78-600-normal.woff2",
+        "bytes": 37572,
+        "sha256": "5ef4ae3b3354e9907630a23c2c0cc5d837a03295c23720e1f1fb1fdd847e5410"
+      },
+      {
+        "file": "noto-serif-sc-79-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/79-600-normal.woff2",
+        "bytes": 31080,
+        "sha256": "ee7f8bd592fc0219fbd6da404d1ec80686092a66f314b46822a8df1a22f1ad5a"
+      },
+      {
+        "file": "noto-serif-sc-80-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/80-600-normal.woff2",
+        "bytes": 23864,
+        "sha256": "e96a0926949178e1b0b62f6ea3da2e33812044a96dc184bbbe58f3a954ecb0f8"
+      },
+      {
+        "file": "noto-serif-sc-81-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/81-600-normal.woff2",
+        "bytes": 32404,
+        "sha256": "e8aa0c142a6d6cf6076a1d7ea4270f1149e1a82d686d6a71a2106f8589505787"
+      },
+      {
+        "file": "noto-serif-sc-82-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/82-600-normal.woff2",
+        "bytes": 32988,
+        "sha256": "eefc15eee1dea3025be72e824722377a02bf2b65271bbea2914b2ebd3c24c06e"
+      },
+      {
+        "file": "noto-serif-sc-83-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/83-600-normal.woff2",
+        "bytes": 31272,
+        "sha256": "0d60f49b555a97180bceb542bc297d2e0b0c558b0e2378cc029ac0b147d809e6"
+      },
+      {
+        "file": "noto-serif-sc-84-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/84-600-normal.woff2",
+        "bytes": 22872,
+        "sha256": "cff80f1f9f6dea13662678a5edab0fbc497da624fe5823ac11f49c5fd17a3d16"
+      },
+      {
+        "file": "noto-serif-sc-85-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/85-600-normal.woff2",
+        "bytes": 21984,
+        "sha256": "3101728641955d8194336be836be4648ba0886a47e354b1a8093a52771b34bb9"
+      },
+      {
+        "file": "noto-serif-sc-86-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/86-600-normal.woff2",
+        "bytes": 25468,
+        "sha256": "802cee1c13c21973c53232d0239327fe96be4940b92dc5cf0d2f55cbd5c75cd0"
+      },
+      {
+        "file": "noto-serif-sc-87-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/87-600-normal.woff2",
+        "bytes": 5432,
+        "sha256": "f6f444f6e74c4147808f3e908f222cf7c2468549b2f793a8c1e2536009cdc6ae"
+      },
+      {
+        "file": "noto-serif-sc-88-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/88-600-normal.woff2",
+        "bytes": 6120,
+        "sha256": "5faa638a6735ac9a4ba8e21266227ffc4a120e0868b96eecd5fa3e376677c16a"
+      },
+      {
+        "file": "noto-serif-sc-89-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/89-600-normal.woff2",
+        "bytes": 6940,
+        "sha256": "d26ebdce63dd0a31cbde7c841351b5f3cdbb147985a45e57456ab442af3bbbf8"
+      },
+      {
+        "file": "noto-serif-sc-90-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/90-600-normal.woff2",
+        "bytes": 5928,
+        "sha256": "f56f3d2ae62a89b11c313029f264838aa3f26dce39aacf196af2d851c16adedf"
+      },
+      {
+        "file": "noto-serif-sc-91-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/91-600-normal.woff2",
+        "bytes": 5860,
+        "sha256": "dfd4ea318b55a4b188b1c7415c1a8e1f28613fd555394aa979e7f8319c556ade"
+      },
+      {
+        "file": "noto-serif-sc-97-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/97-600-normal.woff2",
+        "bytes": 1552,
+        "sha256": "de341889e8ddab28dbbdd77081d5ea22fa566f8cbf3eb05f61bb1b2b114c4bfe"
+      },
+      {
+        "file": "noto-serif-sc-98-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/98-600-normal.woff2",
+        "bytes": 2564,
+        "sha256": "5eee43e19a60612eec82c545d085e9164e5b6880badcf104ef81c6a416615676"
+      },
+      {
+        "file": "noto-serif-sc-99-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/99-600-normal.woff2",
+        "bytes": 6880,
+        "sha256": "cfe9db1a38b549a5d0aa8c4d12772456825cfd006b45fa73dfd6c517c0b9374f"
+      },
+      {
+        "file": "noto-serif-sc-100-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/100-600-normal.woff2",
+        "bytes": 45284,
+        "sha256": "e930c1b1c34b46cd0c09e35db00c59455576f3f0fb2ed3990637bab211fb6b23"
+      },
+      {
+        "file": "noto-serif-sc-101-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/101-600-normal.woff2",
+        "bytes": 41700,
+        "sha256": "dd6d4256cefd246dcb9c684a21b9aa309fb46b3b04f39cc19ae888389b7cf8c4"
+      },
+      {
+        "file": "noto-serif-sc-102-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/102-600-normal.woff2",
+        "bytes": 42676,
+        "sha256": "1c9a0bcfb6b818e7a633a73a8acb991f2e6c07036c75517472111eebb144a730"
+      },
+      {
+        "file": "noto-serif-sc-103-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/103-600-normal.woff2",
+        "bytes": 45100,
+        "sha256": "b9c4576ac9c32a8ef82ac52f47843c1db3691c5bc8935413bb351e14f8bda68a"
+      },
+      {
+        "file": "noto-serif-sc-104-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/104-600-normal.woff2",
+        "bytes": 43200,
+        "sha256": "f8abc959092a0a8dd9bcfc414f9060dd76d2583b6b3d279c97c02d02e112d1a2"
+      },
+      {
+        "file": "noto-serif-sc-105-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/105-600-normal.woff2",
+        "bytes": 43452,
+        "sha256": "312ee5b0ed4f818e10f3f1bc665dd677983f42474bff7fb915d9fd175907779d"
+      },
+      {
+        "file": "noto-serif-sc-106-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/106-600-normal.woff2",
+        "bytes": 43836,
+        "sha256": "b5b2f58e1ce983df551d39e4e001660122acec8a9ccb3710189feb1614487564"
+      },
+      {
+        "file": "noto-serif-sc-107-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/107-600-normal.woff2",
+        "bytes": 42408,
+        "sha256": "f3e272a75351a0207f9a99f79b03440c2df010f7ba375b8a998c17efd401d1d2"
+      },
+      {
+        "file": "noto-serif-sc-108-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/108-600-normal.woff2",
+        "bytes": 44404,
+        "sha256": "e4b905149dab510012571decdc222428a977a53db118da993dc9b0c93bd9fef9"
+      },
+      {
+        "file": "noto-serif-sc-109-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/109-600-normal.woff2",
+        "bytes": 42340,
+        "sha256": "87348dc769d4f4b6405490e9642fbe7bdc894d0c249d1ab779064523ed4a6dc3"
+      },
+      {
+        "file": "noto-serif-sc-110-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/110-600-normal.woff2",
+        "bytes": 42452,
+        "sha256": "d57a8e4f0f0562b9f66de844072f03132aa62812ed37ce3650c95010b9285938"
+      },
+      {
+        "file": "noto-serif-sc-111-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/111-600-normal.woff2",
+        "bytes": 43224,
+        "sha256": "1d21817a759b192a761be78e33782a81abc648f4e75d2222099520d9f0780a46"
+      },
+      {
+        "file": "noto-serif-sc-112-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/112-600-normal.woff2",
+        "bytes": 40452,
+        "sha256": "fc220e62b67c3b495ed0c89958001abfc1c3bd50a149a187a89dfc4bf3b62cfd"
+      },
+      {
+        "file": "noto-serif-sc-113-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/113-600-normal.woff2",
+        "bytes": 40464,
+        "sha256": "a940bc1424abfcc6079c512d1dc3065d0695e9bcee740385e505dc455f1bc1e2"
+      },
+      {
+        "file": "noto-serif-sc-114-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/114-600-normal.woff2",
+        "bytes": 39852,
+        "sha256": "48bb9e0f2872b868939f0dede6fa97ae154d7efc1abe2bb548dc2022ea9164dc"
+      },
+      {
+        "file": "noto-serif-sc-115-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/115-600-normal.woff2",
+        "bytes": 38596,
+        "sha256": "7293995d0e795e698514ec7fb79174fcf0a36ff1cab44e9080fce7f5b602a4fe"
+      },
+      {
+        "file": "noto-serif-sc-116-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/116-600-normal.woff2",
+        "bytes": 35972,
+        "sha256": "95478dc4eb542a80ec207fd7245fc673b533590702218bfea469508e3ac0f773"
+      },
+      {
+        "file": "noto-serif-sc-117-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/117-600-normal.woff2",
+        "bytes": 35576,
+        "sha256": "e884e66067e05a3f88eea194f77e08f96cc8d9c25f95d2ee667c91dd806448cc"
+      },
+      {
+        "file": "noto-serif-sc-118-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/118-600-normal.woff2",
+        "bytes": 31208,
+        "sha256": "de20b8b6896811aa1d8e2acf620bfe30cebf1258a2c3da391118f28a95ed23d6"
+      },
+      {
+        "file": "noto-serif-sc-119-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/119-600-normal.woff2",
+        "bytes": 55312,
+        "sha256": "e89eeec7924b224c4cc39f09d74f35cafbdf6b32c812a1b380ba8a8620565eca"
+      },
+      {
+        "file": "noto-serif-sc-cyrillic-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/cyrillic-600-normal.woff2",
+        "bytes": 8124,
+        "sha256": "42cc1b8b036b2d925152f5a4ef9657426616d6373b9bbf282e1de12f0f2c630b"
+      },
+      {
+        "file": "noto-serif-sc-vietnamese-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/vietnamese-600-normal.woff2",
+        "bytes": 5868,
+        "sha256": "ec9c5d54912928d9c2af96a0e51e07c41586d6f2a9f42d24685f91cc123de7ff"
+      },
+      {
+        "file": "noto-serif-sc-latinext-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/latin-ext-600-normal.woff2",
+        "bytes": 5744,
+        "sha256": "7b5befa8d430414f703d167b4ccb9795225aa88eb1beda44ebbec1355476790a"
+      },
+      {
+        "file": "noto-serif-sc-latin-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/noto-serif-sc%405.3.1/latin-600-normal.woff2",
+        "bytes": 18676,
+        "sha256": "5ec5a1f9810450b5d62da83df506a27d22fb017a94a42016a0853cd9a8c23847"
+      }
+    ]
+  },
+  {
+    "family": "Source Serif 4",
+    "license": "OFL-1.1",
+    "version": "5.3.1",
+    "files": [
+      {
+        "file": "source-serif-4-cyrillicext-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/cyrillic-ext-400-normal.woff2",
+        "bytes": 7148,
+        "sha256": "29b1be650eb1ec292046e55b130997dc74cb3983d811c200644afe7176bd97c2"
+      },
+      {
+        "file": "source-serif-4-cyrillic-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/cyrillic-400-normal.woff2",
+        "bytes": 14172,
+        "sha256": "4899e71407c11bcafe49dfa3573415740a5b47a87028917eedd39731237369c0"
+      },
+      {
+        "file": "source-serif-4-greek-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/greek-400-normal.woff2",
+        "bytes": 7924,
+        "sha256": "dafafcc62255d676e0a998bb3c926d3ba60c1f8e99638518dbc41a9f8c1b42e3"
+      },
+      {
+        "file": "source-serif-4-vietnamese-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/vietnamese-400-normal.woff2",
+        "bytes": 6296,
+        "sha256": "58ec5a4fb3472131b1b6ab1ede668f593381249a05069a79048558aa13ed69f6"
+      },
+      {
+        "file": "source-serif-4-latinext-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/latin-ext-400-normal.woff2",
+        "bytes": 17844,
+        "sha256": "78ff74ea29d0cc5594ff9efd5c0a30911691b89e9021e7bcf118b95e285e007f"
+      },
+      {
+        "file": "source-serif-4-latin-400.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/latin-400-normal.woff2",
+        "bytes": 20088,
+        "sha256": "02194deb92d3975dd30e11a3824a1f1db32b48c93654e60560cb81ce8e7b5f95"
+      },
+      {
+        "file": "source-serif-4-cyrillicext-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/cyrillic-ext-600-normal.woff2",
+        "bytes": 7288,
+        "sha256": "424aad3c02eafc047e2ed438ef02ddfec38e72e97291865ba27399fc25ef3002"
+      },
+      {
+        "file": "source-serif-4-cyrillic-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/cyrillic-600-normal.woff2",
+        "bytes": 14776,
+        "sha256": "881a5cd61ba36255b82c4e99ca68a21dab3fc62fd91d780501c597f82cae477a"
+      },
+      {
+        "file": "source-serif-4-greek-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/greek-600-normal.woff2",
+        "bytes": 8132,
+        "sha256": "9682fb04de1d693e4bfc03cec8e847e51e92e77fd8e79c151d0a6f6d7f1fbee6"
+      },
+      {
+        "file": "source-serif-4-vietnamese-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/vietnamese-600-normal.woff2",
+        "bytes": 6372,
+        "sha256": "a2b21256f49e449c9b5691b0c596c36e73f4f312be4bda7824addfa6f9e15308"
+      },
+      {
+        "file": "source-serif-4-latinext-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/latin-ext-600-normal.woff2",
+        "bytes": 18332,
+        "sha256": "ba70bfd7a5f52800fb9abedfe1926db2b1b614b10cb8ac1e5798a14fb06a02d4"
+      },
+      {
+        "file": "source-serif-4-latin-600.woff2",
+        "source": "https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4%405.3.1/latin-600-normal.woff2",
+        "bytes": 21532,
+        "sha256": "f2b7e1cf1d277b7608231868135648f8ad8e2b58d8e97ca088bee15dc357bee7"
+      }
+    ]
+  },
+  {
+    "family": "Figtree",
+    "license": "OFL-1.1",
+    "source": "https://fontsource.org/fonts/figtree",
+    "provenance": "Copied from the supplied licensed concept asset",
+    "files": [
+      {
+        "file": "figtree-latin-wght-normal.woff2",
+        "bytes": 20156,
+        "sha256": "4ba7d3d096695818fe0686be4f1e82c6b05134e18a22260336130335027462dd"
+      }
+    ]
+  }
+]

@@ -16,6 +16,8 @@ jobs:
       # the merge rules the two devices depend on and the reference list the reading view prints, from the files the browser loads
       - run: node check.mjs
       - run: node check-export.mjs
+      - run: node check-redesign.mjs
+      - run: node check-capture.mjs
 
   break:
     runs-on: ubuntu-latest

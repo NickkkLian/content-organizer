@@ -1,0 +1,129 @@
+{
+  "title": "A Vancouver brunch weekend",
+  "topic": "Vancouver food",
+  "summary": "Eight notes become an unhurried weekend, with seating times, menus, a budget for two and a walk after eating. Every venue is fictional.",
+  "sections": [
+    {
+      "heading": "Choose a time, then a table",
+      "content": "On Saturday, start early at Oat Window, 18 Lantern Street, 8am–3pm. Arrive before 9:30am for easier seating or expect roughly 25 minutes after 10:30. Window tables seat two. Book for four. It closes Sunday, when Birch Pancake House, 9 Sea Breeze Road, opens 8am–2pm. Arrive before 10am and bring a debit card. Moss Table, 42 Cedar Street, is a later option, 9am–4pm both days. In rain, reserve Red Brick Breakfast, 31 Maple Lane, open 8:30am–2:30pm. Book a 9am or 1pm slot the day before. Tables are held ten minutes and the waiting area has no roof.",
+      "sources": [
+        {
+          "title": "Saturday brunch, start on Lantern Street",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "Weekend hours in one place",
+          "url": "https://example.com/clipbind/food-8"
+        },
+        {
+          "title": "Two pancake places, is the difference worth it",
+          "url": "https://example.com/clipbind/food-5"
+        },
+        {
+          "title": "Brunch with a vegetarian friend",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "A rainy-day brunch with reservations",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "Menus and dietary needs",
+      "content": "Oat Window serves two buckwheat pancakes for C$18, fruit for C$4 extra and coffee for C$5. Choose it for savoury food. Gluten-free batter shares the griddle, so ask about allergies. Birch serves three thick pancakes with apple sauce for C$22 and coffee for C$5. Sharing requires two drinks. Moss Table’s tofu scramble is C$19, tomatoes C$6 and oat latte C$6. Ask when ordering to replace butter with olive oil. Its mushroom soup uses chicken stock. The leaf symbol does not promise vegetarian food. Use the side door for step-free access. Red Brick’s egg plate costs C$21 and tea C$4. Leave umbrellas in the entrance bucket.",
+      "sources": [
+        {
+          "title": "Saturday brunch, start on Lantern Street",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "Two pancake places, is the difference worth it",
+          "url": "https://example.com/clipbind/food-5"
+        },
+        {
+          "title": "Brunch with a vegetarian friend",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "A rainy-day brunch with reservations",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "A budget for two",
+      "content": "At Oat Window, two pancake plates and coffees total C$46 before a C$12 tax and tip allowance, about C$58. Two scrambles and oat lattes at Moss Table total C$50 plus C$12, about C$62. Two egg plates and teas at Red Brick total C$50 plus C$13, about C$63. These fictional planning allowances are not tax rates. Parking is extra. Ask about bill details before payment.",
+      "sources": [
+        {
+          "title": "Weekend brunch, beyond the menu price",
+          "url": "https://example.com/clipbind/food-7"
+        },
+        {
+          "title": "Saturday brunch, start on Lantern Street",
+          "url": "https://example.com/clipbind/food-1"
+        },
+        {
+          "title": "Brunch with a vegetarian friend",
+          "url": "https://example.com/clipbind/food-2"
+        },
+        {
+          "title": "A rainy-day brunch with reservations",
+          "url": "https://example.com/clipbind/food-4"
+        }
+      ]
+    },
+    {
+      "heading": "Walk after eating, then have coffee",
+      "content": "Walk six minutes south from Oat Window to Lantern Canal, then follow the water for 1.6km to White Stone Bridge, around half an hour with public toilets at the finish. In rain, use the parallel paved route, 200m longer, to avoid the wet boardwalk. The return bus is at Cedar Street junction. Continue seven minutes to Echo Coffee, 7 Harbour Lane, 8am–5pm, closed Tuesday. Pour-over is C$6, egg toast C$14 and a second filter coffee C$3. Laptops are excluded from 11am–2pm on weekends. Use the communal table at other times, with two power points. Window tables seat two. Take calls outside. Venues, addresses, hours and prices are fictional. Check current hours before a real visit.",
+      "sources": [
+        {
+          "title": "An after-brunch riverside walk",
+          "url": "https://example.com/clipbind/food-6"
+        },
+        {
+          "title": "A café where you can stay a while",
+          "url": "https://example.com/clipbind/food-3"
+        },
+        {
+          "title": "Weekend hours in one place",
+          "url": "https://example.com/clipbind/food-8"
+        }
+      ]
+    }
+  ],
+  "keep_images": [],
+  "id": "demo-guide-food",
+  "demoKey": "food",
+  "sourceNoteIds": [
+    "demo-food-1",
+    "demo-food-2",
+    "demo-food-3",
+    "demo-food-4",
+    "demo-food-5",
+    "demo-food-6",
+    "demo-food-7",
+    "demo-food-8"
+  ],
+  "sourceUrls": [
+    "https://example.com/clipbind/food-1",
+    "https://example.com/clipbind/food-2",
+    "https://example.com/clipbind/food-3",
+    "https://example.com/clipbind/food-4",
+    "https://example.com/clipbind/food-5",
+    "https://example.com/clipbind/food-6",
+    "https://example.com/clipbind/food-7",
+    "https://example.com/clipbind/food-8"
+  ],
+  "images": [],
+  "imagesRepo": [],
+  "lang": "en",
+  "runAt": "2026-11-06T03:21:22.917Z",
+  "savedAt": "2026-11-06T03:21:22.917Z",
+  "model": "AI-authored demo",
+  "trace": {
+    "imagesRead": 8,
+    "transcriptCharsUsed": 0,
+    "inputNotes": 8
+  }
+}

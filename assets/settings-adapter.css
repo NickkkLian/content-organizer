@@ -1,6 +1,6 @@
 .suite-panel,.suite-confirm{--ss-bg:var(--surface-raised);--ss-ink:var(--text);--ss-line:var(--border);--ss-control-line:var(--border-input)}
 .suite-panel input[type=checkbox]{display:inline-block;width:calc(24 * var(--suite-px, 1px));min-height:calc(24 * var(--suite-px, 1px));margin:calc(8 * var(--suite-px, 1px)) calc(12 * var(--suite-px, 1px)) calc(8 * var(--suite-px, 1px)) 0;vertical-align:middle}
-.brand .app-logo{width:calc(32 * var(--suite-px, 1px));height:calc(32 * var(--suite-px, 1px));flex:none;object-fit:contain}
+
 .topbar .suite-gear{width:auto;padding-inline:calc(12 * var(--suite-px, 1px))}
 .settings-connection-note{background:var(--surface-raised);border:calc(1 * var(--suite-px, 1px)) solid var(--border);color:var(--text)}
 .settings-connection-note[hidden]{display:none}

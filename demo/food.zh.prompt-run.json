@@ -1,0 +1,154 @@
+{
+  "method": "Authored by the AI coding agent in this build, following the exact application binding prompt. No API call was made. Fictional inputs and original SVG diagrams only.",
+  "language": "zh",
+  "authoredAt": "2026-11-06T03:21:22.917Z",
+  "system": "You are a content editor. Task: take the saved items the user provides (Xiaohongshu posts/videos, Bilibili videos; sometimes an existing compilation as well), organise, summarise and de-duplicate them, and merge them into one clearly structured long-form piece (a \"compilation\").\nRequirements:\n1. Identify the shared theme and several sub-topics; one section per sub-topic.\n2. **De-duplicate and merge**: keep each piece of information once; fold similar views/methods into one fuller statement; merge repetition across sources and across sections so the reader never sees the same thing twice.\n3. **Remove noise, but do not delete substance**: drop off-topic chatter, engagement bait (follow/like/subscribe/\"see comments\"), pure emotional filler, and the repetition and garbling typical of speech transcripts; always keep the concrete, valuable facts — shop names, addresses, prices, steps, figures, opinions, conclusions, lessons, links.\n4. **Present the content directly, not as reported speech**: never write \"the author says / the creator mentions / they recommend\"; state the facts, views and methods themselves.\n5. Distil and rewrite in your own words; never copy sentences verbatim. Write all output in Simplified Chinese.\n6. Video content is mostly speech-to-text — no punctuation, colloquial, with homophone errors; infer the intended meaning from context before distilling.\n7. If images are attached, read the text and key information inside them (menus, price lists, slides, figures) and fold it into the body.\n8. **Keep only necessary images**: images are labelled [image N-M] (N = item number, M = image number within that item). Put the ones that text cannot replace — menus, price lists, slides, charts, data screenshots, step-by-step photos, UI screenshots with key information — into keep_images; never keep decorative, scenery, portrait or duplicate images. If the body already states the information clearly, do not keep the image. Return an empty array [] if nothing is worth keeping.\n9. source_indices uses 1-based numbers and lists which input items [N] a section mainly draws on (an empty array is fine for new content with no single source).\n10. The title should be concise and informative; the summary sums up the whole piece in one or two sentences.",
+  "userText": "Here are 8 saved items (Xiaohongshu posts/videos, Bilibili videos):\n\n[1] Xiaohongshu post | Title: 周六早午餐，先从灯塔街开始\nTags: #温哥华 #早午餐\nBody / description: 演示中的温哥华店铺均为虚构。燕麦窗在灯塔街 18 号，周六 8:00–15:00，荞麦薄饼 C$18，咖啡 C$5，税和小费另算。9:30 前通常不用等，10:30 后等 25 分钟。两人坐窗边小桌，四人需预约。无麸质薄饼与普通面糊共用烤盘，过敏请先问店员。\nLink: https://example.com/clipbind/food-1\n\n[2] Xiaohongshu post | Title: 带朋友吃素，别只看菜单图标\nTags: #温哥华 #早午餐 #素食\nBody / description: 虚构的苔色餐桌在杉木街 42 号，周末 9:00–16:00，豆腐炒蛋 C$19，烤番茄 C$6，燕麦拿铁 C$6。厨房可以把黄油换橄榄油，但须点单时说明。蘑菇汤含鸡汤，叶子图标只表示有蔬菜。两人 C$62 预算含预留税和小费。门口有一级台阶，轮椅从侧门进。\nLink: https://example.com/clipbind/food-2\n\n[3] Xiaohongshu post | Title: 咖啡馆能不能坐久一点\nTags: #温哥华 #咖啡 #早午餐\nBody / description: 虚构回声咖啡在港湾小径 7 号，8:00–17:00，周二休息。手冲 C$6，鸡蛋吐司 C$14，第二杯滤泡咖啡 C$3。周末 11:00–14:00 不接笔记本，其他时间可在长桌用电脑，插座只有两处。靠窗安静桌限两人，隔音一般，开会戴耳机仍会影响别人。\nLink: https://example.com/clipbind/food-3\n\n[4] Xiaohongshu post | Title: 雨天排队？这家能预约\nTags: #温哥华 #早午餐 #雨天\nBody / description: 虚构红砖早餐房在枫巷 31 号，周末 8:30–14:30，煎蛋土豆盘 C$21，热茶 C$4。提前一天可订 9:00 或 13:00 桌，迟到保留 10 分钟。等位区无顶棚，下雨直接预约。雨伞留门口桶里，湿外套挂椅背会滴到别人。\nLink: https://example.com/clipbind/food-4\n\n[5] Xiaohongshu post | Title: 两家薄饼店，价差值不值\nTags: #温哥华 #早午餐 #薄饼\nBody / description: 虚构对比：燕麦窗荞麦薄饼 C$18，份量两张，水果另加 C$4；桦木煎饼屋在海风路 9 号，三张厚薄饼 C$22，含苹果酱，咖啡 C$5。后者周末 8:00–14:00，只收借记卡，10:00 前到。想吃咸味选燕麦窗，想两人分一份选桦木，分食需另点两杯饮料。\nLink: https://example.com/clipbind/food-5\n\n[6] Xiaohongshu post | Title: 早午餐后，沿河走到哪儿\nTags: #温哥华 #早午餐 #步行\nBody / description: 虚构步行路线：燕麦窗出门向南走 6 分钟到灯塔河道入口，沿水走 1.6 公里到白石小桥，约 30 分钟，终点有公共洗手间。回声咖啡距终点 7 分钟。雨天木板湿滑可改走平行的铺装路，多 200 米。全程不需要开车，回程公交站在杉木街路口。\nLink: https://example.com/clipbind/food-6\n\n[7] Xiaohongshu post | Title: 周末预算，菜单价以外还要留多少\nTags: #温哥华 #早午餐 #预算\nBody / description: 这是演示预算，不代表当地税率。两人燕麦窗 C$46 菜单小计，另留 C$12 税与小费，共 C$58。苔色餐桌两份炒蛋两杯燕麦拿铁小计 C$50，另留 C$12，共 C$62。红砖早餐房两份蛋盘两杯茶 C$50，另留 C$13，共 C$63。每家都可以问清账单构成再付款，预算没有停车费。\nLink: https://example.com/clipbind/food-7\n\n[8] Xiaohongshu post | Title: 店铺时间放一起，不用挨个翻\nTags: #温哥华 #早午餐\nBody / description: 演示店铺时间表：燕麦窗周六 8:00–15:00，周日不开；苔色餐桌周末 9:00–16:00；回声咖啡周末 8:00–17:00，周二休息；红砖早餐房周末 8:30–14:30；桦木煎饼屋周末 8:00–14:00。想周日吃早一点选桦木，晚一点选苔色。营业信息为虚构样本，真实出门前仍应查当天营业。\nLink: https://example.com/clipbind/food-8",
+  "images": [
+    {
+      "label": "[image 1-1]",
+      "file": "assets/demo-covers/food-1.svg"
+    },
+    {
+      "label": "[image 2-1]",
+      "file": "assets/demo-covers/food-2.svg"
+    },
+    {
+      "label": "[image 3-1]",
+      "file": "assets/demo-covers/food-3.svg"
+    },
+    {
+      "label": "[image 4-1]",
+      "file": "assets/demo-covers/food-4.svg"
+    },
+    {
+      "label": "[image 5-1]",
+      "file": "assets/demo-covers/food-5.svg"
+    },
+    {
+      "label": "[image 6-1]",
+      "file": "assets/demo-covers/food-6.svg"
+    },
+    {
+      "label": "[image 7-1]",
+      "file": "assets/demo-covers/food-7.svg"
+    },
+    {
+      "label": "[image 8-1]",
+      "file": "assets/demo-covers/food-8.svg"
+    }
+  ],
+  "schema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "topic": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "sections": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "heading": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "source_indices": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "required": [
+            "heading",
+            "content",
+            "source_indices"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "keep_images": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "title",
+      "topic",
+      "summary",
+      "sections",
+      "keep_images"
+    ],
+    "additionalProperties": false
+  },
+  "inputIds": [
+    "demo-food-1",
+    "demo-food-2",
+    "demo-food-3",
+    "demo-food-4",
+    "demo-food-5",
+    "demo-food-6",
+    "demo-food-7",
+    "demo-food-8"
+  ],
+  "rawOutput": {
+    "title": "温哥华周末早午餐",
+    "topic": "温哥华美食",
+    "summary": "八篇笔记整理成一个不用赶路的周末。先选能坐下的时间，再看菜单、两人预算与饭后步道。店铺均为虚构。",
+    "sections": [
+      {
+        "heading": "先选时间，再选店",
+        "content": "周六早一点去燕麦窗，灯塔街 18 号，8:00–15:00，9:30 前较好入座，10:30 后约等 25 分钟。窗边两人桌，四人先约。周日燕麦窗不开，8:00 可以去桦木煎饼屋，海风路 9 号，14:00 收，10:00 前到，只收借记卡。想晚一点，苔色餐桌在杉木街 42 号，周末 9:00–16:00。雨天订红砖早餐房，枫巷 31 号，周末 8:30–14:30，前一天可订 9:00 或 13:00，迟到保留十分钟，室外等位处没有顶棚。",
+        "source_indices": [
+          1,
+          8,
+          5,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "菜单与饮食限制",
+        "content": "燕麦窗两张荞麦薄饼 C$18，水果加 C$4，咖啡 C$5；想咸味选这里。无麸质面糊共用烤盘，过敏先问。桦木三张厚薄饼 C$22，含苹果酱，咖啡 C$5，两人分食需各点饮料。苔色豆腐炒蛋 C$19、番茄 C$6、燕麦拿铁 C$6，可点单时把黄油换橄榄油；蘑菇汤含鸡汤，不能只看叶子图标。轮椅走苔色侧门，正门有一级台阶。红砖蛋盘 C$21，茶 C$4，伞放门口桶里。",
+        "source_indices": [
+          1,
+          5,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "两个人的预算",
+        "content": "燕麦窗两份薄饼两杯咖啡小计 C$46，预留税和小费 C$12，总计约 C$58。苔色两份炒蛋两杯燕麦拿铁小计 C$50，预留 C$12，总计 C$62。红砖两份蛋盘两杯茶 C$50，预留 C$13，总计 C$63。这些只是演示预算，不能当税率，停车另算，付款前可问清账单。",
+        "source_indices": [
+          7,
+          1,
+          2,
+          4
+        ]
+      },
+      {
+        "heading": "吃完走走，再喝一杯",
+        "content": "从燕麦窗向南走六分钟到灯塔河道，沿水 1.6 公里到白石小桥，约半小时，终点有洗手间。雨天改走平行铺装路，多 200 米，避开湿木板。回程公交在杉木街路口。终点再走七分钟到回声咖啡，港湾小径 7 号，8:00–17:00、周二休息。手冲 C$6，鸡蛋吐司 C$14，续滤泡 C$3。周末 11:00–14:00 不接笔记本，其他时段可用长桌，仅两处插座；窗边桌限两人，电话到外面打。店铺、地址、时间与价格均为虚构，真实出门前查当天营业。",
+        "source_indices": [
+          6,
+          3,
+          8
+        ]
+      }
+    ],
+    "keep_images": []
+  },
+  "outputSHA256": "761ba2f4940669e039e20a696fd28c592d01dda69f4d759e71b640ddc4a3dea8"
+}
