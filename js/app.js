@@ -145,7 +145,7 @@ window.XHS = window.XHS || {};
     els.archCount.textContent = all.filter(function (n) { return n.archived; }).length;
     els.compArchCount.textContent = guides.filter(function (c) { return c.archived; }).length;
   }
-  function moveFilters() { var menu = document.getElementById('filterMenu'), parent = document.getElementById(innerWidth < 900 ? 'phoneFilters' : 'railFilters'); if (menu && parent && menu.parentElement !== parent) parent.append(menu); var sample = document.querySelector('[data-demo-capture]'), host = innerWidth < 900 ? document.getElementById('sampleSlot') : document.querySelector('.pile-actions'); if (sample && host && sample.parentElement !== host) host.prepend(sample); }
+  function moveFilters() { var menu = document.getElementById('filterMenu'), parent = document.getElementById(innerWidth < 900 ? 'phoneFilters' : 'railFilters'); if (menu && parent && menu.parentElement !== parent) parent.append(menu); }
   function renderLibrary() {
     var previousFocus = document.activeElement;
     var previousRowId = previousFocus.closest?.('[data-note]')?.dataset.note;
@@ -198,12 +198,12 @@ window.XHS = window.XHS || {};
     var body = '<div class="note__body">' + esc(note.body) + '</div>';
     var metadata = '<div class="preview-meta">' + esc((note.platform === 'bili' ? 'Bilibili' : 'Xiaohongshu') + (note.author ? ' · @' + note.author : '')) + '</div><div class="tags">' + (note.tags || []).map(function (tag) { return '<span>#' + esc(tag) + '</span>'; }).join('') + '</div>';
     var editor = '<details class="note-editor"' + (note.captureState === 'thin' ? ' open' : '') + '><summary>' + T('修改正文与图片', 'Edit text and images') + '</summary><label>' + T('正文', 'Text') + '<textarea data-note-text rows="6">' + esc(draft ? draft.text : note.body) + '</textarea></label><label>' + T('图片链接', 'Image links') + '<textarea data-note-images rows="2">' + esc(draft ? draft.images : (note.images || []).filter(X.refs.isWebUrl).join('\n')) + '</textarea></label><button class="btn btn--primary" data-act="save-text" data-id="' + id + '">' + T('保存', 'Save') + '</button></details>';
-    return '<div class="preview-inner"><div class="preview-toolbar">' + actions + (secondary ? '<details class="library-menu"><summary aria-label="' + T('更多笔记操作', 'More note actions') + '">' + svg('more') + '</summary><div class="menu-items">' + secondary + '</div></details>' : '') + '</div>' + renderImages(note) + '<h2 class="preview-title">' + esc(note.title) + '</h2>' + (note.captureState ? '<p class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'video-offline' ? '<button class="btn" data-local-help>' + T('怎么开启', 'How to start it') + '</button>' : '') + '</p>' : '') + (source ? metadata + body : '<p class="preview-short">' + esc(String(note.body || '').slice(0, 180)) + '</p><details class="note-full"><summary>' + T('阅读全文', 'Read full note') + '</summary>' + metadata + body + (note.captureState === 'thin' ? '' : editor) + '</details>' + (note.captureState === 'thin' ? editor : '')) + renderTranscript(note, source && isVideo(note)) + (note.url ? X.refs.isWebUrl(note.url) ? '<a class="btn btn--ghost note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + svg('open') + T('打开原帖', 'Open original') + '</a>' : '<span class="note__link">' + esc(note.url) + '</span>' : '') + '</div>';
+    return '<div class="preview-inner"><div class="preview-toolbar">' + actions + (secondary ? '<details class="library-menu"><summary aria-label="' + T('更多笔记操作', 'More note actions') + '">' + svg('more') + '</summary><div class="menu-items">' + secondary + '</div></details>' : '') + '</div>' + renderImages(note) + '<h2 class="preview-title">' + esc(note.title) + '</h2>' + (note.captureState ? '<p class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'video-offline' ? '<button class="btn" data-local-help>' + T('怎么开启', 'How to start it') + '</button>' : '') + '</p>' : '') + (source ? metadata + body : innerWidth >= 900 ? metadata + body + editor : '<p class="preview-short">' + esc(String(note.body || '').slice(0, 180)) + '</p><details class="note-full"><summary>' + T('阅读全文', 'Read full note') + '</summary>' + metadata + body + (note.captureState === 'thin' ? '' : editor) + '</details>' + (note.captureState === 'thin' ? editor : '')) + renderTranscript(note, source && isVideo(note)) + (note.url ? X.refs.isWebUrl(note.url) ? '<a class="btn btn--ghost note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + svg('open') + T('打开原帖', 'Open original') + '</a>' : '<span class="note__link">' + esc(note.url) + '</span>' : '') + '</div>';
   }
   function renderPreview() { els.preview.innerHTML = previewHtml(noteById(focusedId)); X.images.hydrate(els.preview); }
   function showNote(id) {
     focusedId = id; renderPreview();
-    if (innerWidth < 900) { els.noteDlg.classList.remove('tray-sheet'); els.noteDlg.innerHTML = '<div class="sheet-bar"><button class="btn" data-close-note>' + svg('back') + T('回到收藏', 'Back') + '</button></div>' + previewHtml(noteById(id)); els.noteDlg.showModal(); X.images.hydrate(els.noteDlg); }
+    if (innerWidth < 900) { els.noteDlg.classList.remove('tray-sheet'); els.noteDlg.innerHTML = '<div class="sheet-bar"><button class="btn" data-close-note>' + svg('back') + T('回到收藏', 'Back') + '</button></div>' + previewHtml(noteById(id)); els.noteDlg.showModal(); focusDialogHeading(els.noteDlg); X.images.hydrate(els.noteDlg); }
   }
   function selectNote(id, value, range, keyboardInput) {
     if (activePlace !== 'saved' || binding) return;
@@ -250,7 +250,7 @@ window.XHS = window.XHS || {};
     els.noteDlg.classList.add('tray-sheet');
     els.noteDlg.replaceChildren();
     var close = document.createElement('div'); close.className = 'sheet-bar'; close.innerHTML = '<button class="btn" data-close-note>' + svg('back') + T('回到选择', 'Back to selection') + '</button>';
-    els.noteDlg.append(close, els.selBar); els.noteDlg.showModal();
+    els.noteDlg.append(close, els.selBar); els.noteDlg.showModal(); focusDialogHeading(els.noteDlg);
   }
   function chooseDemoSet(key) { selectedIds.clear(); activePlace = 'saved'; activeFilter = key === 'food' ? '美食' : '旅行'; activeTag = ''; X.store.getAll().filter(function (n) { return n.demoKey?.startsWith(key + '-'); }).forEach(function (note) { X.store.unarchive([note.id]); selectedIds.add(note.id); }); renderLibrary(); }
   function onFetch(raw) {
@@ -385,13 +385,14 @@ window.XHS = window.XHS || {};
     var top = margin.getBoundingClientRect().top, overview = margin.querySelector('.source-overview'), end = overview ? overview.getBoundingClientRect().bottom - top + 24 : 0;
     els.readDlg.querySelectorAll('[data-margin]').forEach(function (group) { var section = els.readDlg.querySelector('#read-sec-' + group.dataset.margin); if (!section) return; var position = section.getBoundingClientRect().top - top; var gap = Math.max(0, position - end); if (group.dataset.margin === '1') gap = Math.min(32, gap); group.style.marginTop = gap + 'px'; end = group.getBoundingClientRect().bottom - top + 24; });
   }
+  function focusDialogHeading(dialog) { var heading = dialog.querySelector('h1,h2'); if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); } }
   function openRead(id, opener) {
     var c = compById(id); if (!c) return;
     readingCompId = id; readOpener = opener || document.activeElement; editingCompId = null;
     els.readDlg.classList.remove('trace-open', 'contents-open', 'is-scrolled'); els.readDlg.innerHTML = compReadHtml(c);
     if (!els.readDlg.open) els.readDlg.showModal(); els.readDlg.scrollTop = 0;
     els.readDlg.style.setProperty('--read-bar-h', els.readDlg.querySelector('.read__bar').getBoundingClientRect().height + 'px');
-    els.readDlg.querySelector('button')?.focus(); X.images.hydrate(els.readDlg); document.fonts.ready.then(alignMargins);
+    focusDialogHeading(els.readDlg); X.images.hydrate(els.readDlg); document.fonts.ready.then(alignMargins);
   }
   function closeRead() { if (editingCompId && !confirm(T('放弃还没保存的修改？', 'Discard unsaved changes?'))) return; editingCompId = null; readingCompId = null; els.readDlg.close(); if (readOpener?.isConnected) readOpener.focus(); }
   function openSource(n, opener) {
@@ -457,7 +458,7 @@ window.XHS = window.XHS || {};
     document.querySelector('.skip').textContent = T('跳到笔记', 'Skip to notes'); document.querySelector('.brand').setAttribute('aria-label', T('Clipbind 首页', 'Clipbind home'));
     document.querySelectorAll('summary[aria-label]').forEach(function (el) { if (el.closest('.library-menu')) el.setAttribute('aria-label', T('收藏库工具', 'Library tools')); });
     var sample = document.querySelector('[data-demo-capture]'); sample.hidden = !demo; sample.textContent = T('试存一条示例', 'Try a sample save');
-    if (demo && !els.demoStrip.dataset.dismissed) { els.demoStrip.hidden = false; els.demoStrip.innerHTML = '<span>' + T('虚构示例', 'Fictional notes') + '</span><button class="btn" data-cact="read" data-id="demo-guide-kyoto">' + T('打开《京都五日》', 'Open Kyoto guide') + '</button><details class="library-menu"><summary aria-label="' + T('示例说明', 'About the demo') + '">' + svg('more') + '</summary><div class="menu-items"><p>' + T('示例笔记与图片由 AI 创作，使用真实地名；预算为约数，出发前请核对实际信息。', 'AI-written sample notes and images use real place names. Budgets are rough planning ranges; check current details before visiting.') + '</p><button class="btn" data-how>' + T('它是怎么做的', 'How it works') + '</button></div></details>' + iconBtn('data-dismiss-demo', '关闭示例提示', 'Dismiss demo strip', 'close'); }
+    if (demo && !els.demoStrip.dataset.dismissed) { els.demoStrip.hidden = false; els.demoStrip.innerHTML = '<span>' + T('虚构示例', 'Fictional notes') + '</span><button class="btn" data-cact="read" data-id="demo-guide-kyoto">' + T('打开《京都五日》', 'Open Kyoto guide') + '</button><button class="btn" data-how>' + T('它是怎么做的', 'How it works') + '</button>' + iconBtn('data-dismiss-demo', '关闭示例提示', 'Dismiss demo strip', 'close'); }
   }
   function showInfo(shortcuts, localVideo) {
     var title = shortcuts ? T('键盘快捷键', 'Keyboard shortcuts') : localVideo ? T('本机视频服务', 'Local video service') : T('它是怎么做的', 'How it works');
@@ -480,7 +481,7 @@ window.XHS = window.XHS || {};
     ];
     var keys = [['/', T('搜索', 'Search')], ['a', T('粘贴输入框', 'Capture field')], ['j / k', T('下一篇、上一篇', 'Next or previous note')], ['x', T('选择笔记', 'Select note')], ['⌘A', T('全选当前列表', 'Select current list')], ['b', T('整理所选笔记', 'Bind selection')], ['e', T('归档', 'Archive')], ['[ / ]', T('收起侧栏、预览', 'Collapse rail or preview')], ['n / p', T('阅读下一节、上一节', 'Next or previous section')], ['z', T('撤销', 'Undo')], ['Esc', T('关闭上层，再取消选择', 'Close top layer, then clear selection')]];
     els.infoDlg.innerHTML = '<button class="btn" data-close-info>' + svg('close') + T('关闭', 'Close') + '</button><h1 id="info-title">' + title + '</h1>' + (shortcuts ? '<div class="shortcut-list">' + keys.map(function (key) { return '<kbd>' + key[0] + '</kbd><span>' + key[1] + '</span>'; }).join('') + '</div>' : localVideo ? '<p>' + stages[6][2] + '</p><p>' + T('在电脑上按仓库 local/README.md 启动服务，然后到设置的连接部分保存本机服务口令。', 'Start the service following local/README.md, then save its local service token under Connections in Settings.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '<p>' + T('笔记进来，带着来源的合集出去。每一步都能在代码和测试里找到。', 'A saved pile becomes a guide with traceable sources. Follow each step in the code and its checks.') + '</p><div class="pipeline-flow" role="tablist">' + pipelineStages.map(function (stage, i) { return (i ? svg('chevron') : '') + '<button class="pipeline-node" role="tab" aria-selected="' + (i === 0) + '" data-pipeline-node="' + i + '">' + stage[1] + '</button>'; }).join('') + '</div><div class="pipeline-branch">' + svg('video') + '<button class="btn" data-pipeline-video>' + T('本机视频：下载、转写、挑截图，再接入读取','Local video: download, transcribe, select frames, then join Read') + '</button></div><section id="pipelineDetail" class="pipeline-detail" role="tabpanel"></section>');
-    els.infoDlg.showModal(); if (!shortcuts && !localVideo) renderPipelineDetail(0);
+    els.infoDlg.showModal(); focusDialogHeading(els.infoDlg); if (!shortcuts && !localVideo) renderPipelineDetail(0);
   }
   function renderPipelineDetail(index, video) {
     var stage = video ? ['fetch.js', T('本机视频', 'Local video'), T('本机下载和转写，按画面差异取帧，再由模型挑选有用截图。登录态和媒体留在本机；候选截图可发送给模型。', 'Download and transcribe locally, find frame changes, then ask the model to keep useful frames. Sessions and media stay local; candidate images may be sent to the model.'), 'node check-capture.mjs'] : pipelineStages[index];
@@ -570,7 +571,7 @@ window.XHS = window.XHS || {};
           event.preventDefault();
           var lightbox = document.getElementById('imageDlg');
           lightbox.innerHTML = '<button class="btn" data-close-image>' + svg('close') + T('关闭图片', 'Close image') + '</button><h1 id="image-title">' + esc(image.alt) + '</h1><img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '">';
-          lightbox.showModal();
+          lightbox.showModal(); focusDialogHeading(lightbox);
           return;
         }
       }
