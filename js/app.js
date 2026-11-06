@@ -13,10 +13,13 @@ window.XHS = window.XHS || {};
   var bindStartedAt = 0, bindStep = '';
   var noteDrafts = new Map();
   var demoLanguage = '', railCollapsed = false, paneCollapsed = false;
-  var renderedLanguage = null;
+  var renderedLanguage = null, pipelineStages = [];
   var STATUS_CLASS = { ok: 'status status--ok', err: 'status status--err', loading: 'status status--loading' };
   var SYNC_CLASS = { ok: 'sync-pill is-ok', err: 'sync-pill is-err', syncing: 'sync-pill is-syncing' };
   var ICON_PATH = {
+    filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
+    chevron: '<path d="m8 5 7 7-7 7"/>',
+    check: '<path d="m5 12 4 4L19 6"/>',
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
     open: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
     archive: '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/>',
@@ -49,7 +52,7 @@ window.XHS = window.XHS || {};
   function noteById(id) { return X.store.getAll().find(function (n) { return n.id === id; }); }
   function compById(id) { return X.store.getComps().find(function (c) { return c.id === id; }); }
   function coverUrl(note) { return note.demoCover || note.cover || (note.images || []).find(Boolean) || ''; }
-  function safeImage(url) { return /^assets\/demo-covers\/[a-z0-9-]+\.svg$/.test(url) || X.refs.isWebUrl(url) || /^blob:/.test(url); }
+  function safeImage(url) { return /^assets\/demo-covers\/[a-z0-9-]+\.(?:svg|webp)$/.test(url) || X.refs.isWebUrl(url) || /^blob:/.test(url); }
   function coverHtml(note) {
     var url = coverUrl(note), repo = (note.imagesRepo || []).find(Boolean);
     return '<span class="cover">' + (repo && !note.demoKey ? '<img data-repo="' + esc(repo) + '" alt="' + esc(note.title) + '" width="56" height="56">' : safeImage(url) ? '<img src="' + esc(url) + '" alt="' + esc(note.title) + '" width="56" height="56" loading="lazy" referrerpolicy="no-referrer">' : svg(isVideo(note) ? 'video' : 'post')) + (isVideo(note) ? '<span class="play-mark">' + svg('video') + '</span>' : '') + '</span>';
@@ -74,7 +77,7 @@ window.XHS = window.XHS || {};
     els.status.hidden = !message;
     els.status.className = STATUS_CLASS[type] || 'status';
     toastActions = actions || [];
-    els.status.innerHTML = '<span>' + esc(message) + '</span>' + toastActions.map(function (action, i) { return '<button class="btn" data-toast="' + i + '">' + esc(action.label) + '</button>'; }).join('') + (message ? iconBtn('data-dismiss-toast', '关闭提示', 'Dismiss message', 'close') : '');
+    els.status.innerHTML = (type === 'ok' ? svg('check') : '') + '<span>' + esc(message) + '</span>' + toastActions.map(function (action, i) { return '<button class="btn" data-toast="' + i + '">' + esc(action.label) + '</button>'; }).join('') + (message ? iconBtn('data-dismiss-toast', '关闭提示', 'Dismiss message', 'close') : '');
     if (message) animate(els.status, { opacity: 0 }, { opacity: 1 }, 150);
   }
   function rememberUndo(action) { lastUndo = action; return { label: T('撤销', 'Undo'), run: action }; }
@@ -93,15 +96,12 @@ window.XHS = window.XHS || {};
   }
   function fieldLabel(field) { return { body: T('正文', 'Body'), transcript: T('转写', 'Transcript'), tags: T('标签', 'Tags'), author: T('作者', 'Author'), title: T('标题', 'Title'), summary: T('概述', 'Summary') }[field] || ''; }
   function rowHtml(note) {
-    var match = X.library.search(note, els.search.value), video = isVideo(note), count = Math.max((note.images || []).length, (note.imagesRepo || []).length);
-    var metadata = [note.platform === 'bili' ? T('B站', 'Bilibili') : note.source === 'manual' ? T('粘贴', 'Pasted') : T('小红书', 'Xiaohongshu'), note.author ? '@' + note.author : '', X.catLabel(catOf(note).name), localDay(note.capturedAt || note.savedAt), video ? (note.durationText || fmtDur(note.duration)) : '', note.transcript ? T('转写 ', 'Transcript ') + note.transcript.length.toLocaleString() + T(' 字', ' characters') : count ? count + T(' 图', ' images') : ''].filter(Boolean);
-    var expired = note.demoExpired || (note.images || []).some(X.images.isExpired);
-    var selected = selectedIds.has(note.id);
+    var query = els.search.value.trim(), match = X.library.search(note, query), video = isVideo(note);
+    var expired = note.demoExpired || (note.images || []).some(X.images.isExpired), selected = selectedIds.has(note.id);
+    var marker = pendingCaptures.has(note.id) ? T('读取中', 'Reading') : note.captureState === 'thin' ? T('待补正文', 'Text needed') : note.captureState === 'video-offline' ? T('视频服务离线', 'Video service offline') : expired ? T('图片待修复', 'Images expired') : video ? fmtDur(note.duration) + (note.transcript ? T(' · 有转写', ' · transcript') : T(' · 视频', ' · video')) : '';
     return '<article class="note-row' + (focusedId === note.id ? ' is-focused' : '') + (selected ? ' is-selected' : '') + '" data-note="' + esc(note.id) + '" data-id="' + esc(note.id) + '" tabindex="0" draggable="true" aria-label="' + esc(note.title) + '">' +
       (activePlace === 'archive' ? '<button class="btn" data-act="unarch" data-id="' + esc(note.id) + '">' + T('取出', 'Restore') + '</button>' : '<input class="selbox" type="checkbox" data-id="' + esc(note.id) + '" aria-label="' + esc(T('选择 ', 'Select ') + note.title) + '"' + (selected ? ' checked' : '') + '>') + coverHtml(note) +
-      '<div class="row-content"><h2 class="row-title">' + displayText(note.title || T('未命名', 'Untitled'), els.search.value) + '</h2><div class="row-excerpt">' + (els.search.value ? '<span>' + fieldLabel(match?.field) + ' · </span>' : '') + displayText(String(match?.text || '').replace(/\s+/g, ' '), els.search.value) + '</div><div class="row-meta">' + metadata.map(function (value) { return '<span>' + esc(value) + '</span>'; }).join('<span aria-hidden="true">·</span>') +
-      (expired ? '<button class="btn" data-act="fiximg" data-id="' + esc(note.id) + '">' + T('图片已失效 · 修复', 'Images expired · Fix') + '</button>' : '') + '<button class="btn row-more" data-act="preview" data-id="' + esc(note.id) + '" aria-label="' + T('笔记操作', 'Note actions') + '">' + svg('more') + '</button></div>' +
-      (note.captureState ? '<div class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'thin' ? '<button class="btn" data-act="paste-text" data-id="' + esc(note.id) + '">' + T('粘贴正文', 'Paste the text') + '</button>' : '') + '</div>' : '') + (note.url && !X.refs.isWebUrl(note.url) ? '<span class="note__link">' + esc(note.url) + '</span>' : '') + '</div>' + (pendingCaptures.has(note.id) ? '<span class="pending-bar"></span>' : '') + '</article>';
+      '<div class="row-content"><h2 class="row-title">' + displayText(note.title || T('未命名', 'Untitled'), query) + '</h2>' + (query ? '<div class="row-excerpt"><span>' + fieldLabel(match?.field) + ' · </span>' + displayText(String(match?.text || '').replace(/\s+/g, ' '), query) + '</div>' : '') + '<div class="row-meta"><span class="source-glyph" title="' + (note.platform === 'bili' ? 'Bilibili' : 'Xiaohongshu') + '">' + svg(video ? 'video' : 'post') + '</span><time>' + esc(localDay(note.capturedAt || note.savedAt)) + '</time>' + (marker ? '<span>· ' + esc(marker) + '</span>' : '') + '</div></div><button class="btn row-more" data-act="preview" data-id="' + esc(note.id) + '" aria-label="' + T('笔记操作', 'Note actions') + '">' + svg('more') + '</button>' + (pendingCaptures.has(note.id) ? '<span class="pending-bar"></span>' : '') + '</article>';
   }
   function captureMessage(note) {
     if (pendingCaptures.has(note.id)) return note.captureProgress || T('正在读取…', 'Reading…');
@@ -118,14 +118,16 @@ window.XHS = window.XHS || {};
   function renderRail(base) {
     var all = X.store.getAll(), guides = X.store.getComps();
     var places = [{ value: 'saved', label: T('收藏', 'Saved'), count: all.filter(function (n) { return !n.archived; }).length, icon: 'saved' }, { value: 'guides', label: T('合集', 'Guides'), count: guides.filter(function (c) { return !c.archived; }).length, icon: 'guide' }, { value: 'archive', label: T('归档', 'Archive'), count: all.filter(function (n) { return n.archived; }).length + guides.filter(function (c) { return c.archived; }).length, icon: 'archive' }];
-    var html = places.map(function (place) { return '<button class="place" data-place="' + place.value + '" aria-current="' + (activePlace === place.value) + '">' + svg(place.icon) + esc(place.label) + '<span>' + place.count + '</span></button>'; }).join('');
-    els.places.innerHTML = html; els.phonePlaces.innerHTML = html;
+    var html = places.map(function (place) { return '<button class="place" data-place="' + place.value + '" aria-current="' + (activePlace === place.value) + '">' + svg(place.icon) + esc(place.label) + (place.count ? '<span>' + place.count + '</span>' : '') + '</button>'; }).join('');
+    els.places.innerHTML = html;
+    var currentPlace = places.find(function (place) { return place.value === activePlace; });
+    els.phonePlaces.innerHTML = '<details class="library-menu"><summary aria-label="' + T('切换收藏、合集或归档', 'Switch Saved, Guides or Archive') + '"><h1 class="phone-heading">' + currentPlace.label + '</h1>' + svg('chevron') + '</summary><div class="menu-items">' + html + '</div></details>';
     var counts = new Map(); base.forEach(function (n) { var key = catOf(n).name; counts.set(key, (counts.get(key) || 0) + 1); });
     var topics = [{ name: 'all', count: base.length }].concat(Array.from(counts, function (entry) { return { name: entry[0], count: entry[1] }; }).sort(function (a, b) { return b.count - a.count; }));
-    var topicHtml = topics.map(function (topic) { return '<button class="topic" data-cat="' + esc(topic.name) + '" aria-pressed="' + (activeFilter === topic.name) + '">' + (topic.name === 'all' ? T('全部笔记', 'All notes') : esc(X.catLabel(topic.name))) + '<span>' + topic.count + '</span></button>'; }).join('');
+    var topicHtml = topics.map(function (topic) { return '<button class="topic" data-cat="' + esc(topic.name) + '" aria-pressed="' + (activeFilter === topic.name) + '">' + (topic.name === 'all' ? T('全部', 'All topics') : esc(X.catLabel(topic.name))) + (topic.name === 'all' ? '' : '<span>' + topic.count + '</span>') + '</button>'; }).join('');
     els.catFilter.innerHTML = topicHtml; els.phoneTopics.innerHTML = topicHtml;
     els.topicCaption.textContent = T('主题', 'Topics');
-    els.platFilter.innerHTML = '<p class="filter-label">' + T('来源', 'Source') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['xhs', T('小红书', 'XHS')], ['bili', T('B站', 'Bilibili')]].map(function (entry) { return '<button class="btn" data-dim="platform" data-val="' + entry[0] + '" aria-pressed="' + (activePlatform === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div><p class="filter-label">' + T('类型', 'Type') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['post', T('帖子', 'Posts')], ['video', T('视频', 'Videos')]].map(function (entry) { return '<button class="btn" data-dim="type" data-val="' + entry[0] + '" aria-pressed="' + (activeType === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div>';
+    els.platFilter.innerHTML = '<p class="filter-label">' + T('来源', 'Source') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['xhs', T('小红书', 'Xiaohongshu')], ['bili', T('B站', 'Bilibili')]].map(function (entry) { return '<button class="btn" data-dim="platform" data-val="' + entry[0] + '" aria-pressed="' + (activePlatform === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div><p class="filter-label">' + T('类型', 'Type') + '</p><div class="filter-segment">' + [['all', T('全部', 'All')], ['post', T('帖子', 'Posts')], ['video', T('视频', 'Videos')]].map(function (entry) { return '<button class="btn" data-dim="type" data-val="' + entry[0] + '" aria-pressed="' + (activeType === entry[0]) + '">' + entry[1] + '</button>'; }).join('') + '</div>';
     var countBase = all.filter(function (note) {
       return (activePlace === 'archive' ? note.archived : !note.archived) && (activeFilter === 'all' || catOf(note).name === activeFilter) && (!activeTag || (note.tags || []).includes(activeTag)) && X.library.search(note, els.search.value);
     });
@@ -134,12 +136,16 @@ window.XHS = window.XHS || {};
         if (button.dataset.dim === 'platform') return (activeType === 'all' || (activeType === 'video') === isVideo(note)) && (button.dataset.val === 'all' || (note.platform || 'xhs') === button.dataset.val);
         return (activePlatform === 'all' || (note.platform || 'xhs') === activePlatform) && (button.dataset.val === 'all' || (button.dataset.val === 'video') === isVideo(note));
       }).length;
-      button.append(' ' + count);
+      button.title = count + T(' 篇笔记', ' notes');
     });
     els.railGuides.innerHTML = guides.filter(function (c) { return !c.archived; }).slice(0, 4).map(function (c) { return '<button class="rail-guide" data-cact="read" data-id="' + esc(c.id) + '" draggable="false">' + svg('guide') + '<span>' + esc(c.title) + '</span></button>'; }).join('');
+    moveFilters();
+    document.querySelector('[data-filter-label]').textContent = T('筛选', 'Filter') + ((activePlatform !== 'all' || activeType !== 'all' || activeTag) ? ' ·' : '');
+    document.querySelector('[data-tags-label]').textContent = T('标签', 'Tags');
     els.archCount.textContent = all.filter(function (n) { return n.archived; }).length;
     els.compArchCount.textContent = guides.filter(function (c) { return c.archived; }).length;
   }
+  function moveFilters() { var menu = document.getElementById('filterMenu'), parent = document.getElementById(innerWidth < 900 ? 'phoneFilters' : 'railFilters'); if (menu && parent && menu.parentElement !== parent) parent.append(menu); var sample = document.querySelector('[data-demo-capture]'), host = innerWidth < 900 ? document.getElementById('sampleSlot') : document.querySelector('.pile-actions'); if (sample && host && sample.parentElement !== host) host.prepend(sample); }
   function renderLibrary() {
     var previousFocus = document.activeElement;
     var previousRowId = previousFocus.closest?.('[data-note]')?.dataset.note;
@@ -151,11 +157,13 @@ window.XHS = window.XHS || {};
     var title = activePlace === 'guides' ? T('合集', 'Guides') : activePlace === 'archive' ? T('归档', 'Archive') : activeFilter === 'all' ? T('收藏', 'Saved') : X.catLabel(activeFilter);
     var query = els.search.value.trim();
     var matchingGuides = X.store.getComps().filter(function (c) { return (activePlace === 'archive' ? c.archived : !c.archived) && X.library.search(c, query); });
-    els.pileTitle.innerHTML = '<h1>' + esc(query ? T('搜索「', 'Search “') + query + T('」', '”') : title) + '</h1><span>' + (activePlace === 'guides' ? matchingGuides.length + T(' 篇合集', ' guides') : visibleNotes.length + T(' 篇笔记', ' notes')) + (query ? ' · ' + matchingGuides.length + T(' 篇合集', ' guides') : '') + '</span>' + (!query && pile.length ? '<span>' + T('最近保存 ', 'Latest ') + esc(localDay(pile[0].capturedAt || pile[0].savedAt)) + '</span>' : '');
+    els.pileTitle.innerHTML = '<h1>' + esc(query ? T('搜索「', 'Search “') + query + T('」', '”') : title) + '</h1><span>' + (activePlace === 'guides' ? matchingGuides.length + T(' 篇合集', ' guides') : visibleNotes.length + T(' 篇笔记', ' notes')) + (query ? ' · ' + matchingGuides.length + T(' 篇合集', ' guides') : '') + '</span>';
     els.pileTags.innerHTML = activePlace === 'guides' ? '' : X.library.tags(pile).map(function (tag) { return '<button class="tag-filter" data-tag="' + esc(tag.tag) + '" aria-pressed="' + (activeTag === tag.tag) + '">#' + esc(tag.tag) + ' ' + tag.count + '</button>'; }).join('');
     els.selectAll.hidden = activePlace !== 'saved' || !visibleNotes.length;
     els.selectAll.textContent = T('全选这 ', 'Select these ') + visibleNotes.length + T(' 篇', '');
-    els.pileGuide.textContent = demo && activeFilter === '旅行' ? T('已整理成《京都五日》', 'Bound into “Kyoto in five days”') : '';
+    els.pileTitle.title = pile.length ? T('最近保存 ', 'Latest save ') + localDay(pile[0].savedAt) : '';
+    var phoneAll = document.querySelector('[data-phone-select-all]'); if (phoneAll) phoneAll.textContent = T('全选', 'Select all');
+    els.pileGuide.textContent = '';
     els.libCount.textContent = visibleNotes.length;
     els.libList.hidden = activePlace === 'guides';
     els.compsCard.hidden = !(activePlace === 'guides' || activePlace === 'archive' || query);
@@ -179,15 +187,18 @@ window.XHS = window.XHS || {};
   }
   function guideRowHtml(c) {
     var sources = X.refs.bind(c).sources, notes = (c.sourceNoteIds || []).map(noteById).filter(Boolean);
-    return '<article class="guide-row"><div class="guide-stack">' + notes.slice(0, 3).map(coverHtml).join('') + '</div><button data-cact="read" data-id="' + esc(c.id) + '"><span class="row-title">' + esc(c.title) + '</span><span class="row-excerpt">' + esc(c.summary) + '</span><span class="row-meta">' + sources.length + T(' 篇来源', ' sources') + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</span></button>' + (c.archived ? '<button class="btn" data-cact="unarch" data-id="' + esc(c.id) + '">' + T('取出', 'Restore') + '</button>' : '') + '</article>';
+    return '<article class="guide-row"><div class="guide-stack">' + notes.slice(0, 3).map(coverHtml).join('') + '</div><button data-cact="read" data-id="' + esc(c.id) + '"><span class="row-title">' + esc(c.title) + '</span>' + (els.search.value ? '<span class="row-excerpt">' + displayText(X.library.search(c, els.search.value)?.text || c.summary, els.search.value) + '</span>' : '') + '<span class="row-meta">' + sources.length + T(' 篇来源', ' sources') + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</span></button>' + (c.archived ? '<button class="btn" data-cact="unarch" data-id="' + esc(c.id) + '">' + T('取出', 'Restore') + '</button>' : '') + '</article>';
   }
   function previewHtml(note, source) {
     if (!note) return '<div class="empty">' + svg('post') + '<p>' + T('选中一篇笔记，在这里查看正文和图片。', 'Choose a note to see its text and images here.') + '</p></div>';
     var draft = noteDrafts.get(note.id);
-    var id = esc(note.id), actions = iconBtn('data-act="open" data-id="' + id + '"', '打开原帖', 'Open original', 'open') + iconBtn('data-act="copy-lib" data-id="' + id + '"', '复制 Markdown', 'Copy Markdown', 'copy');
-    if (!source) actions += iconBtn('data-act="topic" data-id="' + id + '"', '改主题', 'Change topic', 'edit') + ((note.images || []).some(X.images.isExpired) || note.demoExpired ? iconBtn('data-act="fiximg" data-id="' + id + '"', '修复图片', 'Fix images', 'fix') : '') + iconBtn('data-act="' + (note.archived ? 'unarch' : 'arch') + '" data-id="' + id + '"', note.archived ? '取出' : '归档', note.archived ? 'Restore' : 'Archive', 'archive') + iconBtn('data-act="del" data-id="' + id + '"', '删除', 'Delete', 'del', true);
-    if (!source && note.captureState && !pendingCaptures.has(note.id)) actions += '<button class="btn" data-act="retry-fetch" data-id="' + id + '">' + T('再读取一次', 'Try reading again') + '</button>';
-    return '<div class="preview-inner"><div class="preview-toolbar">' + actions + '</div>' + renderImages(note) + '<h2 class="preview-title">' + esc(note.title) + '</h2><div class="preview-meta">' + esc((note.platform === 'bili' ? T('B站', 'Bilibili') : T('小红书', 'Xiaohongshu')) + (note.author ? ' · @' + note.author : '') + ' · ' + X.catLabel(catOf(note).name)) + '</div><div class="tags">' + (note.tags || []).map(function (tag) { return '<span>#' + esc(tag) + '</span>'; }).join('') + '</div>' + (note.captureState ? '<p class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'video-offline' ? '<button class="btn" data-local-help>' + T('怎么开启', 'How to start it') + '</button>' : '') + '</p>' : '') + '<div class="note__body">' + esc(note.body) + '</div>' + renderTranscript(note, source && isVideo(note)) + (note.url ? X.refs.isWebUrl(note.url) ? '<a class="note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + T('打开原帖', 'Open original') + '</a>' : '<span class="note__link">' + esc(note.url) + '</span>' : '') + (!source ? '<details class="note-editor"' + (note.captureState === 'thin' ? ' open' : '') + '><summary>' + T('粘贴正文或添加图片链接', 'Paste the text or add image links') + '</summary><label>' + T('正文', 'Text') + '<textarea data-note-text rows="6">' + esc(draft ? draft.text : note.body) + '</textarea></label><label>' + T('图片链接（可选）', 'Image links (optional)') + '<textarea data-note-images rows="2">' + esc(draft ? draft.images : (note.images || []).filter(X.refs.isWebUrl).join('\n')) + '</textarea></label><button class="btn btn--primary" data-act="save-text" data-id="' + id + '">' + T('保存', 'Save') + '</button></details>' : '') + '</div>';
+    var secondary = '', id = esc(note.id), actions = (source ? iconBtn('data-act="open" data-id="' + id + '"', '打开原帖', 'Open original', 'open') : '') + iconBtn('data-act="copy-lib" data-id="' + id + '"', '复制 Markdown', 'Copy Markdown', 'copy');
+    if (!source) secondary += iconBtn('data-act="topic" data-id="' + id + '"', '改主题', 'Change topic', 'edit') + ((note.images || []).some(X.images.isExpired) || note.demoExpired ? iconBtn('data-act="fiximg" data-id="' + id + '"', '修复图片', 'Fix images', 'fix') : '') + iconBtn('data-act="' + (note.archived ? 'unarch' : 'arch') + '" data-id="' + id + '"', note.archived ? '取出' : '归档', note.archived ? 'Restore' : 'Archive', 'archive') + iconBtn('data-act="del" data-id="' + id + '"', '删除', 'Delete', 'del', true);
+    if (!source && note.captureState && !pendingCaptures.has(note.id)) secondary += '<button class="btn" data-act="retry-fetch" data-id="' + id + '">' + T('再读取一次', 'Try reading again') + '</button>';
+    var body = '<div class="note__body">' + esc(note.body) + '</div>';
+    var metadata = '<div class="preview-meta">' + esc((note.platform === 'bili' ? 'Bilibili' : 'Xiaohongshu') + (note.author ? ' · @' + note.author : '')) + '</div><div class="tags">' + (note.tags || []).map(function (tag) { return '<span>#' + esc(tag) + '</span>'; }).join('') + '</div>';
+    var editor = '<details class="note-editor"' + (note.captureState === 'thin' ? ' open' : '') + '><summary>' + T('修改正文与图片', 'Edit text and images') + '</summary><label>' + T('正文', 'Text') + '<textarea data-note-text rows="6">' + esc(draft ? draft.text : note.body) + '</textarea></label><label>' + T('图片链接', 'Image links') + '<textarea data-note-images rows="2">' + esc(draft ? draft.images : (note.images || []).filter(X.refs.isWebUrl).join('\n')) + '</textarea></label><button class="btn btn--primary" data-act="save-text" data-id="' + id + '">' + T('保存', 'Save') + '</button></details>';
+    return '<div class="preview-inner"><div class="preview-toolbar">' + actions + (secondary ? '<details class="library-menu"><summary aria-label="' + T('更多笔记操作', 'More note actions') + '">' + svg('more') + '</summary><div class="menu-items">' + secondary + '</div></details>' : '') + '</div>' + renderImages(note) + '<h2 class="preview-title">' + esc(note.title) + '</h2>' + (note.captureState ? '<p class="capture-notice">' + esc(captureMessage(note)) + (note.captureState === 'video-offline' ? '<button class="btn" data-local-help>' + T('怎么开启', 'How to start it') + '</button>' : '') + '</p>' : '') + (source ? metadata + body : '<p class="preview-short">' + esc(String(note.body || '').slice(0, 180)) + '</p><details class="note-full"><summary>' + T('阅读全文', 'Read full note') + '</summary>' + metadata + body + (note.captureState === 'thin' ? '' : editor) + '</details>' + (note.captureState === 'thin' ? editor : '')) + renderTranscript(note, source && isVideo(note)) + (note.url ? X.refs.isWebUrl(note.url) ? '<a class="btn btn--ghost note__link" href="' + esc(note.url) + '" target="_blank" rel="noreferrer">' + svg('open') + T('打开原帖', 'Open original') + '</a>' : '<span class="note__link">' + esc(note.url) + '</span>' : '') + '</div>';
   }
   function renderPreview() { els.preview.innerHTML = previewHtml(noteById(focusedId)); X.images.hydrate(els.preview); }
   function showNote(id) {
@@ -229,10 +240,10 @@ window.XHS = window.XHS || {};
     els.selectedStack.innerHTML = notes.map(function (note) { return '<div class="stack-item" data-stack="' + esc(note.id) + '">' + coverHtml(note) + '<span>' + esc(note.title) + '</span>' + iconBtn('data-remove-selection="' + esc(note.id) + '"', '移出选择', 'Remove from selection', 'close') + '</div>'; }).join('');
     var images = notes.reduce(function (sum, note) { return sum + Math.max((note.images || []).length, (note.imagesRepo || []).length); }, 0);
     if (els.includeImgs.dataset.selection !== Array.from(selectedIds).join(',')) { els.includeImgs.checked = images > 0; els.includeImgs.dataset.selection = Array.from(selectedIds).join(','); }
-    els.imageOptionText.textContent = T('也读图片里的文字（菜单、价目表）· 共 ', 'Also read text in images (menus, price lists) · ') + images + T(' 张', ' images') + (images > 100 ? T('，最多读取 100 张', ', the first 100 can be read') : '');
+    els.imageOptionText.textContent = T('读图片里的文字 · ', 'Read image text · ') + images + T(' 张', ' images') + (images > 100 ? T('，最多读取 100 张', ', the first 100 can be read') : '');
     els.bindConsequence.textContent = T('整理后，这 ', 'After binding, these ') + count + T(' 篇会移到归档，合集里保留它们的链接。', ' notes move to the archive. The guide keeps links to them.');
     els.guideMenu.innerHTML = X.store.getComps().filter(function (c) { return !c.archived; }).map(function (c) { return '<button class="btn" data-target-guide="' + esc(c.id) + '">' + esc(c.title) + '</button>'; }).join('') || '<p>' + T('还没有合集，可以先建一篇。', 'Create your first guide here.') + '</p>';
-    els.bindNotice.innerHTML = demo ? '<p>' + T('演示结果由 AI 按 Clipbind 的提示词整理，点击后回放，不会现场调用 AI。', 'Bound by an AI model with Clipbind’s prompt. This demo replays the result without a live AI call.') + '</p>' + (!X.library.replaySet(notes) ? '<p>' + T('演示版只为这两组准备了结果。', 'The demo has results for these two sets.') + '</p><button class="btn" data-demo-set="kyoto">' + T('选京都 12 篇', 'Select 12 Kyoto notes') + '</button><button class="btn" data-demo-set="food">' + T('选美食 8 篇', 'Select 8 food notes') + '</button>' : '') : !X.ai.isReady() ? '<p>' + T('需要先在设置里填 Anthropic 密钥。', 'Add your Anthropic key in Settings first.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '';
+    els.bindNotice.innerHTML = demo ? '<p>' + T('演示：回放事先整理好的结果', 'Demo: replay a prepared guide') + '</p>' + (!X.library.replaySet(notes) ? '<p>' + T('演示版只为这两组准备了结果。', 'The demo has results for these two sets.') + '</p><button class="btn" data-demo-set="kyoto">' + T('选京都 12 篇', 'Select 12 Kyoto notes') + '</button><button class="btn" data-demo-set="food">' + T('选美食 8 篇', 'Select 8 food notes') + '</button>' : '') : !X.ai.isReady() ? '<p>' + T('需要先在设置里填 Anthropic 密钥。', 'Add your Anthropic key in Settings first.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '';
     els.consolidateBtn.disabled = binding || (demo && (!X.library.replaySet(notes) || Boolean(els.addToComp.value)));
   }
   function openTray() {
@@ -353,22 +364,26 @@ window.XHS = window.XHS || {};
   }
   function marginCard(source, c, section) {
     var note = sourceNote(source, c);
-    return '<button class="margin-card" data-read="src" data-n="' + source.n + '" data-section="' + section + '">' + (note ? coverHtml(note) : '') + '<span><strong>[' + source.n + '] ' + esc(X.refs.label(source)) + '</strong><small>' + (note ? esc((note.platform === 'bili' ? T('B站', 'Bilibili') : T('小红书', 'Xiaohongshu')) + (note.author ? ' · @' + note.author : '') + (note.duration ? ' · ' + fmtDur(note.duration) : '')) : T('来源笔记已不在此库中', 'Source note is no longer in this library')) + '</small></span></button>';
+    return '<button class="margin-card" data-read="src" data-n="' + source.n + '" data-section="' + section + '">' + (note ? coverHtml(note) : '') + '<span><strong>[' + source.n + '] ' + esc(X.refs.label(source)) + '</strong></span></button>';
   }
   function compEditHtml(c) {
     return '<input class="comp__ed-title" aria-label="' + T('合集标题', 'Guide title') + '" value="' + esc(c.title) + '"><textarea class="comp__ed-sum" aria-label="' + T('概述', 'Summary') + '" rows="3">' + esc(c.summary) + '</textarea>' + (c.sections || []).map(function (section, i) { return '<section class="read__sec"><input class="comp__ed-h" data-i="' + i + '" aria-label="' + T('板块标题', 'Section heading') + '" value="' + esc(section.heading) + '"><textarea class="comp__ed-c" data-i="' + i + '" aria-label="' + T('板块正文', 'Section text') + '" rows="10">' + esc(section.content) + '</textarea></section>'; }).join('');
   }
+  function sourceOverview(c) {
+    var bound = X.refs.bind(c), videoCount = bound.sources.filter(function (source) { return isVideo(sourceNote(source, c) || {}); }).length;
+    return '<div class="source-overview"><p>' + bound.sources.length + T(' 篇来源', ' sources') + '</p><p>' + T('小红书 ', 'Xiaohongshu ') + (bound.sources.length - videoCount) + ' · ' + T('B站视频 ', 'Bilibili videos ') + videoCount + '</p><div class="source-cover-grid">' + bound.sources.map(function (source) { var note = sourceNote(source, c); return '<button class="btn" data-read="src" data-n="' + source.n + '" aria-label="' + esc('[' + source.n + '] ' + X.refs.label(source)) + '">' + (note ? coverHtml(note) : svg('post')) + '</button>'; }).join('') + '</div></div>';
+  }
   function compReadHtml(c) {
     var bound = X.refs.bind(c), editing = editingCompId === c.id;
     var toc = bound.sections.map(function (section, i) { return '<li><span class="read__n">' + (i + 1) + '</span><a href="#read-sec-' + (i + 1) + '" data-read="jump" data-i="' + (i + 1) + '">' + esc(section.heading) + '</a></li>'; }).join('');
-    var body = '<h1 id="read-title">' + esc(c.title) + '</h1><p class="read__lede">' + esc(c.summary) + '</p>' + (c.images?.length ? '<div class="read__kept"><h2>' + T('合集里留下的图', 'Images kept in this guide') + '</h2>' + renderImages(c) + '</div>' : '') + bound.sections.map(function (section, i) { return '<section class="read__sec" id="read-sec-' + (i + 1) + '"><h2 tabindex="-1">' + esc(section.heading) + '</h2><div class="read__text">' + esc(section.content) + '</div><p class="read__cites">' + T('来源', 'Sources') + ' ' + section.refs.map(function (n) { return '<a href="#read-src-' + n + '" data-read="src" data-n="' + n + '">[' + n + ']</a>'; }).join(' ') + '</p></section>'; }).join('') + (!bound.sections.length ? '<p>' + T('这篇合集还没有板块。', 'This guide has no sections yet.') + '</p>' : '') + '<section class="read__all-sources"><h2>' + T('全部来源', 'All sources') + '</h2><ol>' + bound.sources.map(function (source) { return '<li id="read-src-' + source.n + '"><span class="read__n">[' + source.n + ']</span> <button class="btn" data-read="src" data-n="' + source.n + '"><span>' + esc(X.refs.label(source)) + '</span></button>' + (!source.cited ? '<span class="read__tag">' + T('并入了但没有单独标注', 'Folded in, not cited by a section') + '</span>' : '') + (!X.refs.isWebUrl(source.url) && source.url ? '<span class="note__link">' + esc(source.url) + '</span>' : '') + '</li>'; }).join('') + '</ol></section>';
-    return '<div class="read__bar"><button class="btn" data-read="close">' + svg('back') + T('回到收藏', 'Back to library') + '</button><span class="read__bar-title">' + esc(c.title) + '</span><span class="read__meta"><span>' + bound.sources.length + T(' 篇来源', ' sources') + '</span><span>' + (c.lang === 'zh' || c.lang === 'Simplified Chinese' ? T('中文', 'Chinese') : T('英文', 'English')) + '</span><span>' + esc(localDay(c.runAt || c.savedAt)) + '</span></span>' + (editing ? '<button class="btn btn--primary" data-read="save-edit">' + T('保存', 'Save') + '</button><button class="btn" data-read="cancel-edit">' + T('取消', 'Cancel') + '</button>' : '<button class="btn" data-read="copy">' + T('复制全文', 'Copy as text') + '</button><button class="btn" data-read="export">' + T('下载 Markdown', 'Download Markdown') + '</button><button class="btn" data-read="trace">' + T('整理记录', 'How it was made') + '</button><button class="btn phone-contents" data-read="contents">' + T('目录', 'Contents') + '</button><details class="reader-menu"><summary aria-label="' + T('合集操作', 'Guide actions') + '">' + svg('more') + '</summary><div class="menu-items">' + [['edit', T('编辑', 'Edit')], ['reorg', T('再整理一次', 'Re-organize')], ['add', T('加入更多笔记', 'Add notes')], [c.archived ? 'unarch' : 'arch', c.archived ? T('取出', 'Restore') : T('归档', 'Archive')], ['del', T('删除', 'Delete')]].map(function (action) { return '<button class="btn" data-read="' + action[0] + '">' + action[1] + '</button>'; }).join('') + '</div></details>') + '</div><div class="read__grid"><nav class="read__toc" aria-label="' + T('目录', 'Contents') + '"><p class="read__aside-h">' + T('目录', 'Contents') + '</p><ol>' + toc + '</ol></nav><article class="read__body">' + (editing ? '<h1 id="read-title" class="sr-only">' + T('编辑合集', 'Edit guide') + '</h1>' + compEditHtml(c) : body) + '</article><aside class="read__sources"><p class="read__aside-h">' + T('这一节的来源', 'Sources for this section') + '</p>' + bound.sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(bound.sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join('') + '</aside></div><aside id="sourcePeek" class="source-peek" hidden></aside>';
+    var body = '<h1 id="read-title">' + esc(c.title) + '</h1><p class="read-mobile-meta">' + bound.sources.length + T(' 篇来源 · ', ' sources · ') + esc(localDay(c.runAt || c.savedAt)) + '</p><p class="read__lede">' + esc(c.summary) + '</p>' + (c.images?.length ? '<div class="read__kept"><h2>' + T('合集里留下的图', 'Images kept in this guide') + '</h2>' + renderImages(c) + '</div>' : '') + bound.sections.map(function (section, i) { return '<section class="read__sec" id="read-sec-' + (i + 1) + '"><h2 tabindex="-1">' + esc(section.heading) + '</h2><div class="read__text">' + esc(section.content) + '</div><p class="read__cites">' + T('来源', 'Sources') + ' ' + section.refs.map(function (n) { return '<a href="#read-src-' + n + '" data-read="src" data-n="' + n + '">[' + n + ']</a>'; }).join(' ') + '</p></section>'; }).join('') + (!bound.sections.length ? '<p>' + T('这篇合集还没有板块。', 'This guide has no sections yet.') + '</p>' : '') + '<section class="read__all-sources"><h2>' + T('全部来源', 'All sources') + '</h2><ol>' + bound.sources.map(function (source) { return '<li id="read-src-' + source.n + '"><span class="read__n">[' + source.n + ']</span> <button class="btn" data-read="src" data-n="' + source.n + '"><span>' + esc(X.refs.label(source)) + '</span></button>' + (!source.cited ? '<span class="read__tag">' + T('并入了但没有单独标注', 'Folded in, not cited by a section') + '</span>' : '') + (!X.refs.isWebUrl(source.url) && source.url ? '<span class="note__link">' + esc(source.url) + '</span>' : '') + '</li>'; }).join('') + '</ol></section>';
+    return '<div class="read__bar"><button class="btn" data-read="close">' + svg('back') + T('回到收藏', 'Back to library') + '</button><span class="read__bar-title">' + esc(c.title) + '</span><span class="read__meta"><span>' + bound.sources.length + T(' 篇来源', ' sources') + '</span><span>' + (c.lang === 'zh' || c.lang === 'Simplified Chinese' ? T('中文', 'Chinese') : T('英文', 'English')) + '</span><span>' + esc(localDay(c.runAt || c.savedAt)) + '</span></span>' + (editing ? '<button class="btn btn--primary" data-read="save-edit">' + T('保存', 'Save') + '</button><button class="btn" data-read="cancel-edit">' + T('取消', 'Cancel') + '</button>' : '<button class="btn read-main-action" data-read="copy">' + T('复制全文', 'Copy as text') + '</button><button class="btn read-main-action" data-read="export">' + T('下载 Markdown', 'Download Markdown') + '</button><button class="btn read-main-action" data-read="trace">' + T('整理记录', 'How it was made') + '</button><button class="btn phone-contents" data-read="contents">' + T('目录', 'Contents') + '</button><details class="reader-menu"><summary aria-label="' + T('合集操作', 'Guide actions') + '">' + svg('more') + '</summary><div class="menu-items">' + [['copy', T('复制全文', 'Copy as text')], ['export', T('下载 Markdown', 'Download Markdown')], ['trace', T('整理记录', 'How it was made')], ['edit', T('编辑', 'Edit')], ['reorg', T('再整理一次', 'Re-organize')], ['add', T('加入更多笔记', 'Add notes')], [c.archived ? 'unarch' : 'arch', c.archived ? T('取出', 'Restore') : T('归档', 'Archive')], ['del', T('删除', 'Delete')]].map(function (action) { return '<button class="btn" data-read="' + action[0] + '">' + action[1] + '</button>'; }).join('') + '</div></details>') + '</div><div class="read__grid"><nav class="read__toc" aria-label="' + T('目录', 'Contents') + '"><p class="read__aside-h">' + T('目录', 'Contents') + '</p><ol>' + toc + '</ol></nav><article class="read__body">' + (editing ? '<h1 id="read-title" class="sr-only">' + T('编辑合集', 'Edit guide') + '</h1>' + compEditHtml(c) : body) + '</article><aside class="read__sources">' + sourceOverview(c) + bound.sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(bound.sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join('') + '</aside></div><aside id="sourcePeek" class="source-peek" hidden></aside>';
   }
   function alignMargins() {
     if (innerWidth < 900 || els.readDlg.classList.contains('trace-open')) return;
     var margin = els.readDlg.querySelector('.read__sources'); if (!margin) return;
-    var end = 0, top = margin.getBoundingClientRect().top;
-    els.readDlg.querySelectorAll('[data-margin]').forEach(function (group) { var section = els.readDlg.querySelector('#read-sec-' + group.dataset.margin); if (!section) return; var position = section.getBoundingClientRect().top - top; group.style.marginTop = Math.max(0, position - end) + 'px'; end = position + group.getBoundingClientRect().height + 24; });
+    var top = margin.getBoundingClientRect().top, overview = margin.querySelector('.source-overview'), end = overview ? overview.getBoundingClientRect().bottom - top + 24 : 0;
+    els.readDlg.querySelectorAll('[data-margin]').forEach(function (group) { var section = els.readDlg.querySelector('#read-sec-' + group.dataset.margin); if (!section) return; var position = section.getBoundingClientRect().top - top; var gap = Math.max(0, position - end); if (group.dataset.margin === '1') gap = Math.min(32, gap); group.style.marginTop = gap + 'px'; end = group.getBoundingClientRect().bottom - top + 24; });
   }
   function openRead(id, opener) {
     var c = compById(id); if (!c) return;
@@ -389,7 +404,7 @@ window.XHS = window.XHS || {};
   function closePeek() { els.readDlg.querySelector('#sourcePeek').hidden = true; if (peekOpener?.isConnected) peekOpener.focus(); }
   function traceHtml(c) {
     var sources = X.refs.bind(c), notes = (c.sourceNoteIds || []).map(noteById).filter(Boolean), videos = notes.filter(isVideo), chars = c.trace?.transcriptCharsUsed ?? videos.reduce(function (sum, note) { return sum + Math.min((note.transcript || '').length, 8000); }, 0);
-    return '<div class="trace"><h2 class="read__aside-h">' + T('整理记录', 'How it was made') + '</h2><p>' + notes.length + T(' 篇笔记整理成 ', ' notes bound into ') + sources.sections.length + T(' 节', ' sections') + '</p><p>' + videos.length + T(' 段视频，转写共 ', ' videos, ') + chars.toLocaleString() + T(' 字用于整理', ' transcript characters used') + '</p><p>' + (c.trace?.imagesRead ?? T('未记录', 'Not recorded')) + T(' 张图送入，留下 ', ' images read, ') + Math.max((c.images || []).length, (c.imagesRepo || []).length) + T(' 张', ' kept') + '</p><p>' + esc((c.model || 'Claude').replace(/claude-.*/, 'Claude')) + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</p>' + (c.demoKey ? '<p>' + T('由 AI 在本次构建中按应用提示词整理，演示中回放。来源与地点均为虚构。', 'Written by an AI model during this build using the app’s prompt, then replayed. Sources and locations are fictional.') + '</p>' : '') + '<ul>' + sources.sources.map(function (source) { return '<li>' + marginCard(source, c, 0) + '<small>' + sources.sections.map(function (section, i) { return section.refs.includes(source.n) ? (i + 1) + ' ' + section.heading : ''; }).filter(Boolean).map(esc).join(' · ') + (!source.cited ? T('并入了但没有单独标注', 'Folded in, not cited by a section') : '') + '</small></li>'; }).join('') + '</ul></div>';
+    return '<div class="trace"><h2 class="read__aside-h">' + T('整理记录', 'How it was made') + '</h2><p>' + notes.length + T(' 篇笔记整理成 ', ' notes bound into ') + sources.sections.length + T(' 节', ' sections') + '</p><p>' + videos.length + T(' 段视频，转写共 ', ' videos, ') + chars.toLocaleString() + T(' 字用于整理', ' transcript characters used') + '</p><p>' + (c.trace?.imagesRead ?? T('未记录', 'Not recorded')) + T(' 张图送入，留下 ', ' images read, ') + Math.max((c.images || []).length, (c.imagesRepo || []).length) + T(' 张', ' kept') + '</p><p>' + esc(c.demoKey ? T('模型编写 · 示例回放', 'AI-authored · Demo replay') : (c.model || 'Claude').replace(/claude-.*/, 'Claude')) + ' · ' + esc(localDay(c.runAt || c.savedAt)) + '</p>' + (c.demoKey ? '<p>' + T('由 AI 模型按 Clipbind 自己的提示词编写；演示中回放，未现场请求模型。', 'Written by an AI model with Clipbind’s own prompt; replayed in the demo. No live model request.') + '</p>' : '') + '<div class="trace-matrix"><table><thead><tr><th>' + T('来源与节', 'Source / section') + '</th>' + sources.sections.map(function (section, i) { return '<th title="' + esc(section.heading) + '">' + (i + 1) + '</th>'; }).join('') + '</tr></thead><tbody>' + sources.sources.map(function (source) { var note = sourceNote(source, c); return '<tr><th><button class="btn" data-read="src" data-n="' + source.n + '">' + (note ? coverHtml(note) : '') + '<span>' + esc(X.refs.label(source)) + '</span></button>' + (!source.cited ? '<small>' + T('并入但未单独标注', 'Folded in, uncited') + '</small>' : '') + '</th>' + sources.sections.map(function (section) { return '<td aria-label="' + (section.refs.includes(source.n) ? T('引用', 'Cited') : T('未引用', 'Not cited')) + '">' + (section.refs.includes(source.n) ? '<span class="trace-dot"></span>' : '') + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div></div>';
   }
   function saveGuideEdit() {
     var c = compById(readingCompId); if (!c) return;
@@ -405,11 +420,11 @@ window.XHS = window.XHS || {};
   function seedDemo() {
     var language = X.i18n.lang; if (demoLanguage === language) return; demoLanguage = language;
     var notes = X.demo.notes(language), previous = new Map(X.store.getAll().filter(function (n) { return n.demoKey; }).map(function (n) { return [n.id, n]; }));
-    X.store.replaceAll(X.store.getAll().filter(function (n) { return !n.demoKey; }).concat(notes.map(function (note) { return Object.assign({}, note, { archived: previous.get(note.id)?.archived || false }); })));
+    X.store.replaceAll(X.store.getAll().filter(function (n) { return !n.demoKey; }).concat(notes.map(function (note) { return Object.assign({}, note, { archived: previous.has(note.id) ? previous.get(note.id).archived : note.group === 'kyoto' }); })));
     var previousGuides = new Map(X.store.getComps().map(function (c) { return [c.id, c]; }));
-    X.store.replaceAllComps(X.store.getComps().filter(function (c) { return !c.demoKey; }).concat(['kyoto', 'food'].map(function (key) { var c = X.demo.guide(key, language); return Object.assign(c, { archived: previousGuides.get(c.id)?.archived || false }); })));
-    activeFilter = '旅行'; focusedId = 'demo-kyoto-1'; renderLibrary();
-    if (!els.urlInput.value || els.urlInput.dataset.sample === 'true') { els.urlInput.value = X.demo.captureText(language); els.urlInput.dataset.sample = 'true'; }
+    X.store.replaceAllComps(X.store.getComps().filter(function (c) { return !c.demoKey; }).concat((previousGuides.has('demo-guide-food') ? ['kyoto', 'food'] : ['kyoto']).map(function (key) { var c = X.demo.guide(key, language); return Object.assign(c, { archived: previousGuides.get(c.id)?.archived || false }); })));
+    activeFilter = '美食'; focusedId = 'demo-food-1'; renderLibrary();
+    if (!els.urlInput.value || els.urlInput.dataset.sample === 'true') { els.urlInput.value = ''; els.urlInput.dataset.sample = 'true'; }
   }
   function renderStatic() {
     if (renderedLanguage && renderedLanguage !== X.i18n.lang) {
@@ -420,15 +435,15 @@ window.XHS = window.XHS || {};
     }
     renderedLanguage = X.i18n.lang;
     X.i18n.applyStatic();
-    els.urlInput.placeholder = T('粘贴小红书或B站的链接、分享文字', 'Paste a Xiaohongshu or Bilibili link or share text'); els.urlInput.setAttribute('aria-label', els.urlInput.placeholder);
+    els.urlInput.placeholder = T('粘贴链接或分享文字', 'Paste a link or share text'); els.urlInput.setAttribute('aria-label', els.urlInput.placeholder);
     els.fetchBtn.textContent = T('保存', 'Save'); els.pasteBtn.textContent = T('粘贴', 'Paste');
-    els.search.placeholder = T('搜索笔记和合集', 'Search notes and guides'); els.search.setAttribute('aria-label', els.search.placeholder);
+    els.search.placeholder = T('搜索笔记和合集', 'Search notes and guides'); els.search.setAttribute('aria-label', els.search.placeholder); els.search.title = els.search.placeholder + ' (⌘K)';
     els.syncBtn.setAttribute('aria-label', T('同步', 'Sync')); els.searchToggle.setAttribute('aria-label', T('搜索', 'Search'));
     els.rail.setAttribute('aria-label', T('收藏库', 'Library')); els.detailPane.setAttribute('aria-label', T('笔记预览', 'Note preview'));
     document.querySelector('.list-column').setAttribute('aria-label', T('笔记和合集', 'Notes and guides'));
     els.phonePlaces.setAttribute('aria-label', T('收藏库', 'Library'));
     els.noteDlg.setAttribute('aria-label', T('笔记', 'Note'));
-    els.aboutBtn.textContent = T('它是怎么做的', 'How it works'); els.aboutBtn.hidden = !demo;
+    els.aboutBtn.textContent = T('它是怎么做的', 'How it works'); els.aboutBtn.hidden = true;
     var settingsAbout = document.querySelector('#suite-app-controls [data-how]');
     if (settingsAbout && settingsAbout.textContent !== els.aboutBtn.textContent) settingsAbout.textContent = els.aboutBtn.textContent;
     els.newGuide.textContent = T('新合集', 'New guide'); els.existingGuide.textContent = compById(els.addToComp.value)?.title || T('并入已有合集', 'Add to a guide');
@@ -441,7 +456,8 @@ window.XHS = window.XHS || {};
     document.querySelector('[data-toggle-pane]').textContent = paneCollapsed ? T('显示预览', 'Show preview') : T('收起预览', 'Hide preview');
     document.querySelector('.skip').textContent = T('跳到笔记', 'Skip to notes'); document.querySelector('.brand').setAttribute('aria-label', T('Clipbind 首页', 'Clipbind home'));
     document.querySelectorAll('summary[aria-label]').forEach(function (el) { if (el.closest('.library-menu')) el.setAttribute('aria-label', T('收藏库工具', 'Library tools')); });
-    if (demo && !els.demoStrip.dataset.dismissed) { els.demoStrip.hidden = false; els.demoStrip.innerHTML = '<span>' + T('示例数据是虚构的。看看 12 篇京都笔记怎么变成一篇合集。', 'These sample notes are invented. See how 12 Kyoto notes became one guide.') + '</span><button class="btn" data-cact="read" data-id="demo-guide-kyoto">' + T('打开《京都五日》', 'Open the guide') + '</button><button class="btn" data-how>' + T('它是怎么做的', 'How it works') + '</button>' + iconBtn('data-dismiss-demo', '关闭示例提示', 'Dismiss demo strip', 'close'); }
+    var sample = document.querySelector('[data-demo-capture]'); sample.hidden = !demo; sample.textContent = T('试存一条示例', 'Try a sample save');
+    if (demo && !els.demoStrip.dataset.dismissed) { els.demoStrip.hidden = false; els.demoStrip.innerHTML = '<span>' + T('虚构示例', 'Fictional notes') + '</span><button class="btn" data-cact="read" data-id="demo-guide-kyoto">' + T('打开《京都五日》', 'Open Kyoto guide') + '</button><details class="library-menu"><summary aria-label="' + T('示例说明', 'About the demo') + '">' + svg('more') + '</summary><div class="menu-items"><p>' + T('示例笔记与图片由 AI 创作，使用真实地名；预算为约数，出发前请核对实际信息。', 'AI-written sample notes and images use real place names. Budgets are rough planning ranges; check current details before visiting.') + '</p><button class="btn" data-how>' + T('它是怎么做的', 'How it works') + '</button></div></details>' + iconBtn('data-dismiss-demo', '关闭示例提示', 'Dismiss demo strip', 'close'); }
   }
   function showInfo(shortcuts, localVideo) {
     var title = shortcuts ? T('键盘快捷键', 'Keyboard shortcuts') : localVideo ? T('本机视频服务', 'Local video service') : T('它是怎么做的', 'How it works');
@@ -454,9 +470,23 @@ window.XHS = window.XHS || {};
       ['refs.js', T('沿来源读回去', 'Follow the sources'), T('全文统一编号，点引用可看原笔记。复制与 Markdown 下载共用同一套来源逻辑。', 'Shared citation numbering opens the saved note. Text copy and Markdown download use the same source resolver.'), 'node check-export.mjs'],
       ['fetch.js', T('视频留在本机处理', 'Process video locally'), T('yt-dlp 下载，faster-whisper 转写，按画面差异取帧，再由 Claude 挑出有信息的截图。登录态和媒体留在本机。示例转写是虚构脚本。', 'yt-dlp downloads, faster-whisper transcribes, frame differences find candidates, then Claude selects useful frames. Sessions and media stay local. Demo transcripts are scripted.'), 'node check-capture.mjs']
     ];
+    pipelineStages = [
+      ['parse.js', T('粘贴', 'Paste'), T('先保留文字和链接，再读取原帖。失败也能继续编辑。', 'Keep text and its link before fetching. A failed read leaves an editable note.'), 'node check-capture.mjs'],
+      ['fetch.js', T('读取', 'Read'), stages[0][2], stages[0][3]],
+      stages[1],
+      ['merge.js', T('保存与同步', 'Store and sync'), stages[2][2] + ' ' + stages[3][2], 'node check.mjs · 40 cases · --break'],
+      stages[4], stages[5],
+      ['app.js', T('阅读', 'Reader'), T('点编号回看原笔记，在阅读处编辑，或下载带来源的全文。', 'Follow a citation to the saved note, edit where you read, or download the full guide with its sources.'), 'node check-export.mjs']
+    ];
     var keys = [['/', T('搜索', 'Search')], ['a', T('粘贴输入框', 'Capture field')], ['j / k', T('下一篇、上一篇', 'Next or previous note')], ['x', T('选择笔记', 'Select note')], ['⌘A', T('全选当前列表', 'Select current list')], ['b', T('整理所选笔记', 'Bind selection')], ['e', T('归档', 'Archive')], ['[ / ]', T('收起侧栏、预览', 'Collapse rail or preview')], ['n / p', T('阅读下一节、上一节', 'Next or previous section')], ['z', T('撤销', 'Undo')], ['Esc', T('关闭上层，再取消选择', 'Close top layer, then clear selection')]];
-    els.infoDlg.innerHTML = '<button class="btn" data-close-info>' + svg('close') + T('关闭', 'Close') + '</button><h1 id="info-title">' + title + '</h1>' + (shortcuts ? '<div class="shortcut-list">' + keys.map(function (key) { return '<kbd>' + key[0] + '</kbd><span>' + key[1] + '</span>'; }).join('') + '</div>' : localVideo ? '<p>' + stages[6][2] + '</p><p>' + T('在电脑上按仓库 local/README.md 启动服务，然后到设置的连接部分保存本机服务口令。', 'Start the service following local/README.md, then save its local service token under Connections in Settings.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '<p>' + T('笔记进来，带着来源的合集出去。每一步都能在代码和测试里找到。', 'A saved pile becomes a guide with traceable sources. Follow each step in the code and its checks.') + '</p><div class="pipeline">' + stages.map(function (stage) { return '<article><h2>' + stage[1] + '</h2><p>' + stage[2] + '</p><a href="https://github.com/NickkkLian/content-organizer/blob/main/js/' + stage[0] + '" target="_blank" rel="noreferrer">' + stage[0] + '</a><p><code>' + stage[3] + '</code></p></article>'; }).join('') + '</div>');
-    els.infoDlg.showModal();
+    els.infoDlg.innerHTML = '<button class="btn" data-close-info>' + svg('close') + T('关闭', 'Close') + '</button><h1 id="info-title">' + title + '</h1>' + (shortcuts ? '<div class="shortcut-list">' + keys.map(function (key) { return '<kbd>' + key[0] + '</kbd><span>' + key[1] + '</span>'; }).join('') + '</div>' : localVideo ? '<p>' + stages[6][2] + '</p><p>' + T('在电脑上按仓库 local/README.md 启动服务，然后到设置的连接部分保存本机服务口令。', 'Start the service following local/README.md, then save its local service token under Connections in Settings.') + '</p><button class="btn" data-open-ai>' + T('打开设置', 'Open Settings') + '</button>' : '<p>' + T('笔记进来，带着来源的合集出去。每一步都能在代码和测试里找到。', 'A saved pile becomes a guide with traceable sources. Follow each step in the code and its checks.') + '</p><div class="pipeline-flow" role="tablist">' + pipelineStages.map(function (stage, i) { return (i ? svg('chevron') : '') + '<button class="pipeline-node" role="tab" aria-selected="' + (i === 0) + '" data-pipeline-node="' + i + '">' + stage[1] + '</button>'; }).join('') + '</div><div class="pipeline-branch">' + svg('video') + '<button class="btn" data-pipeline-video>' + T('本机视频：下载、转写、挑截图，再接入读取','Local video: download, transcribe, select frames, then join Read') + '</button></div><section id="pipelineDetail" class="pipeline-detail" role="tabpanel"></section>');
+    els.infoDlg.showModal(); if (!shortcuts && !localVideo) renderPipelineDetail(0);
+  }
+  function renderPipelineDetail(index, video) {
+    var stage = video ? ['fetch.js', T('本机视频', 'Local video'), T('本机下载和转写，按画面差异取帧，再由模型挑选有用截图。登录态和媒体留在本机；候选截图可发送给模型。', 'Download and transcribe locally, find frame changes, then ask the model to keep useful frames. Sessions and media stay local; candidate images may be sent to the model.'), 'node check-capture.mjs'] : pipelineStages[index];
+    var detail = document.getElementById('pipelineDetail'); if (!detail || !stage) return;
+    detail.innerHTML = '<h2>' + stage[1] + '</h2><p>' + stage[2] + '</p><a href="https://github.com/NickkkLian/content-organizer/blob/main/js/' + stage[0] + '" target="_blank" rel="noreferrer">' + stage[0] + '</a><p><code>' + stage[3] + '</code></p>';
+    els.infoDlg.querySelectorAll('[data-pipeline-node]').forEach(function (button) { button.setAttribute('aria-selected', !video && Number(button.dataset.pipelineNode) === index); });
   }
   function handleNoteAction(button) {
     var id = button.dataset.id, note = noteById(id), action = button.dataset.act;
@@ -495,7 +525,7 @@ window.XHS = window.XHS || {};
     if (action === 'export') return download(X.export.filename(c), compToMarkdown(c), 'text/markdown;charset=utf-8');
     if (action === 'jump') { var section = els.readDlg.querySelector('#read-sec-' + button.dataset.i); section?.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' }); section?.querySelector('h2')?.focus({ preventScroll: true }); els.readDlg.classList.remove('contents-open'); }
     if (action === 'contents') els.readDlg.classList.toggle('contents-open');
-    if (action === 'trace') { var open = els.readDlg.classList.toggle('trace-open'); els.readDlg.querySelector('.read__sources').innerHTML = open ? traceHtml(c) : X.refs.bind(c).sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(X.refs.bind(c).sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join(''); if (!open) alignMargins(); }
+    if (action === 'trace') { var open = els.readDlg.classList.toggle('trace-open'); els.readDlg.querySelector('.read__sources').innerHTML = open ? traceHtml(c) : sourceOverview(c) + X.refs.bind(c).sections.map(function (section, i) { return '<div class="margin-section" data-margin="' + (i + 1) + '">' + section.refs.map(function (n) { return marginCard(X.refs.bind(c).sources[n - 1], c, i + 1); }).join('') + '</div>'; }).join(''); if (!open) alignMargins(); }
     if (action === 'edit') { editingCompId = c.id; editingRevision = c.savedAt; els.readDlg.innerHTML = compReadHtml(c); els.readDlg.querySelector('.comp__ed-title').focus(); }
     if (action === 'save-edit') saveGuideEdit();
     if (action === 'cancel-edit') { editingCompId = null; openRead(c.id, readOpener); }
@@ -557,6 +587,10 @@ window.XHS = window.XHS || {};
       if (button.hasAttribute('data-toast')) toastActions[Number(button.dataset.toast)]?.run();
       if (button.hasAttribute('data-dismiss-toast')) els.status.hidden = true;
       if (button.hasAttribute('data-dismiss-demo')) { els.demoStrip.dataset.dismissed = 'true'; els.demoStrip.hidden = true; }
+      if (button.hasAttribute('data-demo-capture')) onFetch(X.demo.captureText(X.i18n.lang));
+      if (button.hasAttribute('data-phone-select-all')) { visibleNotes.forEach(function (note) { selectedIds.add(note.id); }); renderLibrary(); }
+      if (button.hasAttribute('data-pipeline-node')) renderPipelineDetail(Number(button.dataset.pipelineNode));
+      if (button.hasAttribute('data-pipeline-video')) renderPipelineDetail(0, true);
       if (button.hasAttribute('data-how')) showInfo();
       if (button.hasAttribute('data-close-info')) els.infoDlg.close();
       if (button.hasAttribute('data-close-note')) els.noteDlg.close();
@@ -588,7 +622,7 @@ window.XHS = window.XHS || {};
     els.railGuides.addEventListener('drop', function (event) { var target = event.target.closest('[data-cact]'); if (!target) return; event.preventDefault(); els.addToComp.value = target.dataset.id; updateSelBar(); });
     els.readDlg.addEventListener('cancel', function (event) { event.preventDefault(); var peek = els.readDlg.querySelector('#sourcePeek'); if (peek && !peek.hidden) closePeek(); else closeRead(); });
     els.readDlg.addEventListener('scroll', function () { els.readDlg.classList.toggle('is-scrolled', els.readDlg.scrollTop > 100); }, { passive: true });
-    window.addEventListener('resize', alignMargins);
+    window.addEventListener('resize', function () { alignMargins(); moveFilters(); });
     document.addEventListener('keydown', keyboard);
     window.addEventListener('beforeunload', function (event) { if (pendingCaptures.size || binding || editingCompId || noteDrafts.size) { event.preventDefault(); event.returnValue = ''; } });
   }
@@ -661,11 +695,11 @@ window.XHS = window.XHS || {};
   }
 
   async function copyText(t){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
-    try { await navigator.clipboard.writeText(t); setStatus(T('已复制到剪贴板 ✓','Copied to clipboard ✓'), 'ok'); }
+    try { await navigator.clipboard.writeText(t); setStatus(T('已复制到剪贴板','Copied to clipboard'), 'ok'); }
     catch (e) {
       var ta = document.createElement('textarea');
       ta.value = t; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); ta.remove(); setStatus(T('已复制 ✓','Copied ✓'), 'ok');
+      document.execCommand('copy'); ta.remove(); setStatus(T('已复制','Copied'), 'ok');
     }
   });}
 
@@ -705,7 +739,7 @@ window.XHS = window.XHS || {};
     var todo = X.store.getAll().filter(function (n) {
       return (n.images || []).length > (n.imagesRepo || []).filter(Boolean).length;
     });
-    if (!todo.length) { setStatus(T('所有图片都已归档 ✓','All images already archived ✓'), 'ok'); return; }
+    if (!todo.length) { setStatus(T('所有图片都已归档','All images already archived'), 'ok'); return; }
     if (!X.images.ready()) { setStatus(T('请先在设置的连接部分里连接 GitHub（归档图片需要令牌）','Connect GitHub in Settings → Connection first (archiving needs a token)'), 'err'); return; }
     els.fixAllBtn.disabled = true;
     var ok = 0, fail = 0;
@@ -718,7 +752,7 @@ window.XHS = window.XHS || {};
       }
       renderLibrary();
       scheduleSync();
-      setStatus(T('修复完成：归档 ','Done: archived ') + ok + T(' 张','') + (fail ? T('，','; ') + fail + T(' 张失败（原帖可能已删除或需登录）',' failed (post deleted or login required)') : ' ✓'), fail ? 'err' : 'ok');
+      setStatus(T('修复完成：归档 ','Done: archived ') + ok + T(' 张','') + (fail ? T('，','; ') + fail + T(' 张失败（原帖可能已删除或需登录）',' failed (post deleted or login required)') : ''), fail ? 'err' : 'ok');
     } finally { els.fixAllBtn.disabled = false; }
   });}
 
@@ -798,7 +832,7 @@ window.XHS = window.XHS || {};
       X.store.archive(notes.map(function (n) { return n.id; }));   // consolidated source notes are archived automatically
       selectedIds.clear();
       renderLibrary(); renderComps(); updateSelBar();
-      setStatus(notes.length ? T('整理完成 ✓ 已存入合集，原笔记已自动归档','Done ✓ Saved to a guide; source notes auto-archived') : T('再整理完成 ✓ 合集已更新（去重合并、清理无效信息）','Re-organized ✓ Guide updated'), 'ok');
+      setStatus(notes.length ? T('整理完成 已存入合集，原笔记已自动归档','Done Saved to a guide; source notes auto-archived') : T('再整理完成 合集已更新（去重合并、清理无效信息）','Re-organized Guide updated'), 'ok');
       scheduleSync();
       openRead(saved.id); var restore = function () { X.store.unarchive(notes.map(function (n) { return n.id; })); renderLibrary(); scheduleSync(); }; lastUndo = restore; setStatus(T('合集已保存，原笔记已归档', 'Guide saved, source notes archived'), 'ok', [{ label: T('撤销归档', 'Restore them'), run: restore }]);
     } catch (e) {

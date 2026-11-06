@@ -18,6 +18,7 @@ jobs:
       - run: node check-export.mjs
       - run: node check-redesign.mjs
       - run: node check-capture.mjs
+      - run: node check-demo-assets.mjs
 
   break:
     runs-on: ubuntu-latest

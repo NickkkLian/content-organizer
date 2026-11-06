@@ -1,41 +1,41 @@
 {
-  "method": "Authored by the AI coding agent in this build, following the exact application binding prompt. No API call was made. Fictional inputs and original SVG diagrams only.",
+  "method": "Authored by the AI coding agent in this build, following the exact application binding prompt. No API call was made. AI-written sample notes with real public place names, approximate planning ranges, original generated cover photographs and SVG diagrams.",
   "language": "zh",
-  "authoredAt": "2026-11-06T03:21:22.917Z",
+  "authoredAt": "2026-11-06T04:37:45.591Z",
   "system": "You are a content editor. Task: take the saved items the user provides (Xiaohongshu posts/videos, Bilibili videos; sometimes an existing compilation as well), organise, summarise and de-duplicate them, and merge them into one clearly structured long-form piece (a \"compilation\").\nRequirements:\n1. Identify the shared theme and several sub-topics; one section per sub-topic.\n2. **De-duplicate and merge**: keep each piece of information once; fold similar views/methods into one fuller statement; merge repetition across sources and across sections so the reader never sees the same thing twice.\n3. **Remove noise, but do not delete substance**: drop off-topic chatter, engagement bait (follow/like/subscribe/\"see comments\"), pure emotional filler, and the repetition and garbling typical of speech transcripts; always keep the concrete, valuable facts — shop names, addresses, prices, steps, figures, opinions, conclusions, lessons, links.\n4. **Present the content directly, not as reported speech**: never write \"the author says / the creator mentions / they recommend\"; state the facts, views and methods themselves.\n5. Distil and rewrite in your own words; never copy sentences verbatim. Write all output in Simplified Chinese.\n6. Video content is mostly speech-to-text — no punctuation, colloquial, with homophone errors; infer the intended meaning from context before distilling.\n7. If images are attached, read the text and key information inside them (menus, price lists, slides, figures) and fold it into the body.\n8. **Keep only necessary images**: images are labelled [image N-M] (N = item number, M = image number within that item). Put the ones that text cannot replace — menus, price lists, slides, charts, data screenshots, step-by-step photos, UI screenshots with key information — into keep_images; never keep decorative, scenery, portrait or duplicate images. If the body already states the information clearly, do not keep the image. Return an empty array [] if nothing is worth keeping.\n9. source_indices uses 1-based numbers and lists which input items [N] a section mainly draws on (an empty array is fine for new content with no single source).\n10. The title should be concise and informative; the summary sums up the whole piece in one or two sentences.",
-  "userText": "Here are 8 saved items (Xiaohongshu posts/videos, Bilibili videos):\n\n[1] Xiaohongshu post | Title: 周六早午餐，先从灯塔街开始\nTags: #温哥华 #早午餐\nBody / description: 演示中的温哥华店铺均为虚构。燕麦窗在灯塔街 18 号，周六 8:00–15:00，荞麦薄饼 C$18，咖啡 C$5，税和小费另算。9:30 前通常不用等，10:30 后等 25 分钟。两人坐窗边小桌，四人需预约。无麸质薄饼与普通面糊共用烤盘，过敏请先问店员。\nLink: https://example.com/clipbind/food-1\n\n[2] Xiaohongshu post | Title: 带朋友吃素，别只看菜单图标\nTags: #温哥华 #早午餐 #素食\nBody / description: 虚构的苔色餐桌在杉木街 42 号，周末 9:00–16:00，豆腐炒蛋 C$19，烤番茄 C$6，燕麦拿铁 C$6。厨房可以把黄油换橄榄油，但须点单时说明。蘑菇汤含鸡汤，叶子图标只表示有蔬菜。两人 C$62 预算含预留税和小费。门口有一级台阶，轮椅从侧门进。\nLink: https://example.com/clipbind/food-2\n\n[3] Xiaohongshu post | Title: 咖啡馆能不能坐久一点\nTags: #温哥华 #咖啡 #早午餐\nBody / description: 虚构回声咖啡在港湾小径 7 号，8:00–17:00，周二休息。手冲 C$6，鸡蛋吐司 C$14，第二杯滤泡咖啡 C$3。周末 11:00–14:00 不接笔记本，其他时间可在长桌用电脑，插座只有两处。靠窗安静桌限两人，隔音一般，开会戴耳机仍会影响别人。\nLink: https://example.com/clipbind/food-3\n\n[4] Xiaohongshu post | Title: 雨天排队？这家能预约\nTags: #温哥华 #早午餐 #雨天\nBody / description: 虚构红砖早餐房在枫巷 31 号，周末 8:30–14:30，煎蛋土豆盘 C$21，热茶 C$4。提前一天可订 9:00 或 13:00 桌，迟到保留 10 分钟。等位区无顶棚，下雨直接预约。雨伞留门口桶里，湿外套挂椅背会滴到别人。\nLink: https://example.com/clipbind/food-4\n\n[5] Xiaohongshu post | Title: 两家薄饼店，价差值不值\nTags: #温哥华 #早午餐 #薄饼\nBody / description: 虚构对比：燕麦窗荞麦薄饼 C$18，份量两张，水果另加 C$4；桦木煎饼屋在海风路 9 号，三张厚薄饼 C$22，含苹果酱，咖啡 C$5。后者周末 8:00–14:00，只收借记卡，10:00 前到。想吃咸味选燕麦窗，想两人分一份选桦木，分食需另点两杯饮料。\nLink: https://example.com/clipbind/food-5\n\n[6] Xiaohongshu post | Title: 早午餐后，沿河走到哪儿\nTags: #温哥华 #早午餐 #步行\nBody / description: 虚构步行路线：燕麦窗出门向南走 6 分钟到灯塔河道入口，沿水走 1.6 公里到白石小桥，约 30 分钟，终点有公共洗手间。回声咖啡距终点 7 分钟。雨天木板湿滑可改走平行的铺装路，多 200 米。全程不需要开车，回程公交站在杉木街路口。\nLink: https://example.com/clipbind/food-6\n\n[7] Xiaohongshu post | Title: 周末预算，菜单价以外还要留多少\nTags: #温哥华 #早午餐 #预算\nBody / description: 这是演示预算，不代表当地税率。两人燕麦窗 C$46 菜单小计，另留 C$12 税与小费，共 C$58。苔色餐桌两份炒蛋两杯燕麦拿铁小计 C$50，另留 C$12，共 C$62。红砖早餐房两份蛋盘两杯茶 C$50，另留 C$13，共 C$63。每家都可以问清账单构成再付款，预算没有停车费。\nLink: https://example.com/clipbind/food-7\n\n[8] Xiaohongshu post | Title: 店铺时间放一起，不用挨个翻\nTags: #温哥华 #早午餐\nBody / description: 演示店铺时间表：燕麦窗周六 8:00–15:00，周日不开；苔色餐桌周末 9:00–16:00；回声咖啡周末 8:00–17:00，周二休息；红砖早餐房周末 8:30–14:30；桦木煎饼屋周末 8:00–14:00。想周日吃早一点选桦木，晚一点选苔色。营业信息为虚构样本，真实出门前仍应查当天营业。\nLink: https://example.com/clipbind/food-8",
+  "userText": "Here are 8 saved items (Xiaohongshu posts/videos, Bilibili videos):\n\n[1] Xiaohongshu post | Title: Kitsilano 早午餐：番茄炖蛋\nTags: #温哥华 #早午餐\nBody / description: 在 Kitsilano 找一份番茄炖蛋配酸面包，先吃饱再沿海边散步。两人出门前先看当天菜单和能否预约；周末不把排队时间当成固定值。蛋的熟度、辣度和额外面包在点单时问清。餐饮预算先按每人约三四十加元上下预留，实际花费看菜单、税与自行选择的小费。\nLink: https://example.com/clipbind/food-1\n\n[2] Xiaohongshu post | Title: Mount Pleasant，豆腐炒蛋\nTags: #温哥华 #早午餐 #素食\nBody / description: 想吃植物为主的早午餐，可以从 Mount Pleasant 一带找豆腐炒蛋、烤番茄和蔬菜。给同行的人看完整菜单，不用叶子图标代替配料确认。奶、黄油和高汤要直接问店员，饮食要求在点单前说明。无障碍入口和座位情况也先向店家核对。\nLink: https://example.com/clipbind/food-2\n\n[3] Xiaohongshu post | Title: West 4th 咖啡，只坐一会儿\nTags: #温哥华 #咖啡 #早午餐\nBody / description: West 4th Avenue 的咖啡馆可以作为早午餐前后的一站。先问能不能用电脑、是否有插座，不把一张双人桌占整个下午。排队明显时喝完就走，电话到室外接。手冲和拿铁先选一种，没必要为了试菜单一次点满。\nLink: https://example.com/clipbind/food-3\n\n[4] Xiaohongshu post | Title: Main Street 雨天，热茶和可颂\nTags: #温哥华 #早午餐 #雨天\nBody / description: 雨天把长等位换成 Main Street 一带的面包店或咖啡馆。可颂、热茶和能放湿伞的位置，比打卡一桌菜更实用。出门前确认当天开放和座位；门外排队没有遮雨就换下一家。湿外套和包不要挡住邻桌过道。\nLink: https://example.com/clipbind/food-4\n\n[5] Xiaohongshu post | Title: West End 松饼，两个人分着吃\nTags: #温哥华 #早午餐 #薄饼\nBody / description: 在 West End 找松饼时，比较的是份量和口味，不只是一份的价格。浆果、枫糖和咖啡可能分开计价，先看菜单。想分食就问店家是否方便，再决定要不要加一份咸食。两个人各选一种口味，比点两份相同的大盘更容易吃完。\nLink: https://example.com/clipbind/food-5\n\n[6] Xiaohongshu post | Title: 早餐三明治，带去海边\nTags: #温哥华 #早午餐 #步行\nBody / description: 买好早餐三明治，再去 False Creek 或 Kitsilano 的海边找允许停留的位置。路线按体力走，预留约半小时到一小时，不追求绕完整条海堤。垃圾带走，别喂野生动物；下雨时不在湿滑石边停留。回程先查公交站或步行路线。\nLink: https://example.com/clipbind/food-6\n\n[7] Xiaohongshu post | Title: 班尼迪克蛋，菜单价之外\nTags: #温哥华 #早午餐 #预算\nBody / description: 班尼迪克蛋配土豆看起来是一份，账单还可能有饮料、加料和税。先把想点的东西加起来，再单独决定小费，不把预留数当成当地固定税率。两人的早午餐可以先预留约六十至九十加元，点单前再按当天菜单调整；停车和交通另算。\nLink: https://example.com/clipbind/food-7\n\n[8] Xiaohongshu post | Title: 酸奶碗收尾，周末别排满\nTags: #温哥华 #早午餐\nBody / description: 不想吃大盘早午餐时，选酸奶、燕麦和水果，给下午留空间。周末当天先确认营业与是否有位，再决定去哪片街区。想看海选 Kitsilano，想接着逛小店可以留在 Main Street 或 West 4th。把吃饭、喝咖啡和散步连成半天，不需要八家都去。\nLink: https://example.com/clipbind/food-8",
   "images": [
     {
       "label": "[image 1-1]",
-      "file": "assets/demo-covers/food-1.svg"
+      "file": "assets/demo-covers/food-1.webp"
     },
     {
       "label": "[image 2-1]",
-      "file": "assets/demo-covers/food-2.svg"
+      "file": "assets/demo-covers/food-2.webp"
     },
     {
       "label": "[image 3-1]",
-      "file": "assets/demo-covers/food-3.svg"
+      "file": "assets/demo-covers/food-3.webp"
     },
     {
       "label": "[image 4-1]",
-      "file": "assets/demo-covers/food-4.svg"
+      "file": "assets/demo-covers/food-4.webp"
     },
     {
       "label": "[image 5-1]",
-      "file": "assets/demo-covers/food-5.svg"
+      "file": "assets/demo-covers/food-5.webp"
     },
     {
       "label": "[image 6-1]",
-      "file": "assets/demo-covers/food-6.svg"
+      "file": "assets/demo-covers/food-6.webp"
     },
     {
       "label": "[image 7-1]",
-      "file": "assets/demo-covers/food-7.svg"
+      "file": "assets/demo-covers/food-7.webp"
     },
     {
       "label": "[image 8-1]",
-      "file": "assets/demo-covers/food-8.svg"
+      "file": "assets/demo-covers/food-8.webp"
     }
   ],
   "schema": {
@@ -105,22 +105,22 @@
   "rawOutput": {
     "title": "温哥华周末早午餐",
     "topic": "温哥华美食",
-    "summary": "八篇笔记整理成一个不用赶路的周末。先选能坐下的时间，再看菜单、两人预算与饭后步道。店铺均为虚构。",
+    "summary": "从 Kitsilano 的番茄炖蛋到 West 4th 的咖啡，把早午餐、预算与饭后散步串成半天。",
     "sections": [
       {
-        "heading": "先选时间，再选店",
-        "content": "周六早一点去燕麦窗，灯塔街 18 号，8:00–15:00，9:30 前较好入座，10:30 后约等 25 分钟。窗边两人桌，四人先约。周日燕麦窗不开，8:00 可以去桦木煎饼屋，海风路 9 号，14:00 收，10:00 前到，只收借记卡。想晚一点，苔色餐桌在杉木街 42 号，周末 9:00–16:00。雨天订红砖早餐房，枫巷 31 号，周末 8:30–14:30，前一天可订 9:00 或 13:00，迟到保留十分钟，室外等位处没有顶棚。",
+        "heading": "先选街区，再选一餐",
+        "content": "想看海选 Kitsilano，番茄炖蛋与酸面包后接短走；想逛街可留在 Main Street 或 West 4th。Mount Pleasant 可以找豆腐炒蛋，West End 看松饼。酸奶燕麦碗适合想吃轻一点的那天。一天只组合一餐、一杯咖啡和一段路，不必八种都试。出门前核对当天菜单、座位与是否预约。",
         "source_indices": [
           1,
-          8,
-          5,
           2,
-          4
+          5,
+          8,
+          3
         ]
       },
       {
-        "heading": "菜单与饮食限制",
-        "content": "燕麦窗两张荞麦薄饼 C$18，水果加 C$4，咖啡 C$5；想咸味选这里。无麸质面糊共用烤盘，过敏先问。桦木三张厚薄饼 C$22，含苹果酱，咖啡 C$5，两人分食需各点饮料。苔色豆腐炒蛋 C$19、番茄 C$6、燕麦拿铁 C$6，可点单时把黄油换橄榄油；蘑菇汤含鸡汤，不能只看叶子图标。轮椅走苔色侧门，正门有一级台阶。红砖蛋盘 C$21，茶 C$4，伞放门口桶里。",
+        "heading": "点单前问清楚",
+        "content": "番茄炖蛋问蛋的熟度、辣度与加面包；松饼看份量，浆果、糖浆、咖啡可能另计。分食先问店家。豆腐炒蛋也要确认奶、黄油与高汤，不用图标判断饮食要求。无障碍入口和座位向店家确认。雨天用 Main Street 的可颂和热茶作短路线，没遮雨的长队就换一家。",
         "source_indices": [
           1,
           5,
@@ -130,25 +130,24 @@
       },
       {
         "heading": "两个人的预算",
-        "content": "燕麦窗两份薄饼两杯咖啡小计 C$46，预留税和小费 C$12，总计约 C$58。苔色两份炒蛋两杯燕麦拿铁小计 C$50，预留 C$12，总计 C$62。红砖两份蛋盘两杯茶 C$50，预留 C$13，总计 C$63。这些只是演示预算，不能当税率，停车另算，付款前可问清账单。",
+        "content": "先加餐点、饮料和加料，再看税与自行选择的小费。两人早午餐可先预留约六十至九十加元，再按当天菜单调整，停车和交通另算；预留数不能当成固定税率。班尼迪克蛋的菜单价未必就是整份账单。",
         "source_indices": [
           7,
-          1,
-          2,
-          4
+          1
         ]
       },
       {
-        "heading": "吃完走走，再喝一杯",
-        "content": "从燕麦窗向南走六分钟到灯塔河道，沿水 1.6 公里到白石小桥，约半小时，终点有洗手间。雨天改走平行铺装路，多 200 米，避开湿木板。回程公交在杉木街路口。终点再走七分钟到回声咖啡，港湾小径 7 号，8:00–17:00、周二休息。手冲 C$6，鸡蛋吐司 C$14，续滤泡 C$3。周末 11:00–14:00 不接笔记本，其他时段可用长桌，仅两处插座；窗边桌限两人，电话到外面打。店铺、地址、时间与价格均为虚构，真实出门前查当天营业。",
+        "heading": "吃完走走，喝完就走",
+        "content": "早餐三明治可以带去 False Creek 或 Kitsilano 海边，预留约半小时到一小时，按体力折返。垃圾带走，不喂野生动物，雨天避开湿滑石边。West 4th 咖啡馆先问电脑与插座安排，排队时别长占小桌，电话到外面接。天气不好就缩短行程，热茶和可颂也足够。",
         "source_indices": [
           6,
           3,
+          4,
           8
         ]
       }
     ],
     "keep_images": []
   },
-  "outputSHA256": "761ba2f4940669e039e20a696fd28c592d01dda69f4d759e71b640ddc4a3dea8"
+  "outputSHA256": "f9a6c37b8484b7af2764b93aae16216d968ac47c80472aace4d7da729bf70ea8"
 }

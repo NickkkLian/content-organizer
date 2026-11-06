@@ -1,92 +1,88 @@
 {
   "title": "温哥华周末早午餐",
   "topic": "温哥华美食",
-  "summary": "八篇笔记整理成一个不用赶路的周末。先选能坐下的时间，再看菜单、两人预算与饭后步道。店铺均为虚构。",
+  "summary": "从 Kitsilano 的番茄炖蛋到 West 4th 的咖啡，把早午餐、预算与饭后散步串成半天。",
   "sections": [
     {
-      "heading": "先选时间，再选店",
-      "content": "周六早一点去燕麦窗，灯塔街 18 号，8:00–15:00，9:30 前较好入座，10:30 后约等 25 分钟。窗边两人桌，四人先约。周日燕麦窗不开，8:00 可以去桦木煎饼屋，海风路 9 号，14:00 收，10:00 前到，只收借记卡。想晚一点，苔色餐桌在杉木街 42 号，周末 9:00–16:00。雨天订红砖早餐房，枫巷 31 号，周末 8:30–14:30，前一天可订 9:00 或 13:00，迟到保留十分钟，室外等位处没有顶棚。",
+      "heading": "先选街区，再选一餐",
+      "content": "想看海选 Kitsilano，番茄炖蛋与酸面包后接短走；想逛街可留在 Main Street 或 West 4th。Mount Pleasant 可以找豆腐炒蛋，West End 看松饼。酸奶燕麦碗适合想吃轻一点的那天。一天只组合一餐、一杯咖啡和一段路，不必八种都试。出门前核对当天菜单、座位与是否预约。",
       "sources": [
         {
-          "title": "周六早午餐，先从灯塔街开始",
+          "title": "Kitsilano 早午餐：番茄炖蛋",
           "url": "https://example.com/clipbind/food-1"
         },
         {
-          "title": "店铺时间放一起，不用挨个翻",
-          "url": "https://example.com/clipbind/food-8"
-        },
-        {
-          "title": "两家薄饼店，价差值不值",
-          "url": "https://example.com/clipbind/food-5"
-        },
-        {
-          "title": "带朋友吃素，别只看菜单图标",
+          "title": "Mount Pleasant，豆腐炒蛋",
           "url": "https://example.com/clipbind/food-2"
         },
         {
-          "title": "雨天排队？这家能预约",
-          "url": "https://example.com/clipbind/food-4"
+          "title": "West End 松饼，两个人分着吃",
+          "url": "https://example.com/clipbind/food-5"
+        },
+        {
+          "title": "酸奶碗收尾，周末别排满",
+          "url": "https://example.com/clipbind/food-8"
+        },
+        {
+          "title": "West 4th 咖啡，只坐一会儿",
+          "url": "https://example.com/clipbind/food-3"
         }
       ]
     },
     {
-      "heading": "菜单与饮食限制",
-      "content": "燕麦窗两张荞麦薄饼 C$18，水果加 C$4，咖啡 C$5；想咸味选这里。无麸质面糊共用烤盘，过敏先问。桦木三张厚薄饼 C$22，含苹果酱，咖啡 C$5，两人分食需各点饮料。苔色豆腐炒蛋 C$19、番茄 C$6、燕麦拿铁 C$6，可点单时把黄油换橄榄油；蘑菇汤含鸡汤，不能只看叶子图标。轮椅走苔色侧门，正门有一级台阶。红砖蛋盘 C$21，茶 C$4，伞放门口桶里。",
+      "heading": "点单前问清楚",
+      "content": "番茄炖蛋问蛋的熟度、辣度与加面包；松饼看份量，浆果、糖浆、咖啡可能另计。分食先问店家。豆腐炒蛋也要确认奶、黄油与高汤，不用图标判断饮食要求。无障碍入口和座位向店家确认。雨天用 Main Street 的可颂和热茶作短路线，没遮雨的长队就换一家。",
       "sources": [
         {
-          "title": "周六早午餐，先从灯塔街开始",
+          "title": "Kitsilano 早午餐：番茄炖蛋",
           "url": "https://example.com/clipbind/food-1"
         },
         {
-          "title": "两家薄饼店，价差值不值",
+          "title": "West End 松饼，两个人分着吃",
           "url": "https://example.com/clipbind/food-5"
         },
         {
-          "title": "带朋友吃素，别只看菜单图标",
+          "title": "Mount Pleasant，豆腐炒蛋",
           "url": "https://example.com/clipbind/food-2"
         },
         {
-          "title": "雨天排队？这家能预约",
+          "title": "Main Street 雨天，热茶和可颂",
           "url": "https://example.com/clipbind/food-4"
         }
       ]
     },
     {
       "heading": "两个人的预算",
-      "content": "燕麦窗两份薄饼两杯咖啡小计 C$46，预留税和小费 C$12，总计约 C$58。苔色两份炒蛋两杯燕麦拿铁小计 C$50，预留 C$12，总计 C$62。红砖两份蛋盘两杯茶 C$50，预留 C$13，总计 C$63。这些只是演示预算，不能当税率，停车另算，付款前可问清账单。",
+      "content": "先加餐点、饮料和加料，再看税与自行选择的小费。两人早午餐可先预留约六十至九十加元，再按当天菜单调整，停车和交通另算；预留数不能当成固定税率。班尼迪克蛋的菜单价未必就是整份账单。",
       "sources": [
         {
-          "title": "周末预算，菜单价以外还要留多少",
+          "title": "班尼迪克蛋，菜单价之外",
           "url": "https://example.com/clipbind/food-7"
         },
         {
-          "title": "周六早午餐，先从灯塔街开始",
+          "title": "Kitsilano 早午餐：番茄炖蛋",
           "url": "https://example.com/clipbind/food-1"
-        },
-        {
-          "title": "带朋友吃素，别只看菜单图标",
-          "url": "https://example.com/clipbind/food-2"
-        },
-        {
-          "title": "雨天排队？这家能预约",
-          "url": "https://example.com/clipbind/food-4"
         }
       ]
     },
     {
-      "heading": "吃完走走，再喝一杯",
-      "content": "从燕麦窗向南走六分钟到灯塔河道，沿水 1.6 公里到白石小桥，约半小时，终点有洗手间。雨天改走平行铺装路，多 200 米，避开湿木板。回程公交在杉木街路口。终点再走七分钟到回声咖啡，港湾小径 7 号，8:00–17:00、周二休息。手冲 C$6，鸡蛋吐司 C$14，续滤泡 C$3。周末 11:00–14:00 不接笔记本，其他时段可用长桌，仅两处插座；窗边桌限两人，电话到外面打。店铺、地址、时间与价格均为虚构，真实出门前查当天营业。",
+      "heading": "吃完走走，喝完就走",
+      "content": "早餐三明治可以带去 False Creek 或 Kitsilano 海边，预留约半小时到一小时，按体力折返。垃圾带走，不喂野生动物，雨天避开湿滑石边。West 4th 咖啡馆先问电脑与插座安排，排队时别长占小桌，电话到外面接。天气不好就缩短行程，热茶和可颂也足够。",
       "sources": [
         {
-          "title": "早午餐后，沿河走到哪儿",
+          "title": "早餐三明治，带去海边",
           "url": "https://example.com/clipbind/food-6"
         },
         {
-          "title": "咖啡馆能不能坐久一点",
+          "title": "West 4th 咖啡，只坐一会儿",
           "url": "https://example.com/clipbind/food-3"
         },
         {
-          "title": "店铺时间放一起，不用挨个翻",
+          "title": "Main Street 雨天，热茶和可颂",
+          "url": "https://example.com/clipbind/food-4"
+        },
+        {
+          "title": "酸奶碗收尾，周末别排满",
           "url": "https://example.com/clipbind/food-8"
         }
       ]
@@ -118,8 +114,8 @@
   "images": [],
   "imagesRepo": [],
   "lang": "zh",
-  "runAt": "2026-11-06T03:21:22.917Z",
-  "savedAt": "2026-11-06T03:21:22.917Z",
+  "runAt": "2026-11-06T04:37:45.591Z",
+  "savedAt": "2026-11-06T04:37:45.591Z",
   "model": "AI-authored demo",
   "trace": {
     "imagesRead": 8,

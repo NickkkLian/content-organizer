@@ -56,7 +56,7 @@ async function openWith(url) {
   const ctx = Object.assign(window, { document, localStorage: { length: 0, key: () => null, getItem: () => null, setItem() {} },
     location: { search: '', hostname: 'localhost' }, navigator: {}, console, setTimeout, clearTimeout, URL, Promise,
     addEventListener() {}, removeEventListener() {}, matchMedia: () => stand(), confirm: () => false,
-    URLSearchParams, MutationObserver: class { observe() {} } });
+    innerWidth: 1230, URLSearchParams, MutationObserver: class { observe() {} } });
   ctx.window = ctx.self = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(HERE, 'js', 'refs.js'), 'utf8'), ctx);

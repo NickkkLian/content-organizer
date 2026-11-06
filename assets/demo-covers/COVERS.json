@@ -1,0 +1,218 @@
+[
+  {
+    "file": "food-1.webp",
+    "bytes": 53912,
+    "sha256": "5af4f9167af9a2c3db6f066d788819f39b6eef5e9baa3ac4166228bd3bd89d8a",
+    "prompt": "food-1.prompt.txt"
+  },
+  {
+    "file": "food-2.webp",
+    "bytes": 52224,
+    "sha256": "9019ba16f808697fb7f442a29569179e6a295df19098b4cfc0dd9056e9916c73",
+    "prompt": "food-2.prompt.txt"
+  },
+  {
+    "file": "food-3.webp",
+    "bytes": 51544,
+    "sha256": "8ec85a9cf8ff8219cb1ec4b41344d320888f963f80767acc61de915b8009ec0c",
+    "prompt": "food-3.prompt.txt"
+  },
+  {
+    "file": "food-4.webp",
+    "bytes": 52534,
+    "sha256": "45f8201f72f1d853ba6d166f1e62da5b7bd3d3679f7dba25599aa381ae40028b",
+    "prompt": "food-4.prompt.txt"
+  },
+  {
+    "file": "food-5.webp",
+    "bytes": 28004,
+    "sha256": "c6a8a26ff4621e495919228609edbcd333bb8121133e45ad8c5079fa48afe030",
+    "prompt": "food-5.prompt.txt"
+  },
+  {
+    "file": "food-6.webp",
+    "bytes": 53674,
+    "sha256": "b6ee67b0211c633c9e269bf23000daa7097d01839cef96172941f52e4307d72a",
+    "prompt": "food-6.prompt.txt"
+  },
+  {
+    "file": "food-7.webp",
+    "bytes": 47766,
+    "sha256": "01a6261b6e5258073f9a349424a685d1e1a3c17219aa78ee90ff349fa2ef0a65",
+    "prompt": "food-7.prompt.txt"
+  },
+  {
+    "file": "food-8.webp",
+    "bytes": 46634,
+    "sha256": "2fa66055136050461f7ce5e7363fe6ec1b3fb0f57036ba0d222a73f15e6d116d",
+    "prompt": "food-8.prompt.txt"
+  },
+  {
+    "file": "home-1.webp",
+    "bytes": 44344,
+    "sha256": "76e01a58927d6af338f9492af37bbd54e526aee5583533efc36b0e9a7d4cb90b",
+    "prompt": "home-1.prompt.txt"
+  },
+  {
+    "file": "home-2.webp",
+    "bytes": 48338,
+    "sha256": "4c644b0ec6e01dac52898848edefbc826c3fdc43043cb86d5b0fc7067ad5c9b1",
+    "prompt": "home-2.prompt.txt"
+  },
+  {
+    "file": "home-3.webp",
+    "bytes": 20246,
+    "sha256": "365e7c7dcba6aaa7137b663dd16f883d8f9b167c2625d6f5523a34173d518910",
+    "prompt": "home-3.prompt.txt"
+  },
+  {
+    "file": "home-4.webp",
+    "bytes": 22564,
+    "sha256": "e0b8eedc1b7c6c0fd91df7db9c2da2c4ae5b55f78aa21891dca9dc513da48f3a",
+    "prompt": "home-4.prompt.txt"
+  },
+  {
+    "file": "home-5.webp",
+    "bytes": 40274,
+    "sha256": "07d08716645bc7a999d2cdf3335e565d6b91cf226a3f71df1f3393f066f3153e",
+    "prompt": "home-5.prompt.txt"
+  },
+  {
+    "file": "kyoto-1.webp",
+    "bytes": 57450,
+    "sha256": "e1d2fa631790545cd7a7da8c08f10dd56ebe1a08ae165a051139ea0aae8b208e",
+    "prompt": "kyoto-1.prompt.txt"
+  },
+  {
+    "file": "kyoto-10.webp",
+    "bytes": 58362,
+    "sha256": "f76b4a280ed1b1dbb66bc45e6a134577e4fa15f9dc81f90ea6e95f23c4a75f5b",
+    "prompt": "kyoto-10.prompt.txt"
+  },
+  {
+    "file": "kyoto-11.webp",
+    "bytes": 43382,
+    "sha256": "ad2ec95fbb77b16959790eb0bded3cbc78d3cde074167a4b51172d66dd8f962b",
+    "prompt": "kyoto-11.prompt.txt"
+  },
+  {
+    "file": "kyoto-12.webp",
+    "bytes": 34752,
+    "sha256": "1af8ae11ab95f3b408b370870f2f60019112e62fd1de96b030c0e5e98493ab20",
+    "prompt": "kyoto-12.prompt.txt"
+  },
+  {
+    "file": "kyoto-2.webp",
+    "bytes": 34082,
+    "sha256": "c6f892883259fcec954d30cbe6d2a14397c8009da5a18fa75150ce89ed1310e7",
+    "prompt": "kyoto-2.prompt.txt"
+  },
+  {
+    "file": "kyoto-3.webp",
+    "bytes": 55102,
+    "sha256": "07ebd524fb863f13c6d5f0e5556ab9e7f8914cf9bebdcde2d84d01021491c9b6",
+    "prompt": "kyoto-3.prompt.txt"
+  },
+  {
+    "file": "kyoto-4.webp",
+    "bytes": 45066,
+    "sha256": "13fe6f31f327a0b892136a75571022599eb62a939100716148fe9e764606b7ab",
+    "prompt": "kyoto-4.prompt.txt"
+  },
+  {
+    "file": "kyoto-5.webp",
+    "bytes": 43824,
+    "sha256": "ecf049bef622cb4c1fe9ebe293ef9620360571ac26517d2a58b1b865ff6b7fe3",
+    "prompt": "kyoto-5.prompt.txt"
+  },
+  {
+    "file": "kyoto-6.webp",
+    "bytes": 57924,
+    "sha256": "f418d0fd8afb6c21b6189abd87d86525aac6be290b3de716c631ef9c8f3a0fb4",
+    "prompt": "kyoto-6.prompt.txt"
+  },
+  {
+    "file": "kyoto-7.webp",
+    "bytes": 57738,
+    "sha256": "cb350944d39a8dde70105577144540d168f7159ef250f305e28cfa56a9870bdb",
+    "prompt": "kyoto-7.prompt.txt"
+  },
+  {
+    "file": "kyoto-8.webp",
+    "bytes": 57298,
+    "sha256": "3c64087541be8ed02c8080962ac8b4ed74e82e40bc4a4798b46e1107a6b73a9f",
+    "prompt": "kyoto-8.prompt.txt"
+  },
+  {
+    "file": "kyoto-9.webp",
+    "bytes": 27622,
+    "sha256": "b9d214b8801ab9f3b09d293d59dde8dd8ac7082ca8b1be2c8f62b08ebc67f536",
+    "prompt": "kyoto-9.prompt.txt"
+  },
+  {
+    "file": "mixed-1.webp",
+    "bytes": 33148,
+    "sha256": "867ab9bff76e190850509181050072cdb43105d91fee035c12c2d45afc506ab5",
+    "prompt": "mixed-1.prompt.txt"
+  },
+  {
+    "file": "mixed-2.webp",
+    "bytes": 44680,
+    "sha256": "73b2adb6f08790ff7298b9f3df4c55e0354813a3b4f8e3ffc593cf4d84f70cf3",
+    "prompt": "mixed-2.prompt.txt"
+  },
+  {
+    "file": "mixed-3.webp",
+    "bytes": 41108,
+    "sha256": "14638b9aefc0d64ebed2c2a970d63a14f29a1c8cc67335481231eaa7ad9f749d",
+    "prompt": "mixed-3.prompt.txt"
+  },
+  {
+    "file": "mixed-4.webp",
+    "bytes": 44392,
+    "sha256": "ac5bef850cb701c6132cbbfcabac3e6782d676fab7024b65bfa63155da4ec980",
+    "prompt": "mixed-4.prompt.txt"
+  },
+  {
+    "file": "mixed-5.webp",
+    "bytes": 51828,
+    "sha256": "24754a3205bf96b9368fc93b5791d4ce24fd1b2158bb8d6d2403e932016ec0ab",
+    "prompt": "mixed-5.prompt.txt"
+  },
+  {
+    "file": "tech-1.webp",
+    "bytes": 36320,
+    "sha256": "ed0872964bd42caaf3a5969c1c89e9b3fc3917040e9d486e313e679ce9399166",
+    "prompt": "tech-1.prompt.txt"
+  },
+  {
+    "file": "tech-2.webp",
+    "bytes": 40048,
+    "sha256": "21accd5c51f31b0b20c77bbf13bdae7d3e358612dfe0b393f0ebc83aeb85019d",
+    "prompt": "tech-2.prompt.txt"
+  },
+  {
+    "file": "tech-3.webp",
+    "bytes": 24864,
+    "sha256": "81803d409695044c0cf1df1266e4c230dfab62b87483d018f343ad55f6bf4b3f",
+    "prompt": "tech-3.prompt.txt"
+  },
+  {
+    "file": "tech-4.webp",
+    "bytes": 25624,
+    "sha256": "a497f9aaee407f88fed1d5ea80a772f245e2ba2418e3a077d5afdfb19aec1fac",
+    "prompt": "tech-4.prompt.txt"
+  },
+  {
+    "file": "tech-5.webp",
+    "bytes": 23656,
+    "sha256": "5f7cc25f2f4aec27c6d610bfe11c249f01c219f80fb7c81f5213342227aefbba",
+    "prompt": "tech-5.prompt.txt"
+  },
+  {
+    "file": "tech-6.webp",
+    "bytes": 47042,
+    "sha256": "5c5ca15e17196714227d3020cb26df65e2aa1103305de8f04780a2a150e5c261",
+    "prompt": "tech-6.prompt.txt"
+  }
+]

@@ -1,0 +1,1 @@
+These original AI-generated demo covers are distributed under the repository MIT licence. Generated with built-in image_gen; no external photograph was used. They are illustrative sample images, not documentary photographs or depictions of a named business. Per-file prompts are adjacent.
