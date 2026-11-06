@@ -19,6 +19,7 @@ jobs:
       - run: node check-redesign.mjs
       - run: node check-capture.mjs
       - run: node check-demo-assets.mjs
+      - run: node check-font-provenance.mjs
 
   break:
     runs-on: ubuntu-latest
