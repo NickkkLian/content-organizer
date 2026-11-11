@@ -845,6 +845,7 @@ window.XHS = window.XHS || {};
 
   var syncTimer = null;
   var syncing = false;
+  var syncFeedback = null;
 
   function setSyncStatus(state, text, title){
     if (!els.syncStatus) return;
@@ -855,8 +856,12 @@ window.XHS = window.XHS || {};
 
   function updateSyncUI(){
     if (!X.sync) return;
-    if (X.sync.isConfigured()) setSyncStatus('ok', '☁ ' + X.sync.getConfig().owner, T('已连接 ','Connected ') + X.sync.dataLabel());
-    else setSyncStatus('', T('● 本地','● Local'), T('未连接云同步，仅存本机','Not connected; local only'));
+    if (!X.sync.isConfigured()) { syncFeedback = null; setSyncStatus('', T('● 本地','● Local'), T('未连接云同步，仅存本机','Not connected; local only')); return; }
+    if (syncFeedback?.source !== X.store.source()) syncFeedback = null;
+    if (syncing) setSyncStatus('syncing', T('↻ 同步中…','↻ Syncing…'));
+    else if (syncFeedback?.error) setSyncStatus('err', T('⚠ 同步失败','⚠ Sync failed'), syncFeedback.error.localizedMessage?.() || syncFeedback.error.message);
+    else if (syncFeedback?.at) setSyncStatus('ok', T('☁ 已同步','☁ Synced'), T('已同步于 ','Synced at ') + syncFeedback.at.toLocaleTimeString(X.i18n.lang === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }) + ' · ' + X.sync.dataLabel());
+    else setSyncStatus('ok', '☁ ' + X.sync.getConfig().owner, T('已连接 ','Connected ') + X.sync.dataLabel());
   }
 
   async function doSync(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
@@ -864,18 +869,18 @@ window.XHS = window.XHS || {};
     if (!X.sync || !X.sync.isConfigured() || syncing) return;
     var syncCompleted=false;
     syncing = true;
-    setSyncStatus('syncing', T('↻ 同步中…','↻ Syncing…'));
+    updateSyncUI();
     try {
       await X.sync.sync();syncCompleted=true;FirstRead.ready();
       renderLibrary();
       renderComps();
-      var t = new Date().toLocaleTimeString(X.i18n.lang === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' });
-      setSyncStatus('ok', T('☁ 已同步','☁ Synced'), T('已同步于 ','Synced at ') + t + ' · ' + X.sync.dataLabel());
+      syncFeedback = { source: X.store.source(), at: new Date() };
     } catch (e) {
       FirstRead.fail(doSync,T);
-      setSyncStatus('err', T('⚠ 同步失败','⚠ Sync failed'), e.message);
+      syncFeedback = { source: X.store.source(), error: e };
     } finally {
       syncing = false;
+      updateSyncUI();
       if(syncCompleted&&X.sync.isConfigured()&&X.sync.hasUnsynced())scheduleSync();
     }
   });}

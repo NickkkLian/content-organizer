@@ -11,7 +11,7 @@ const SaveStatus=(()=>{
  function paintOwned(){
   const el=document.querySelector('[data-save-status]'),label=el?.querySelector('[role=status]'),button=el?.querySelector('button');if(!label)return;
   const zh=XHS.i18n.lang==='zh';
-  if(XHS.sync.isConfigured()&&innerWidth<900){const snapshot=store.snapshot(),full=SuiteSaveStatus.describe(snapshot,XHS.i18n.lang),short={ready:zh?'已载入':'Loaded',saved:zh?'已保存':'Saved',saving:zh?'保存中…':'Saving…',draft:zh?'未保存':'Not saved'};label.textContent=short[snapshot.state]||full;label.title=full;label.setAttribute('aria-label',full);return;}
+  if(XHS.sync.isConfigured()){const snapshot=store.snapshot(),full=SuiteSaveStatus.describe(snapshot,XHS.i18n.lang),short={ready:zh?'已载入':'Loaded',saved:zh?'已保存':'Saved',saving:zh?'保存中…':'Saving…',draft:zh?'未保存':'Not saved'};label.textContent=innerWidth<900?(short[snapshot.state]||full):full;label.title=full;label.setAttribute('aria-label',full);return;}
   if(!XHS.sync.isConfigured()){
    if(localState.state==='ready'){const dates=XHS.store.getAll().concat(XHS.store.getComps()).map(item=>new Date(item.savedAt)).filter(date=>Number.isFinite(+date));if(dates.length)localState={state:'saved',at:new Date(Math.max(...dates.map(Number))),reason:''};}
    const time=localState.at?.toLocaleTimeString(zh?'zh-CN':'en-CA',{hour:'2-digit',minute:'2-digit'})||'';

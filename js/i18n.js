@@ -86,16 +86,22 @@ window.XHS = window.XHS || {};
     if (lb) lb.textContent = lang === 'en' ? '中文' : 'EN';
   }
 
+  function refreshLanguage() {
+    applyStatic();
+    if (X.app && X.app.rerender) X.app.rerender();
+    // Status text must change in this turn, without waiting for a save or timer.
+    if (typeof SaveStatus !== 'undefined') SaveStatus.refresh();
+  }
+
   function toggleLang() {
     lang = lang === 'en' ? 'zh' : 'en';
     try { localStorage.setItem(HubSettingsContract.preferenceKey("pha-lang"), lang); } catch (e) {}
-    applyStatic();
-    if (X.app && X.app.rerender) X.app.rerender();
+    refreshLanguage();
   }
 
   X.i18n = {
     get lang() { return lang; },
-    setLanguage(value){if(value===lang)return;lang=value;document.documentElement.lang=value;applyStatic();if(X.app)X.app.rerender();},
+    setLanguage(value){if(value===lang)return;lang=value;refreshLanguage();},
     T: T, L: L, applyStatic: applyStatic, toggleLang: toggleLang, I18N: I18N
   };
   window.T = T;   // convenience for the render modules

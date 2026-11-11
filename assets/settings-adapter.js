@@ -2,12 +2,13 @@
 (() => {
  const C=HubSettingsContract,R=HubSettingsRuntime,H=SuiteSettingsHelpers,X=XHS,kit=H.kitPreferences('content-organizer'),demo=new URLSearchParams(location.search).get('demo')==='1';
  kit.palette.labels={plaster:{en:'Paper',zh:'纸色'},paper:{en:'Linen',zh:'亚麻'},ink:{en:'Stone',zh:'灰石'}};
- const gear=document.getElementById('nl-settings-button'),notice=H.connectionNotice([document.getElementById('main')]);let backup;
+ const gear=document.getElementById('nl-settings-button'),notice=H.connectionNotice([document.getElementById('main')]);let backup,localServiceOnline=null;
+ function paintLocalService(){const status=document.getElementById('suite-local-service-status');if(status)status.textContent=localServiceOnline===null?'':localServiceOnline?X.i18n.T('本地服务在线','Local service online'):X.i18n.T('本地服务无法连接','Local service unreachable');}
  const tokenGroup=demo?null:SuiteFieldGroup({id:'suite-local-fetch',slot:'xhs_fetch_token',raw:true,fields:[{key:'token',secret:true,en:'Local fetch service token',zh:'本地抓取服务口令'}],removePrompt:{en:'Remove this browser’s local fetch service token? The service and its credential are not revoked.',zh:'移除此浏览器的本地抓取服务口令？这不会关闭服务或撤销口令。'},removeLabel:{en:'Remove local service token',zh:'移除本地服务口令'}});
  const adapter=window.settingsAdapter={
   ...kit,resetDescription:{en:' and reset the palette and single-key shortcuts',zh:'并恢复配色与单键快捷键'},app:'content-organizer',appSection:{en:"Your library",zh:"你的收藏库"},demo,isolatedCredentials:true,connectionSlot:'co_connection',
   routing:'Fixed content.json, archived images in xhs-images/. The local fetch service address and transport stay unchanged.',
-  language:()=>X.i18n.lang,setLanguage(value){X.i18n.setLanguage(value);H.gear(gear,X.i18n.T('设置','Settings'));},
+  language:()=>X.i18n.lang,setLanguage(value){X.i18n.setLanguage(value);paintLocalService();H.gear(gear,X.i18n.T('设置','Settings'));},
   connection:()=>({...X.connection.current}),unsaved:()=>X.connection.pending||X.app.unsaved(),
   settingsDirty:()=>kit.settingsDirty()||Boolean(tokenGroup?.dirty()),discardSettings(){kit.discardSettings();tokenGroup?.discard();},
   canConnectDrafts(next){return !X.connection.pending&&!C.complete(adapter.connection())&&!X.app.hasEditingDrafts()&&(X.store.source()==='offline'||X.store.sourceScope(next)===X.store.source());},
@@ -33,7 +34,7 @@
    if(demo)return;tokenGroup.mount(container);tokenGroup.refresh();
    let test=container.querySelector('#suite-local-service-test'),status=container.querySelector('#suite-local-service-status');
    if(!test){test=document.createElement('button');test.id='suite-local-service-test';status=document.createElement('p');status.id='suite-local-service-status';status.setAttribute('role','status');container.append(test,status);}
-   test.textContent=X.i18n.T('测试本地服务（只读）','Test local service (read only)');test.onclick=async()=>{const ok=await R.track(()=>X.fetchsvc.health());status.textContent=ok?X.i18n.T('本地服务在线','Local service online'):X.i18n.T('本地服务无法连接','Local service unreachable');};
+   paintLocalService();test.textContent=X.i18n.T('测试本地服务（只读）','Test local service (read only)');test.onclick=async()=>{localServiceOnline=await R.track(()=>X.fetchsvc.health());paintLocalService();};
   },
   dataControls(container,settings){
    let clear=container.querySelector('#clearAll');if(!clear){clear=document.createElement('button');clear.id='clearAll';clear.className='btn btn--danger';container.append(clear);}

@@ -10,6 +10,12 @@ window.XHS = window.XHS || {};
   'use strict';
   var T = (window.XHS.i18n && window.XHS.i18n.T) || function (zh, en) { return en; };
 
+  function syncError(message) {
+    var error = new Error(message());
+    error.localizedMessage = message;
+    return error;
+  }
+
   // localStorage key holding owner / repo / token. On GitHub Pages every public demo shares the origin
   // nickkklian.github.io, so a shared key would let a token entered in one demo connect the others: there this demo
   // keeps its own key (a trailing dot in the host name is the same site). Elsewhere the product family shares one
@@ -70,8 +76,8 @@ window.XHS = window.XHS || {};
   // ---------- validate the token (read-only GET /user, touches no repo) ----------
   async function validate(token){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var r = await fetch('https://api.github.com/user', { headers: headers(token) });
-    if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
-    if (!r.ok) throw new Error(T('校验失败 HTTP ','Validation failed HTTP ') + r.status);
+    if (r.status === 401) throw syncError(function () { return T('令牌无效或已过期 (401)','Token invalid or expired (401)'); });
+    if (!r.ok) throw syncError(function () { return T('校验失败 HTTP ','Validation failed HTTP ') + r.status; });
     var j = await r.json();
     return j.login;
   });}
@@ -86,13 +92,13 @@ window.XHS = window.XHS || {};
     var r = await fetch(contentsUrl(cfg, file), { headers: headers(cfg.token), cache: 'no-store' });
     HubSettingsRuntime.fileRead(cfg,file||DATA_PATH,r.status);
     if (r.status === 404) return { doc: emptyDoc(), sha: null, missing: true };
-    if (r.status === 401) throw new Error(T('令牌无效或已过期 (401)','Token invalid or expired (401)'));
-    if (!r.ok) throw new Error(T('读取失败 HTTP ','Read failed HTTP ') + r.status);
+    if (r.status === 401) throw syncError(function () { return T('令牌无效或已过期 (401)','Token invalid or expired (401)'); });
+    if (!r.ok) throw syncError(function () { return T('读取失败 HTTP ','Read failed HTTP ') + r.status; });
     var j = await r.json();
     var text = j.content ? b64decode(j.content) : '';
     if (!text && j.sha && j.size > 0) {
       var br = await fetch(blobUrl(cfg, j.sha), { headers: headers(cfg.token), cache: 'no-store' });
-      if (!br.ok) throw new Error(T('读取大文件失败 HTTP ','Reading the large file failed HTTP ') + br.status);
+      if (!br.ok) throw syncError(function () { return T('读取大文件失败 HTTP ','Reading the large file failed HTTP ') + br.status; });
       text = b64decode((await br.json()).content);
     }
     // A file that exists but cannot be read stops the sync. Treating it as an empty library
@@ -100,15 +106,15 @@ window.XHS = window.XHS || {};
     var parsed;
     try { parsed = JSON.parse(text); }
     catch (e) {
-      throw new Error(T('读不懂仓库里的 ','Cannot read ') + (file || DATA_PATH) +
-        T('，已停止同步，没有覆盖任何内容','; sync stopped and nothing was overwritten'));
+      throw syncError(function () { return T('读不懂仓库里的 ','Cannot read ') + (file || DATA_PATH) +
+        T('，已停止同步，没有覆盖任何内容','; sync stopped and nothing was overwritten'); });
     }
     // Valid JSON of the wrong shape stops it too: a list field holding something else would be read as empty and
     // the save would write that empty list over it. A field that is simply missing is fine and starts empty.
     var bad = shapeProblems(parsed);
     if (bad.length) {
-      throw new Error((file || DATA_PATH) + T(' 的格式不对（',' has the wrong shape (') + bad.join(', ') +
-        T('），已停止同步，没有覆盖任何内容',' is not what this app expects); sync stopped and nothing was overwritten'));
+      throw syncError(function () { return (file || DATA_PATH) + T(' 的格式不对（',' has the wrong shape (') + bad.join(', ') +
+        T('），已停止同步，没有覆盖任何内容',' is not what this app expects); sync stopped and nothing was overwritten'); });
     }
     return { doc: normalizeDoc(parsed), sha: j.sha, missing: false };
   });}
@@ -119,7 +125,7 @@ window.XHS = window.XHS || {};
     var r = await fetch(contentsUrl(cfg, file), {
       method: 'PUT', headers: headers(cfg.token), body: JSON.stringify(body)
     });
-    if (!r.ok) throw new Error(T('写入失败 HTTP ','Write failed HTTP ') + r.status + (r.status === 409 ? T('（版本冲突）',' (version conflict)') : ''));
+    if (!r.ok) throw syncError(function () { return T('写入失败 HTTP ','Write failed HTTP ') + r.status + (r.status === 409 ? T('（版本冲突）',' (version conflict)') : ''); });
     return r.json();
   });}
 
@@ -153,7 +159,7 @@ window.XHS = window.XHS || {};
   }
   async function syncWrite(){return (typeof HubSettingsRuntime==='undefined'?(fn=>fn()):(fn=>HubSettingsRuntime.track(fn)))(async()=>{/* settings workflow */
     var cfg = getConfig();
-    if (!isConfigured(cfg)) throw new Error(T('未连接：请先在设置里填入令牌','Not connected: enter a token in settings first'));
+    if (!isConfigured(cfg)) throw syncError(function () { return T('未连接：请先在设置里填入令牌','Not connected: enter a token in settings first'); });
 
     var remote = await getFile(cfg);                    // content.json
     var base = remote.missing ? await bootstrapFromLegacy(cfg) : remote.doc;

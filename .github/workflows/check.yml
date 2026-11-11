@@ -20,6 +20,7 @@ jobs:
       - run: node check-capture.mjs
       - run: node check-demo-assets.mjs
       - run: node check-font-provenance.mjs
+      - run: node --test test/save-status-language.test.mjs
 
   break:
     runs-on: ubuntu-latest
