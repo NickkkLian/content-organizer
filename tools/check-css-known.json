@@ -4,7 +4,5 @@
     "overlay": "The pinned shared panel only detects Mind Archive's reusable merge overlay. Clipbind uses its own native dialogs and never creates this class.",
     "suite-preference": "The two actual header buttons are styled by [data-settings-slot]>button in entry.css, including their 44 px targets, focus and hover states."
   },
-  "dead": {
-    "Use": "The CSS-in-JS heuristic joins the reset confirmation prose into .Use. This is a sentence, not a class selector."
-  }
+  "dead": {}
 }

@@ -5,7 +5,7 @@
  const gear=document.getElementById('nl-settings-button'),notice=H.connectionNotice([document.getElementById('main')]);let backup;
  const tokenGroup=demo?null:SuiteFieldGroup({id:'suite-local-fetch',slot:'xhs_fetch_token',raw:true,fields:[{key:'token',secret:true,en:'Local fetch service token',zh:'本地抓取服务口令'}],removePrompt:{en:'Remove this browser’s local fetch service token? The service and its credential are not revoked.',zh:'移除此浏览器的本地抓取服务口令？这不会关闭服务或撤销口令。'},removeLabel:{en:'Remove local service token',zh:'移除本地服务口令'}});
  const adapter=window.settingsAdapter={
-  ...kit,resetDescription:{en:' and reset the palette and single-key shortcuts',zh:'并恢复配色与单键快捷键'},resetLabel:{en:C.hosted?'Use hub theme and reset palette and shortcuts':'Use system theme and reset palette and shortcuts',zh:C.hosted?'使用 Hub 主题并恢复配色与快捷键':'跟随系统主题并恢复配色与快捷键'},app:'content-organizer',appSection:{en:"Your library",zh:"你的收藏库"},demo,isolatedCredentials:true,connectionSlot:'co_connection',
+  ...kit,resetDescription:{en:' and reset the palette and single-key shortcuts',zh:'并恢复配色与单键快捷键'},app:'content-organizer',appSection:{en:"Your library",zh:"你的收藏库"},demo,isolatedCredentials:true,connectionSlot:'co_connection',
   routing:'Fixed content.json, archived images in xhs-images/. The local fetch service address and transport stay unchanged.',
   language:()=>X.i18n.lang,setLanguage(value){X.i18n.setLanguage(value);H.gear(gear,X.i18n.T('设置','Settings'));},
   connection:()=>({...X.connection.current}),unsaved:()=>X.connection.pending||X.app.unsaved(),

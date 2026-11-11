@@ -17,7 +17,7 @@ const SaveStatus=(()=>{
    const time=localState.at?.toLocaleTimeString(zh?'zh-CN':'en-CA',{hour:'2-digit',minute:'2-digit'})||'';
    const draft=!['saving','error'].includes(localState.state)&&XHS.app?.hasContentDrafts();
    el.dataset.saveState=navigator.onLine===false?'offline':draft?'draft':localState.state;
-   const full=(navigator.onLine===false?(zh?'离线 · ':'Offline · '):'')+(draft?(zh?'未保存，请完成编辑':'Not saved. Finish editing'):localState.state==='saving'?(zh?'保存中…':'Saving…'):localState.state==='error'?(zh?'没保存上。':'Not saved. ')+(localState.reason==='full'?(zh?'浏览器存储空间不足':'Browser storage is full'):(zh?'浏览器无法保存这份副本':'Browser storage is unavailable')):localState.state==='ready'?(zh?'没有待保存更改':'No changes to save'):(zh?'已保存 ':'Saved ')+time);
+   const full=(navigator.onLine===false?(zh?'离线 · ':'Offline · '):'')+(draft?(zh?'未保存，请完成编辑':'Not saved. Finish editing'):localState.state==='saving'?(zh?'保存中…':'Saving…'):localState.state==='error'?(zh?'没保存上。':'Not saved. ')+(localState.reason==='full'?(zh?'浏览器存储空间不足':'Browser storage is full'):(zh?'浏览器无法保存这份副本':'Browser storage is unavailable')):localState.state==='ready'?(zh?'没有未保存的更改':'No changes to save'):(zh?'已保存 ':'Saved ')+time);
    label.textContent=innerWidth<900&&draft?(zh?'未保存':'Not saved'):innerWidth<900&&localState.state==='saved'?(navigator.onLine===false?(zh?'离线':'Offline'):(zh?'已保存':'Saved')):full;label.title=full;label.setAttribute('aria-label',full);
    if(button){button.hidden=localState.state!=='error';button.textContent=zh?'重试':'Retry';button.onclick=()=>localRetry?.();}
   }
