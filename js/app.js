@@ -876,7 +876,7 @@ window.XHS = window.XHS || {};
       renderComps();
       syncFeedback = { source: X.store.source(), at: new Date() };
     } catch (e) {
-      FirstRead.fail(doSync,T);
+      FirstRead.fail(doSync,T,false,'main',e);
       syncFeedback = { source: X.store.source(), error: e };
     } finally {
       syncing = false;
