@@ -33,17 +33,14 @@ Open **http://localhost:8000/?demo=1**. The app is static, with no build step, a
 - **Keep it** — images on Xiaohongshu's CDN carry a signed expiry; the app archives them into your
   private repo so saved notes don't rot, and offers a one-click repair for notes whose links already
   died.
-- **Take it with you** — **Copy as text** puts the full Markdown text on the clipboard. **Download Markdown** saves that same text as a file. Both use the existing exporter and keep shared source numbering. Notes-only downloads and image repair are in the library tools menu. Binding moves source notes to **Archive**, with **Restore them** available afterwards.
+- **Take it with you** — **Copy as text** puts the full Markdown text on the clipboard. **Download Markdown** saves that same text as a file. Both keep shared source numbering. Notes-only downloads and image repair are in the library tools menu. Binding moves source notes to **Archive**, with **Restore them** available afterwards.
 
 The compilation export is text with its numbered sources; images are not embedded.
 
 ## The reading view
 
-A compilation is a piece of writing, and the card grid it was made in is a filing cabinet: four folded
-cards to a row, every section expanded inside a quarter of the window, the buttons that re-run and
-delete it directly underneath. **Read** opens it in its own surface instead — sections in reading
-order down a measured column, a table of contents beside them, and one numbered list of everything
-the piece was made from.
+**Read** opens a compilation in its own surface: sections in reading order down a measured column, a
+table of contents beside them, and one numbered list of everything the piece was made from.
 
 Building that list is the part with rules, so it is `js/refs.js` and it has cases:
 
@@ -105,10 +102,10 @@ The older `make-demo-compilation.mjs` remains a standalone live-generation helpe
   header; the key never leaves your machine, but this is a personal-tool trade-off, not a pattern for
   multi-user products.
 - `check.mjs` covers merge and source identity. `check-redesign.mjs` covers the library view rules and demo sets. Live proxy availability, local transcription and model output still depend on their external services.
-- A compilation is what one model run produced. Re-running **Re-organize** tightens it, and editing it by
-  hand is the other half of that — neither is a claim that the result is right.
+- A compilation is what one model run produced and can be wrong. **Re-organize** re-runs it, and you can
+  edit it by hand.
 - Browser-stored credentials share this GitHub Pages origin with the author's other apps; use your own hosting for an isolated origin.
-- In the compilation export, Markdown and HTML in the saved text stay literal, as in the reading view. Only HTTP(S) sources become links; other source addresses remain text. Connection settings are never included. As with copying any document, review its text and source URLs before sharing it.
+- In the compilation export, Markdown and HTML in the saved text stay literal, as in the reading view. Only HTTP(S) sources become links; other source addresses remain text. Connection settings are never included. Review its text and source URLs before sharing it.
 
 ## License
 
